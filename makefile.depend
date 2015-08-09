@@ -1,0 +1,13 @@
+# -*- mode: makefile -*-
+
+OBJ_FILES = bdistrib.o globalVariables.o initOuterSurfaces.o initPlasma.o \
+	initSurfaceMod.o readInput.o writeOutput.o
+
+# Dependencies:
+bdistrib.o: globalVariables.o
+globalVariables.o: 
+initOuterSurfaces.o: globalVariables.o initSurfaceMod.o
+initPlasma.o: globalVariables.o
+initSurfaceMod.o: 
+readInput.o: globalVariables.o
+writeOutput.o: globalVariables.o
