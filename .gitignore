@@ -1,0 +1,10 @@
+*.o
+*.mod
+*.a
+bdistrib
+*.nc
+bdistrib_out*
+job.out.*
+job.err.*
+*~
+\#*

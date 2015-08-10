@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+
+print "usage: bdistribPlot bdistrib_out.XXX.nc"
+
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
+import numpy as np
+from scipy.io import netcdf
+import sys
+import math
+
+if len(sys.argv) != 2:
+    print "Error! You must specify 1 argument: the bdistrib_out.XXX.nc file."
+    exit(1)
+
+
+f = netcdf.netcdf_file(sys.argv[1],'r',mmap=False)
+nu_plasma = f.variables['nu_plasma'][()]
+nvl_plasma = f.variables['nvl_plasma'][()]
+u_plasma = f.variables['u_plasma'][()]
+vl_plasma = f.variables['vl_plasma'][()]
+x_plasma = f.variables['x_plasma'][()]
+y_plasma = f.variables['y_plasma'][()]
+z_plasma = f.variables['z_plasma'][()]
+x_middle = f.variables['x_middle'][()]
+y_middle = f.variables['y_middle'][()]
+z_middle = f.variables['z_middle'][()]
+x_current = f.variables['x_current'][()]
+y_current = f.variables['y_current'][()]
+z_current = f.variables['z_current'][()]
+
+print "nu_plasma: ",nu_plasma
+print "nvl_plasma: ",nvl_plasma
+print "x_plasma.shape: ",x_plasma.shape
+
+f.close()
+
+########################################################
+# For 3D plotting, 'close' the arrays in u and v
+########################################################
+
+x_plasma = np.append(x_plasma, x_plasma[[0],:], axis=0)
+y_plasma = np.append(y_plasma, y_plasma[[0],:], axis=0)
+z_plasma = np.append(z_plasma, z_plasma[[0],:], axis=0)
+x_plasma = np.append(x_plasma, x_plasma[:,[0]], axis=1)
+y_plasma = np.append(y_plasma, y_plasma[:,[0]], axis=1)
+z_plasma = np.append(z_plasma, z_plasma[:,[0]], axis=1)
+
+x_middle = np.append(x_middle, x_middle[[0],:], axis=0)
+y_middle = np.append(y_middle, y_middle[[0],:], axis=0)
+z_middle = np.append(z_middle, z_middle[[0],:], axis=0)
+x_middle = np.append(x_middle, x_middle[:,[0]], axis=1)
+y_middle = np.append(y_middle, y_middle[:,[0]], axis=1)
+z_middle = np.append(z_middle, z_middle[:,[0]], axis=1)
+
+x_current = np.append(x_current, x_current[[0],:], axis=0)
+y_current = np.append(y_current, y_current[[0],:], axis=0)
+z_current = np.append(z_current, z_current[[0],:], axis=0)
+x_current = np.append(x_current, x_current[:,[0]], axis=1)
+y_current = np.append(y_current, y_current[:,[0]], axis=1)
+z_current = np.append(z_current, z_current[:,[0]], axis=1)
+
+########################################################
+# Now make plot of surfaces at given toroidal angle
+########################################################
+
+fig = plt.figure(4)
+fig.patch.set_facecolor('white')
+iv = 0
+plt.plot(x_plasma[iv,:], z_plasma[iv,:], 'r.-', label='plasma')
+plt.plot(x_middle[iv,:], z_middle[iv,:], 'm.-', label='middle')
+plt.plot(x_current[iv,:], z_current[iv,:], 'b.-', label='current')
+plt.gca().set_aspect('equal',adjustable='box')
+plt.legend(fontsize='x-small')
+plt.title('v=0')
+
+########################################################
+# Now make 3D surface plot
+########################################################
+
+fig = plt.figure(1)
+fig.patch.set_facecolor('white')
+ax = fig.gca(projection='3d')
+ax.plot_surface(x_plasma, y_plasma, z_plasma, rstride=1, cstride=1, color='r')
+plotLMax = x_plasma.max()
+ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
+plt.title('Plasma surface')
+
+fig = plt.figure(2)
+fig.patch.set_facecolor('white')
+ax = fig.gca(projection='3d')
+ax.plot_surface(x_middle, y_middle, z_middle, rstride=1, cstride=1, color='m')
+plotLMax = x_middle.max()
+ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
+plt.title('Middle surface')
+
+fig = plt.figure(3)
+fig.patch.set_facecolor('white')
+ax = fig.gca(projection='3d')
+ax.plot_surface(x_current, y_current, z_current, rstride=1, cstride=1, color='b')
+plotLMax = x_current.max()
+ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
+plt.title('Current surface')
+
+
+plt.show()
+

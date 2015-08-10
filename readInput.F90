@@ -49,4 +49,8 @@ subroutine readInput
   if (ierr .ne. 0) stop 'error reading wout in bn_read_vmecf90'
   print *,"Successfully read VMEC data from ",woutFilename
 
+  nvl_plasma = nv_plasma * nfp
+  nvl_middle = nv_middle * nfp
+  nvl_current = nv_current * nfp
+
 end subroutine readInput

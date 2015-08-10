@@ -1,5 +1,8 @@
 # bdistrib
 
+There are 3 surfaces, named 'plasma', 'middle', and 'current',
+The 'plasma' surface corresponds to the outermost surface of the VMEC equilibrium.
+
 Parameter: nu_plasma
 Type: int
 Default: 16

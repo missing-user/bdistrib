@@ -16,6 +16,9 @@ include makefile.depend
 %.o: %.F90
 	$(FC) $(EXTRA_COMPILE_FLAGS) -I $(LIBSTELL_DIR) -c $<
 
+%.o: %.f
+	$(FC) $(EXTRA_COMPILE_FLAGS) -I $(LIBSTELL_DIR) -c $<
+
 $(TARGET): $(OBJ_FILES)
 	$(FC) -o $(TARGET) $(OBJ_FILES) $(LIBSTELL_DIR)/libstell.a $(EXTRA_LINK_FLAGS)
 
