@@ -10,7 +10,7 @@ subroutine readInput
   integer :: fileUnit, didFileAccessWork
 
   namelist / bdistrib / nu_plasma, nv_plasma, nu_middle, nv_middle, nu_current, nv_current, &
-       surface_option_middle, surface_option_current, R_middle, R_current, a_middle, a_current, &
+       surface_option_middle, surface_option_current, R0_middle, R0_current, a_middle, a_current, &
        separation_middle, separation_current, woutFilename
 
   ! getcarg is in LIBSTELL

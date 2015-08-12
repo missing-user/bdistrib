@@ -18,48 +18,34 @@ if len(sys.argv) != 2:
 f = netcdf.netcdf_file(sys.argv[1],'r',mmap=False)
 nu_plasma = f.variables['nu_plasma'][()]
 nvl_plasma = f.variables['nvl_plasma'][()]
+nvl_middle = f.variables['nvl_middle'][()]
+nvl_current = f.variables['nvl_current'][()]
 u_plasma = f.variables['u_plasma'][()]
 vl_plasma = f.variables['vl_plasma'][()]
-x_plasma = f.variables['x_plasma'][()]
-y_plasma = f.variables['y_plasma'][()]
-z_plasma = f.variables['z_plasma'][()]
-x_middle = f.variables['x_middle'][()]
-y_middle = f.variables['y_middle'][()]
-z_middle = f.variables['z_middle'][()]
-x_current = f.variables['x_current'][()]
-y_current = f.variables['y_current'][()]
-z_current = f.variables['z_current'][()]
+r_plasma  = f.variables['r_plasma'][()]
+r_middle  = f.variables['r_middle'][()]
+r_current = f.variables['r_current'][()]
 
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
-print "x_plasma.shape: ",x_plasma.shape
+print "r_plasma.shape: ",r_plasma.shape
 
 f.close()
+
+#exit(0)
 
 ########################################################
 # For 3D plotting, 'close' the arrays in u and v
 ########################################################
 
-x_plasma = np.append(x_plasma, x_plasma[[0],:], axis=0)
-y_plasma = np.append(y_plasma, y_plasma[[0],:], axis=0)
-z_plasma = np.append(z_plasma, z_plasma[[0],:], axis=0)
-x_plasma = np.append(x_plasma, x_plasma[:,[0]], axis=1)
-y_plasma = np.append(y_plasma, y_plasma[:,[0]], axis=1)
-z_plasma = np.append(z_plasma, z_plasma[:,[0]], axis=1)
+r_plasma  = np.append(r_plasma,  r_plasma[:,[0],:], axis=1)
+r_plasma  = np.append(r_plasma,  r_plasma[:,:,[0]], axis=2)
 
-x_middle = np.append(x_middle, x_middle[[0],:], axis=0)
-y_middle = np.append(y_middle, y_middle[[0],:], axis=0)
-z_middle = np.append(z_middle, z_middle[[0],:], axis=0)
-x_middle = np.append(x_middle, x_middle[:,[0]], axis=1)
-y_middle = np.append(y_middle, y_middle[:,[0]], axis=1)
-z_middle = np.append(z_middle, z_middle[:,[0]], axis=1)
+r_middle  = np.append(r_middle,  r_middle[:,[0],:], axis=1)
+r_middle  = np.append(r_middle,  r_middle[:,:,[0]], axis=2)
 
-x_current = np.append(x_current, x_current[[0],:], axis=0)
-y_current = np.append(y_current, y_current[[0],:], axis=0)
-z_current = np.append(z_current, z_current[[0],:], axis=0)
-x_current = np.append(x_current, x_current[:,[0]], axis=1)
-y_current = np.append(y_current, y_current[:,[0]], axis=1)
-z_current = np.append(z_current, z_current[:,[0]], axis=1)
+r_current = np.append(r_current, r_current[:,[0],:], axis=1)
+r_current = np.append(r_current, r_current[:,:,[0]], axis=2)
 
 ########################################################
 # Now make plot of surfaces at given toroidal angle
@@ -68,9 +54,9 @@ z_current = np.append(z_current, z_current[:,[0]], axis=1)
 fig = plt.figure(4)
 fig.patch.set_facecolor('white')
 iv = 0
-plt.plot(x_plasma[iv,:], z_plasma[iv,:], 'r.-', label='plasma')
-plt.plot(x_middle[iv,:], z_middle[iv,:], 'm.-', label='middle')
-plt.plot(x_current[iv,:], z_current[iv,:], 'b.-', label='current')
+plt.plot( r_plasma[0,iv,:],  r_plasma[2,iv,:], 'r.-', label='plasma')
+plt.plot( r_middle[0,iv,:],  r_middle[2,iv,:], 'm.-', label='middle')
+plt.plot(r_current[0,iv,:], r_current[2,iv,:], 'b.-', label='current')
 plt.gca().set_aspect('equal',adjustable='box')
 plt.legend(fontsize='x-small')
 plt.title('v=0')
@@ -82,26 +68,38 @@ plt.title('v=0')
 fig = plt.figure(1)
 fig.patch.set_facecolor('white')
 ax = fig.gca(projection='3d')
-ax.plot_surface(x_plasma, y_plasma, z_plasma, rstride=1, cstride=1, color='r')
-plotLMax = x_plasma.max()
-ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
-plt.title('Plasma surface')
+ax.plot_surface(r_plasma[0,:,:], r_plasma[1,:,:], r_plasma[2,:,:], rstride=1, cstride=1, color='r',linewidth=0)
+#ax.plot_surface(r_plasma[0,:,:], r_plasma[1,:,:], r_plasma[2,:,:], rstride=1, cstride=1, color='r',linewidth=0,antialiased=False)
+#plotLMax = r_plasma.max()
 
-fig = plt.figure(2)
-fig.patch.set_facecolor('white')
-ax = fig.gca(projection='3d')
-ax.plot_surface(x_middle, y_middle, z_middle, rstride=1, cstride=1, color='m')
-plotLMax = x_middle.max()
-ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
-plt.title('Middle surface')
+maxIndex = int(nvl_middle*0.7)
+ax.plot_surface(r_middle[0,:maxIndex,:], r_middle[1,:maxIndex,:], r_middle[2,:maxIndex,:], rstride=1, cstride=1, color='m',linewidth=0)
+#ax.plot_surface(r_middle[0,:maxIndex,:], r_middle[1,:maxIndex,:], r_middle[2,:maxIndex,:], rstride=1, cstride=1, color='m',linewidth=0,antialiased=False)
 
-fig = plt.figure(3)
-fig.patch.set_facecolor('white')
-ax = fig.gca(projection='3d')
-ax.plot_surface(x_current, y_current, z_current, rstride=1, cstride=1, color='b')
-plotLMax = x_current.max()
+maxIndex = int(nvl_current*0.55)
+minIndex = int(nvl_current*0.15)
+ax.plot_surface(r_current[0,minIndex:maxIndex,:], r_current[1,minIndex:maxIndex,:], r_current[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0)
+#ax.plot_surface(r_current[0,minIndex:maxIndex,:], r_current[1,minIndex:maxIndex,:], r_current[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0,antialiased=False)
+
+plotLMax = r_current.max()
 ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
-plt.title('Current surface')
+#plt.title('Plasma surface')
+
+#fig = plt.figure(2)
+#fig.patch.set_facecolor('white')
+#ax = fig.gca(projection='3d')
+#ax.plot_surface(r_middle[0,:,:], r_middle[1,:,:], r_middle[2,:,:], rstride=1, cstride=1, color='m',linewidth=0,antialiased=False)
+#plotLMax = r_middle.max()
+#ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
+#plt.title('Middle surface')
+
+#fig = plt.figure(3)
+#fig.patch.set_facecolor('white')
+#ax = fig.gca(projection='3d')
+#ax.plot_surface(r_current[0,:,:], r_current[1,:,:], r_current[2,:,:], rstride=1, cstride=1, color='b',linewidth=0,antialiased=False)
+#plotLMax = r_current.max()
+#ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
+#plt.title('Current surface')
 
 
 plt.show()

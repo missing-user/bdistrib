@@ -11,7 +11,7 @@ module globalVariables
   integer :: surface_option_middle=0
   integer :: surface_option_current=0
 
-  real(dp) :: R_middle=5.5, R_current=5.5
+  real(dp) :: R0_middle=5.5, R0_current=5.5
   real(dp) :: a_middle=0.3, a_current=0.6
   real(dp) :: separation_middle=0.3, separation_current=0.6
 

@@ -9,7 +9,7 @@ subroutine initCurrentPotentialModes()
   ! xm is nonnegative.
   ! xn can be negative, zero, or positive.
   ! When xm is 0, xn must be positive.
-  currentPotential_mnmax = currentPotentials_mpol*(currentPotential_ntor*2+1) + currentPotential_ntor
+  currentPotential_mnmax = currentPotential_mpol*(currentPotential_ntor*2+1) + currentPotential_ntor
 
   allocate(currentPotential_xm(currentPotential_mnmax))
   allocate(currentPotential_xn(currentPotential_mnmax))
@@ -22,8 +22,8 @@ subroutine initCurrentPotentialModes()
 
   ! Handle the xm>0 modes:
   index = currentPotential_ntor
-  do jm = 1,currentPotential_xm
-     do jn = -currentPotential_xn, currentPotential_xn
+  do jm = 1,currentPotential_mpol
+     do jn = -currentPotential_ntor, currentPotential_ntor
         index = index + 1
         currentPotential_xn(index) = jn
         currentPotential_xm(index) = jm

@@ -20,7 +20,7 @@ module initSurfaceMod
       real(rprec) :: R_specified, a, separation
       real(rprec), dimension(:), allocatable :: u, v, vl
       real(rprec), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
-      real(rprec) :: R0_to_use, R
+      real(rprec) :: R0_to_use
       real(rprec) :: angle, sinangle, cosangle, dsinangledu, dcosangledu
       real(rprec) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
       integer :: i, iu, iv, fzeroFlag
