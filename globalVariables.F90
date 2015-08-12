@@ -21,22 +21,16 @@ module globalVariables
   real(dp) :: norm_normal_plasma, norm_normal_middle, norm_normal_current
 
   real(dp), dimension(:), allocatable :: u_plasma, v_plasma, vl_plasma
-  real(dp), dimension(:,:), allocatable :: x_plasma, y_plasma, z_plasma
-  real(dp), dimension(:,:), allocatable :: dxdu_plasma, dydu_plasma, dzdu_plasma
-  real(dp), dimension(:,:), allocatable :: dxdv_plasma, dydv_plasma, dzdv_plasma
-  real(dp), dimension(:,:), allocatable :: normal_x_plasma, normal_y_plasma, normal_z_plasma
+  real(dp), dimension(:,:,:), allocatable :: r_plasma, drdu_plasma, drdv_plasma, normal_plasma
 
   real(dp), dimension(:), allocatable :: u_middle, v_middle, vl_middle
-  real(dp), dimension(:,:), allocatable :: x_middle, y_middle, z_middle
-  real(dp), dimension(:,:), allocatable :: dxdu_middle, dydu_middle, dzdu_middle
-  real(dp), dimension(:,:), allocatable :: dxdv_middle, dydv_middle, dzdv_middle
-  real(dp), dimension(:,:), allocatable :: normal_x_middle, normal_y_middle, normal_z_middle
+  real(dp), dimension(:,:,:), allocatable :: r_middle, drdu_middle, drdv_middle, normal_middle
 
   real(dp), dimension(:), allocatable :: u_current, v_current, vl_current
-  real(dp), dimension(:,:), allocatable :: x_current, y_current, z_current
-  real(dp), dimension(:,:), allocatable :: dxdu_current, dydu_current, dzdu_current
-  real(dp), dimension(:,:), allocatable :: dxdv_current, dydv_current, dzdv_current
-  real(dp), dimension(:,:), allocatable :: normal_x_current, normal_y_current, normal_z_current
+  real(dp), dimension(:,:,:), allocatable :: r_current, drdu_current, drdv_current, normal_current
+
+  integer :: currentPotential_mnmax, currentPotential_mpol=4, currentPotential_ntor=4
+  integer, dimension(:), allocatable :: currentPotential_xm, currentPotential_xn
 
 end module globalVariables
 

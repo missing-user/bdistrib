@@ -26,29 +26,16 @@ subroutine initPlasma
      vl_plasma(i) = (i-1.0_rprec)/nv_plasma
   end do
 
-  allocate(x_plasma(nu_plasma,nvl_plasma))
-  allocate(y_plasma(nu_plasma,nvl_plasma))
-  allocate(z_plasma(nu_plasma,nvl_plasma))
-  allocate(dxdu_plasma(nu_plasma,nvl_plasma))
-  allocate(dydu_plasma(nu_plasma,nvl_plasma))
-  allocate(dzdu_plasma(nu_plasma,nvl_plasma))
-  allocate(dxdv_plasma(nu_plasma,nvl_plasma))
-  allocate(dydv_plasma(nu_plasma,nvl_plasma))
-  allocate(dzdv_plasma(nu_plasma,nvl_plasma))
-  allocate(normal_x_plasma(nu_plasma,nvl_plasma))
-  allocate(normal_y_plasma(nu_plasma,nvl_plasma))
-  allocate(normal_z_plasma(nu_plasma,nvl_plasma))
+  ! Last coordinate is the Cartesian component x, y, or z
+  allocate(r_plasma(nu_plasma,nvl_plasma,3))
+  allocate(drdu_plasma(nu_plasma,nvl_plasma,3))
+  allocate(drdv_plasma(nu_plasma,nvl_plasma,3))
+  allocate(normal_plasma(nu_plasma,nvl_plasma,3))
 
-  x_plasma=0
-  y_plasma=0
-  z_plasma=0
-  dxdu_plasma=0
-  dydu_plasma=0
-  dzdu_plasma=0
-  dxdv_plasma=0
-  dydv_plasma=0
-  dzdv_plasma=0
-
+  r_plasma=0
+  drdu_plasma=0
+  drdv_plasma=0
+ 
   do iv = 1,nvl_plasma
      angle2 = twopi*vl_plasma(iv)/nfp
      sinangle2 = sin(angle2)
@@ -65,25 +52,25 @@ subroutine initPlasma
            dsinangledv = cosangle*twopi*xn(imn)/nfp
            dcosangledv = -sinangle*twopi*xn(imn)/nfp
 
-           x_plasma(iu,iv) = x_plasma(iu,iv) + rmnc(imn,ns) * cosangle * cosangle2
-           y_plasma(iu,iv) = y_plasma(iu,iv) + rmnc(imn,ns) * cosangle * sinangle2
-           z_plasma(iu,iv) = z_plasma(iu,iv) + zmns(imn,ns) * sinangle
+           r_plasma(iu,iv,1) = r_plasma(iu,iv,1) + rmnc(imn,ns) * cosangle * cosangle2
+           r_plasma(iu,iv,2) = r_plasma(iu,iv,2) + rmnc(imn,ns) * cosangle * sinangle2
+           r_plasma(iu,iv,3) = r_plasma(iu,iv,3) + zmns(imn,ns) * sinangle
 
-           dxdu_plasma(iu,iv) = dxdu_plasma(iu,iv) + rmnc(imn,ns) * dcosangledu * cosangle2
-           dydu_plasma(iu,iv) = dydu_plasma(iu,iv) + rmnc(imn,ns) * dcosangledu * sinangle2
-           dzdu_plasma(iu,iv) = dzdu_plasma(iu,iv) + zmns(imn,ns) * dsinangledu
+           drdu_plasma(iu,iv,1) = drdu_plasma(iu,iv,1) + rmnc(imn,ns) * dcosangledu * cosangle2
+           drdu_plasma(iu,iv,2) = drdu_plasma(iu,iv,2) + rmnc(imn,ns) * dcosangledu * sinangle2
+           drdu_plasma(iu,iv,3) = drdu_plasma(iu,iv,3) + zmns(imn,ns) * dsinangledu
 
-           dxdv_plasma(iu,iv) = dxdv_plasma(iu,iv) + rmnc(imn,ns) * (dcosangledv * cosangle2 + cosangle * dcosangle2dv)
-           dydv_plasma(iu,iv) = dydv_plasma(iu,iv) + rmnc(imn,ns) * (dcosangledv * sinangle2 + cosangle * dsinangle2dv)
-           dzdv_plasma(iu,iv) = dzdv_plasma(iu,iv) + zmns(imn,ns) * dsinangledv
+           drdv_plasma(iu,iv,1) = drdv_plasma(iu,iv,1) + rmnc(imn,ns) * (dcosangledv * cosangle2 + cosangle * dcosangle2dv)
+           drdv_plasma(iu,iv,2) = drdv_plasma(iu,iv,2) + rmnc(imn,ns) * (dcosangledv * sinangle2 + cosangle * dsinangle2dv)
+           drdv_plasma(iu,iv,3) = drdv_plasma(iu,iv,3) + zmns(imn,ns) * dsinangledv
         end do
      end do
   end do
 
   ! Evaluate cross product
-  normal_x_plasma = dydv_plasma * dzdu_plasma - dydu_plasma * dzdv_plasma
-  normal_y_plasma = dzdv_plasma * dxdu_plasma - dzdu_plasma * dxdv_plasma
-  normal_z_plasma = dxdv_plasma * dydu_plasma - dxdu_plasma * dydv_plasma
+  normal_plasma(:,:,1) = drdv_plasma(:,:,2) * drdu_plasma(:,:,3) - drdu_plasma(:,:,2) * drdv_plasma(:,:,3)
+  normal_plasma(:,:,2) = drdv_plasma(:,:,3) * drdu_plasma(:,:,1) - drdu_plasma(:,:,3) * drdv_plasma(:,:,1)
+  normal_plasma(:,:,3) = drdv_plasma(:,:,1) * drdu_plasma(:,:,2) - drdu_plasma(:,:,1) * drdv_plasma(:,:,2)
 
 
 end subroutine initPlasma

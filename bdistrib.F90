@@ -10,6 +10,7 @@ program bdistrib
 
   call initPlasma()
   call initOuterSurfaces()
+  call initCurrentPotentialModes()
 
   call writeOutput()
 

@@ -8,9 +8,7 @@ module initSurfaceMod
   contains
 
     subroutine initSurface(nu, nv, nvl, u, v, vl, &
-         x, y, z, &
-         normal_x, normal_y, normal_z, &
-         surface_option, R_specified, a, separation)
+         r, drdu, drdv, normal, surface_option, R_specified, a, separation)
 
       use read_wout_mod
       use stel_kinds
@@ -21,9 +19,7 @@ module initSurfaceMod
       integer :: nu, nv, nvl, surface_option
       real(rprec) :: R_specified, a, separation
       real(rprec), dimension(:), allocatable :: u, v, vl
-      real(rprec), dimension(:,:), allocatable :: x, y, z
-      real(rprec), dimension(:,:), allocatable :: normal_x, normal_y, normal_z
-      real(rprec), dimension(:,:), allocatable :: dxdu, dxdv, dydu, dydv, dzdu, dzdv
+      real(rprec), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
       real(rprec) :: R0_to_use, R
       real(rprec) :: angle, sinangle, cosangle, dsinangledu, dcosangledu
       real(rprec) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
@@ -47,28 +43,15 @@ module initSurfaceMod
          vl(i) = (i-1.0_rprec)/nv
       end do
 
-      allocate(x(nu,nvl))
-      allocate(y(nu,nvl))
-      allocate(z(nu,nvl))
-      allocate(dxdu(nu,nvl))
-      allocate(dydu(nu,nvl))
-      allocate(dzdu(nu,nvl))
-      allocate(dxdv(nu,nvl))
-      allocate(dydv(nu,nvl))
-      allocate(dzdv(nu,nvl))
-      allocate(normal_x(nu,nvl))
-      allocate(normal_y(nu,nvl))
-      allocate(normal_z(nu,nvl))
+      ! Last dimension is the Cartesian component x, y, or z.
+      allocate(r(nu,nvl,3))
+      allocate(drdu(nu,nvl,3))
+      allocate(drdv(nu,nvl,3))
+      allocate(normal(nu,nvl,3))
 
-      x = 0
-      y = 0
-      z = 0
-      dxdu = 0
-      dydu = 0
-      dzdu = 0
-      dxdv = 0
-      dydv = 0
-      dzdv = 0
+      r = 0
+      drdu = 0
+      drdv = 0
 
       select case (surface_option)
       case (0,1)
@@ -93,17 +76,17 @@ module initSurfaceMod
                dsinangle2dv = cosangle2*twopi/nfp
                dcosangle2dv = -sinangle2*twopi/nfp
 
-               x(iu,iv) = (R0_to_use + a * cosangle) * cosangle2
-               y(iu,iv) = (R0_to_use + a * cosangle) * sinangle2
-               z(iu,iv) = a * sinangle
+               r(iu,iv,1) = (R0_to_use + a * cosangle) * cosangle2
+               r(iu,iv,2) = (R0_to_use + a * cosangle) * sinangle2
+               r(iu,iv,3) = a * sinangle
 
-               dxdu(iu,iv) = (a * dcosangledu) * cosangle2
-               dydu(iu,iv) = (a * dcosangledu) * sinangle2
-               dzdu(iu,iv) = a * dsinangledu
+               drdu(iu,iv,1) = (a * dcosangledu) * cosangle2
+               drdu(iu,iv,2) = (a * dcosangledu) * sinangle2
+               drdu(iu,iv,3) = a * dsinangledu
 
-               dxdv(iu,iv) = (R0_to_use + a * cosangle) * dcosangle2dv
-               dydv(iu,iv) = (R0_to_use + a * cosangle) * dsinangle2dv
-               !dzdv(iu,iv) = 0, so no equation needed for it here.
+               drdv(iu,iv,1) = (R0_to_use + a * cosangle) * dcosangle2dv
+               drdv(iu,iv,2) = (R0_to_use + a * cosangle) * dsinangle2dv
+               !drdv(iu,iv,3) = 0, so no equation needed for it here.
             end do
          end do
 
@@ -132,9 +115,9 @@ module initSurfaceMod
                end if
 
                call expandPlasmaSurface(u_rootSolve, v_plasma_rootSolveSolution, separation, x_new, y_new, z_new)
-               x(iu,iv) = x_new
-               y(iu,iv) = y_new
-               z(iu,iv) = z_new
+               r(iu,iv,1) = x_new
+               r(iu,iv,2) = y_new
+               r(iu,iv,3) = z_new
 
             end do
 
@@ -146,9 +129,9 @@ module initSurfaceMod
       end select
 
       ! Evaluate cross product:
-      normal_x = dydv * dzdu - dydu * dzdv
-      normal_y = dzdv * dxdu - dzdu * dxdv
-      normal_z = dxdv * dydu - dxdu * dydv
+      normal(:,:,1) = drdv(:,:,2) * drdu(:,:,3) - drdu(:,:,2) * drdv(:,:,3)
+      normal(:,:,2) = drdv(:,:,3) * drdu(:,:,1) - drdu(:,:,3) * drdv(:,:,1)
+      normal(:,:,3) = drdv(:,:,1) * drdu(:,:,2) - drdu(:,:,1) * drdv(:,:,2)
 
       contains
 

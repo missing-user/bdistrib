@@ -1,4 +1,4 @@
-subroutine expandPlasmaSurface(u, v, separation, x, y, z)
+subroutine expandPlasmaSurface(u, v, separation, x,y,z)
   
   use read_wout_mod, only: nfp, ns, xm, xn, mnmax, rmnc, zmns
   use stel_kinds

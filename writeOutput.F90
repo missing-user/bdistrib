@@ -30,15 +30,23 @@ subroutine writeOutput
        vn_u_current = "u_current", &
        vn_v_current = "v_current", &
        vn_vl_current = "vl_current", &
-       vn_x_plasma = "x_plasma", &
-       vn_y_plasma = "y_plasma", &
-       vn_z_plasma = "z_plasma", &
-       vn_x_middle = "x_middle", &
-       vn_y_middle = "y_middle", &
-       vn_z_middle = "z_middle", &
-       vn_x_current = "x_current", &
-       vn_y_current = "y_current", &
-       vn_z_current = "z_current"
+       vn_r_plasma  = "r_plasma", &
+       vn_r_middle  = "r_middle", &
+       vn_r_current = "r_current", &
+       vn_drdu_plasma  = "drdu_plasma", &
+       vn_drdu_middle  = "drdu_middle", &
+       vn_drdu_current = "drdu_current", &
+       vn_drdv_plasma  = "drdv_plasma", &
+       vn_drdv_middle  = "drdv_middle", &
+       vn_drdv_current = "drdv_current", &
+       vn_normal_plasma = "normal_plasma", &
+       vn_normal_middle = "normal_middle", &
+       vn_normal_current = "normal_current", &
+       vn_currentPotential_mpol = "currentPotential_mpol", &
+       vn_currentPotential_ntor = "currentPotential_ntor", &
+       vn_currentPotential_mnmax = "currentPotential_mnmax", &
+       vn_currentPotential_xm = "currentPotential_xm", &
+       vn_currentPotential_xn = "currentPotential_xn"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -50,14 +58,21 @@ subroutine writeOutput
        nvl_middle_dim = (/'nvl_middle'/), &
        nu_current_dim = (/'nu_current'/), &
        nv_current_dim = (/'nv_current'/), &
-       nvl_current_dim = (/'nvl_current'/)
+       nvl_current_dim = (/'nvl_current'/), &
+       currentPotential_mnmax_dim = (/'currentPotential_mnmax'/)
 
   ! Arrays with dimension 2:
   character(len=*), parameter, dimension(2) :: &
-       uvl_plasma_dim = (/'nu_plasma','nvl_plasma'/), &
-       uvl_middle_dim = (/'nu_middle','nvl_middle'/), &
-       uvl_current_dim = (/'nu_current','nvl_current'/)
+       u_vl_plasma_dim = (/'nu_plasma','nvl_plasma'/), &
+       u_vl_middle_dim = (/'nu_middle','nvl_middle'/), &
+       u_vl_current_dim = (/'nu_current','nvl_current'/)
 !       uvl_plasma_dim = (/'nvl_plasma','nu_plasma'/)
+
+  ! Arrays with dimension 3:
+  character(len=*), parameter, dimension(3) :: &
+       u_vl_xyz_plasma_dim  = (/'nu_plasma' ,'nvl_plasma' ,'xyz'/), &
+       u_vl_xyz_middle_dim  = (/'nu_middle' ,'nvl_middle' ,'xyz'/), &
+       u_vl_xyz_current_dim = (/'nu_current','nvl_current','xyz'/)
 
   call cdf_open(ncid,outputFilename,'w',ierr)
   IF (ierr .ne. 0) then
@@ -77,6 +92,9 @@ subroutine writeOutput
   call cdf_define(ncid, vn_nu_current, nu_current)
   call cdf_define(ncid, vn_nv_current, nv_current)
   call cdf_define(ncid, vn_nvl_current, nvl_current)
+  call cdf_define(ncid, vn_currentPotential_mpol, currentPotential_mpol)
+  call cdf_define(ncid, vn_currentPotential_ntor, currentPotential_ntor)
+  call cdf_define(ncid, vn_currentPotential_mnmax, currentPotential_mnmax)
 
   ! Arrays with dimension 1
 
@@ -89,18 +107,26 @@ subroutine writeOutput
   call cdf_define(ncid, vn_u_current, u_current, dimname=nu_current_dim)
   call cdf_define(ncid, vn_v_current, v_current, dimname=nv_current_dim)
   call cdf_define(ncid, vn_vl_current, vl_current, dimname=nvl_current_dim)
+  call cdf_define(ncid, vn_currentPotential_xm, currentPotential_xm, dimname=currentPotential_mnmax_dim)
+  call cdf_define(ncid, vn_currentPotential_xn, currentPotential_xn, dimname=currentPotential_mnmax_dim)
 
-  ! Arrays with dimension 2
+  ! Arrays with dimension 3
 
-  call cdf_define(ncid, vn_x_plasma, x_plasma, dimname=uvl_plasma_dim)
-  call cdf_define(ncid, vn_y_plasma, y_plasma, dimname=uvl_plasma_dim)
-  call cdf_define(ncid, vn_z_plasma, z_plasma, dimname=uvl_plasma_dim)
-  call cdf_define(ncid, vn_x_middle, x_middle, dimname=uvl_middle_dim)
-  call cdf_define(ncid, vn_y_middle, y_middle, dimname=uvl_middle_dim)
-  call cdf_define(ncid, vn_z_middle, z_middle, dimname=uvl_middle_dim)
-  call cdf_define(ncid, vn_x_current, x_current, dimname=uvl_current_dim)
-  call cdf_define(ncid, vn_y_current, y_current, dimname=uvl_current_dim)
-  call cdf_define(ncid, vn_z_current, z_current, dimname=uvl_current_dim)
+  call cdf_define(ncid, vn_r_plasma,  r_plasma,  dimname=u_vl_xyz_plasma_dim)
+  call cdf_define(ncid, vn_r_middle,  r_middle,  dimname=u_vl_xyz_middle_dim)
+  call cdf_define(ncid, vn_r_current, r_current, dimname=u_vl_xyz_current_dim)
+
+  call cdf_define(ncid, vn_drdu_plasma,  drdu_plasma,  dimname=u_vl_xyz_plasma_dim)
+  call cdf_define(ncid, vn_drdu_middle,  drdu_middle,  dimname=u_vl_xyz_middle_dim)
+  call cdf_define(ncid, vn_drdu_current, drdu_current, dimname=u_vl_xyz_current_dim)
+
+  call cdf_define(ncid, vn_drdv_plasma,  drdv_plasma,  dimname=u_vl_xyz_plasma_dim)
+  call cdf_define(ncid, vn_drdv_middle,  drdv_middle,  dimname=u_vl_xyz_middle_dim)
+  call cdf_define(ncid, vn_drdv_current, drdv_current, dimname=u_vl_xyz_current_dim)
+
+  call cdf_define(ncid, vn_normal_plasma,  normal_plasma,  dimname=u_vl_xyz_plasma_dim)
+  call cdf_define(ncid, vn_normal_middle,  normal_middle,  dimname=u_vl_xyz_middle_dim)
+  call cdf_define(ncid, vn_normal_current, normal_current, dimname=u_vl_xyz_current_dim)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
   ! Done with cdf_define calls. Now write the data.
@@ -118,6 +144,9 @@ subroutine writeOutput
   call cdf_write(ncid, vn_nu_current, nu_current)
   call cdf_write(ncid, vn_nv_current, nv_current)
   call cdf_write(ncid, vn_nvl_current, nvl_current)
+  call cdf_write(ncid, vn_currentPotential_mpol, currentPotential_mpol)
+  call cdf_write(ncid, vn_currentPotential_ntor, currentPotential_ntor)
+  call cdf_write(ncid, vn_currentPotential_mnmax, currentPotential_mnmax)
 
   ! Arrays with dimension 1
 
@@ -130,18 +159,26 @@ subroutine writeOutput
   call cdf_write(ncid, vn_u_current, u_current)
   call cdf_write(ncid, vn_v_current, v_current)
   call cdf_write(ncid, vn_vl_current, vl_current)
+  call cdf_write(ncid, vn_currentPotential_xm, currentPotential_xm)
+  call cdf_write(ncid, vn_currentPotential_xn, currentPotential_xn)
 
-  ! Arrays with dimension 2
+  ! Arrays with dimension 3
 
-  call cdf_write(ncid, vn_x_plasma, x_plasma)
-  call cdf_write(ncid, vn_y_plasma, y_plasma)
-  call cdf_write(ncid, vn_z_plasma, z_plasma)
-  call cdf_write(ncid, vn_x_middle, x_middle)
-  call cdf_write(ncid, vn_y_middle, y_middle)
-  call cdf_write(ncid, vn_z_middle, z_middle)
-  call cdf_write(ncid, vn_x_current, x_current)
-  call cdf_write(ncid, vn_y_current, y_current)
-  call cdf_write(ncid, vn_z_current, z_current)
+  call cdf_write(ncid, vn_r_plasma,  r_plasma)
+  call cdf_write(ncid, vn_r_middle,  r_middle)
+  call cdf_write(ncid, vn_r_current, r_current)
+
+  call cdf_write(ncid, vn_drdu_plasma,  drdu_plasma)
+  call cdf_write(ncid, vn_drdu_middle,  drdu_middle)
+  call cdf_write(ncid, vn_drdu_current, drdu_current)
+
+  call cdf_write(ncid, vn_drdv_plasma,  drdv_plasma)
+  call cdf_write(ncid, vn_drdv_middle,  drdv_middle)
+  call cdf_write(ncid, vn_drdv_current, drdv_current)
+
+  call cdf_write(ncid, vn_normal_plasma,  normal_plasma)
+  call cdf_write(ncid, vn_normal_middle,  normal_middle)
+  call cdf_write(ncid, vn_normal_current, normal_current)
 
   call cdf_close(ncid)
 
