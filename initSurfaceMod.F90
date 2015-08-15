@@ -8,7 +8,8 @@ module initSurfaceMod
   contains
 
     subroutine initSurface(nu, nv, nvl, u, v, vl, &
-         r, drdu, drdv, normal, surface_option, R_specified, a, separation)
+         r, drdu, drdv, normal, norm_normal, &
+         surface_option, R_specified, a, separation)
 
       use read_wout_mod
       use stel_kinds
@@ -20,6 +21,7 @@ module initSurfaceMod
       real(rprec) :: R_specified, a, separation
       real(rprec), dimension(:), allocatable :: u, v, vl
       real(rprec), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
+      real(rprec), dimension(:,:), allocatable :: norm_normal
       real(rprec) :: R0_to_use
       real(rprec) :: angle, sinangle, cosangle, dsinangledu, dcosangledu
       real(rprec) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
@@ -98,19 +100,17 @@ module initSurfaceMod
          rootSolve_relerr = 1.0e-10_rprec
          do iu = 1,nu
             u_rootSolve = u(iu)
-            print *,"u=",u_rootSolve
             do iv = 1,nvl
                v_rootSolve_target = vl(iv)
                v_rootSolve_min = v_rootSolve_target - 0.3
                v_rootSolve_max = v_rootSolve_target + 0.3
-               print *,"***",fzero_residual(v_rootSolve_min), fzero_residual(v_rootSolve_target), fzero_residual(v_rootSolve_max)
                call fzero(fzero_residual, v_rootSolve_min, v_rootSolve_max, v_rootSolve_target, &
                     rootSolve_relerr, rootSolve_abserr, fzeroFlag)
                ! Note: fzero returns its answer in v_rootSolve_min
                v_plasma_rootSolveSolution = v_rootSolve_min
                if (fzeroFlag == 4) then
                   stop "ERROR: fzero returned error 4: no sign change in residual"
-               else if (fzeroFlag > 1) then
+               else if (fzeroFlag > 2) then
                   print *,"WARNING: fzero returned an error code:",fzeroFlag
                end if
 
@@ -132,6 +132,9 @@ module initSurfaceMod
       normal(:,:,1) = drdv(:,:,2) * drdu(:,:,3) - drdu(:,:,2) * drdv(:,:,3)
       normal(:,:,2) = drdv(:,:,3) * drdu(:,:,1) - drdu(:,:,3) * drdv(:,:,1)
       normal(:,:,3) = drdv(:,:,1) * drdu(:,:,2) - drdu(:,:,1) * drdv(:,:,2)
+
+      allocate(norm_normal(nu, nvl))
+      norm_normal = sqrt(normal(:,:,1)**2 + normal(:,:,2)**2 + normal(:,:,3)**2)
 
       contains
 

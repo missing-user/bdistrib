@@ -18,8 +18,6 @@ module globalVariables
   character(len=200) :: woutFilename=""
   character(len=200) :: outputFilename
 
-  real(dp) :: norm_normal_plasma, norm_normal_middle, norm_normal_current
-
   real(dp), dimension(:), allocatable :: u_plasma, v_plasma, vl_plasma
   real(dp), dimension(:,:,:), allocatable :: r_plasma, drdu_plasma, drdv_plasma, normal_plasma
 
@@ -29,8 +27,12 @@ module globalVariables
   real(dp), dimension(:), allocatable :: u_current, v_current, vl_current
   real(dp), dimension(:,:,:), allocatable :: r_current, drdu_current, drdv_current, normal_current
 
+  real(dp), dimension(:,:), allocatable :: norm_normal_plasma, norm_normal_middle, norm_normal_current
+
   integer :: currentPotential_mnmax, currentPotential_mpol=4, currentPotential_ntor=4
   integer, dimension(:), allocatable :: currentPotential_xm, currentPotential_xn
+
+  real(dp), dimension(:,:), allocatable :: inductance_plasma, inductance_middle
 
 end module globalVariables
 

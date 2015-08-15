@@ -1,11 +1,13 @@
 # -*- mode: makefile -*-
 
-OBJ_FILES = bdistrib.o expandPlasmaSurface.o fzero.o globalVariables.o \
+OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildMatrices.o expandPlasmaSurface.o fzero.o globalVariables.o \
 	initCurrentPotentialModes.o initOuterSurfaces.o initPlasma.o \
 	initSurfaceMod.o readInput.o writeOutput.o
 
 # Dependencies:
 bdistrib.o: globalVariables.o
+buildInductanceMatrixMod.o: globalVariables.o
+buildMatrices.o: globalVariables.o buildInductanceMatrixMod.o
 expandPlasmaSurface.o:
 fzero.o: 
 initCurrentPotentialModes.o: globalVariables.o

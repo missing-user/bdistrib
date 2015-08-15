@@ -7,6 +7,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 import numpy as np
 from scipy.io import netcdf
+from scipy.interpolate import interp1d
 import sys
 import math
 
@@ -16,12 +17,15 @@ if len(sys.argv) != 2:
 
 
 f = netcdf.netcdf_file(sys.argv[1],'r',mmap=False)
+nfp = f.variables['nfp'][()]
 nu_plasma = f.variables['nu_plasma'][()]
 nvl_plasma = f.variables['nvl_plasma'][()]
 nvl_middle = f.variables['nvl_middle'][()]
 nvl_current = f.variables['nvl_current'][()]
 u_plasma = f.variables['u_plasma'][()]
 vl_plasma = f.variables['vl_plasma'][()]
+vl_middle = f.variables['vl_middle'][()]
+vl_current = f.variables['vl_current'][()]
 r_plasma  = f.variables['r_plasma'][()]
 r_middle  = f.variables['r_middle'][()]
 r_current = f.variables['r_current'][()]
@@ -40,12 +44,42 @@ f.close()
 
 r_plasma  = np.append(r_plasma,  r_plasma[:,[0],:], axis=1)
 r_plasma  = np.append(r_plasma,  r_plasma[:,:,[0]], axis=2)
+vl_plasma = np.append(vl_plasma,nfp)
 
 r_middle  = np.append(r_middle,  r_middle[:,[0],:], axis=1)
 r_middle  = np.append(r_middle,  r_middle[:,:,[0]], axis=2)
+vl_middle = np.append(vl_middle,nfp)
 
 r_current = np.append(r_current, r_current[:,[0],:], axis=1)
 r_current = np.append(r_current, r_current[:,:,[0]], axis=2)
+vl_current = np.append(vl_current,nfp)
+
+########################################################
+# Extract cross-sections of the 3 surfaces at several toroidal angles
+########################################################
+
+def getCrossSection(rArray, vl_old, v_new):
+    x = rArray[0,:,:]
+    y = rArray[1,:,:]
+    z = rArray[2,:,:]
+    R = np.sqrt(x**2 + y**2)
+
+    nu = z.shape[1]
+    nv_new = len(v_new)
+    R_slice = np.zeros([nv_new,nu])
+    Z_slice = np.zeros([nv_new,nu])
+    for iu in range(nu):
+        interpolator = interp1d(vl_old, R[:,iu])
+        R_slice[:,iu] = interpolator(v_new)
+        interpolator = interp1d(vl_old, z[:,iu])
+        Z_slice[:,iu] = interpolator(v_new)
+
+    return R_slice, Z_slice
+
+v_slices = [0, 0.25, 0.5, 0.75]
+R_slice_plasma, Z_slice_plasma = getCrossSection(r_plasma, vl_plasma, v_slices)
+R_slice_middle, Z_slice_middle = getCrossSection(r_middle, vl_middle, v_slices)
+R_slice_current, Z_slice_current = getCrossSection(r_current, vl_current, v_slices)
 
 ########################################################
 # Now make plot of surfaces at given toroidal angle
@@ -53,13 +87,30 @@ r_current = np.append(r_current, r_current[:,:,[0]], axis=2)
 
 fig = plt.figure(4)
 fig.patch.set_facecolor('white')
-iv = 0
-plt.plot( r_plasma[0,iv,:],  r_plasma[2,iv,:], 'r.-', label='plasma')
-plt.plot( r_middle[0,iv,:],  r_middle[2,iv,:], 'm.-', label='middle')
-plt.plot(r_current[0,iv,:], r_current[2,iv,:], 'b.-', label='current')
-plt.gca().set_aspect('equal',adjustable='box')
-plt.legend(fontsize='x-small')
-plt.title('v=0')
+
+numRows = 2
+numCols = 2
+
+Rmin = R_slice_current.min()
+Rmax = R_slice_current.max()
+Zmin = Z_slice_current.min()
+Zmax = Z_slice_current.max()
+
+for whichPlot in range(4):
+    plt.subplot(numRows,numCols,whichPlot+1)
+    v = v_slices[whichPlot]
+    plt.plot( R_slice_plasma[whichPlot,:],  Z_slice_plasma[whichPlot,:], 'r.-', label='plasma')
+    plt.plot( R_slice_middle[whichPlot,:],  Z_slice_middle[whichPlot,:], 'm.-', label='middle')
+    plt.plot(R_slice_current[whichPlot,:], Z_slice_current[whichPlot,:], 'b.-', label='current')
+    plt.gca().set_aspect('equal',adjustable='box')
+    plt.legend(fontsize='x-small')
+    plt.title('v='+str(v))
+    plt.xlabel('R')
+    plt.ylabel('Z')
+    plt.xlim([Rmin,Rmax])
+    plt.ylim([Zmin,Zmax])
+
+plt.tight_layout()
 
 ########################################################
 # Now make 3D surface plot

@@ -42,6 +42,9 @@ subroutine writeOutput
        vn_normal_plasma = "normal_plasma", &
        vn_normal_middle = "normal_middle", &
        vn_normal_current = "normal_current", &
+       vn_norm_normal_plasma  = "norm_normal_plasma", &
+       vn_norm_normal_middle  = "norm_normal_middle", &
+       vn_norm_normal_current = "norm_normal_current", &
        vn_currentPotential_mpol = "currentPotential_mpol", &
        vn_currentPotential_ntor = "currentPotential_ntor", &
        vn_currentPotential_mnmax = "currentPotential_mnmax", &
@@ -110,6 +113,12 @@ subroutine writeOutput
   call cdf_define(ncid, vn_currentPotential_xm, currentPotential_xm, dimname=currentPotential_mnmax_dim)
   call cdf_define(ncid, vn_currentPotential_xn, currentPotential_xn, dimname=currentPotential_mnmax_dim)
 
+  ! Arrays with dimension 2
+
+  call cdf_define(ncid, vn_norm_normal_plasma,  norm_normal_plasma,  dimname=u_vl_plasma_dim)
+  call cdf_define(ncid, vn_norm_normal_middle,  norm_normal_middle,  dimname=u_vl_middle_dim)
+  call cdf_define(ncid, vn_norm_normal_current,  norm_normal_current,  dimname=u_vl_current_dim)
+
   ! Arrays with dimension 3
 
   call cdf_define(ncid, vn_r_plasma,  r_plasma,  dimname=u_vl_xyz_plasma_dim)
@@ -161,6 +170,12 @@ subroutine writeOutput
   call cdf_write(ncid, vn_vl_current, vl_current)
   call cdf_write(ncid, vn_currentPotential_xm, currentPotential_xm)
   call cdf_write(ncid, vn_currentPotential_xn, currentPotential_xn)
+
+  ! Arrays with dimension 2
+
+  call cdf_write(ncid, vn_norm_normal_plasma,  norm_normal_plasma)
+  call cdf_write(ncid, vn_norm_normal_middle,  norm_normal_middle)
+  call cdf_write(ncid, vn_norm_normal_current,  norm_normal_current)
 
   ! Arrays with dimension 3
 

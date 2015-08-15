@@ -72,5 +72,8 @@ subroutine initPlasma
   normal_plasma(:,:,2) = drdv_plasma(:,:,3) * drdu_plasma(:,:,1) - drdu_plasma(:,:,3) * drdv_plasma(:,:,1)
   normal_plasma(:,:,3) = drdv_plasma(:,:,1) * drdu_plasma(:,:,2) - drdu_plasma(:,:,1) * drdv_plasma(:,:,2)
 
+  allocate(norm_normal_plasma(nu_plasma, nvl_plasma))
+  norm_normal_plasma = sqrt(normal_plasma(:,:,1)**2 + normal_plasma(:,:,2)**2 + normal_plasma(:,:,3)**2)
+
 
 end subroutine initPlasma

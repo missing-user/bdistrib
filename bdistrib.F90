@@ -8,9 +8,13 @@ program bdistrib
 
   call readInput()
 
+  ! Define the position vector and normal vector at each grid point for the 3 surfaces:
   call initPlasma()
   call initOuterSurfaces()
   call initCurrentPotentialModes()
+
+  ! Compute the matrices relating current on the outer surface to B_n on the inner surfaces
+  call buildMatrices()
 
   call writeOutput()
 
