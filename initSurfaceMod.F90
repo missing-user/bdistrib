@@ -17,7 +17,7 @@ module initSurfaceMod
 
       implicit none
 
-      integer :: nu, nv, nvl, surface_option
+      integer :: nu, nv, nvl, surface_option, iflag
       real(rprec) :: R_specified, a, separation
       real(rprec), dimension(:), allocatable :: u, v, vl
       real(rprec), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
@@ -29,9 +29,12 @@ module initSurfaceMod
       real(rprec) :: u_rootSolve, rootSolve_abserr, rootSolve_relerr, v_rootSolve_min, v_rootSolve_max
       real(rprec) :: v_rootSolve_target, v_plasma_rootSolveSolution, x_new, y_new, z_new
 
-      allocate(u(nu))
-      allocate(v(nv))
-      allocate(vl(nvl))
+      allocate(u(nu),stat=iflag)
+      if (iflag .ne. 0) stop 'Allocation error!'
+      allocate(v(nv),stat=iflag)
+      if (iflag .ne. 0) stop 'Allocation error!'
+      allocate(vl(nvl),stat=iflag)
+      if (iflag .ne. 0) stop 'Allocation error!'
 
       do i = 1,nu
          u(i) = (i-1.0_rprec)/nu
@@ -46,10 +49,14 @@ module initSurfaceMod
       end do
 
       ! Last dimension is the Cartesian component x, y, or z.
-      allocate(r(nu,nvl,3))
-      allocate(drdu(nu,nvl,3))
-      allocate(drdv(nu,nvl,3))
-      allocate(normal(nu,nvl,3))
+      allocate(r(nu,nvl,3),stat=iflag)
+      if (iflag .ne. 0) stop 'Allocation error!'
+      allocate(drdu(nu,nvl,3),stat=iflag)
+      if (iflag .ne. 0) stop 'Allocation error!'
+      allocate(drdv(nu,nvl,3),stat=iflag)
+      if (iflag .ne. 0) stop 'Allocation error!'
+      allocate(normal(nu,nvl,3),stat=iflag)
+      if (iflag .ne. 0) stop 'Allocation error!'
 
       r = 0
       drdu = 0
@@ -58,6 +65,8 @@ module initSurfaceMod
       select case (surface_option)
       case (0,1)
          ! Torus with circular cross-section
+
+         print *,"  Building a plain circular torus."
 
          if (surface_option==0) then
             R0_to_use = Rmajor
@@ -93,6 +102,8 @@ module initSurfaceMod
          end do
 
       case (2)
+
+         print *,"  Constructing a surface offset from the plasma by ",separation
 
          !rootSolve_abserr = 0
          !rootSolve_relerr = 0
@@ -133,7 +144,8 @@ module initSurfaceMod
       normal(:,:,2) = drdv(:,:,3) * drdu(:,:,1) - drdu(:,:,3) * drdv(:,:,1)
       normal(:,:,3) = drdv(:,:,1) * drdu(:,:,2) - drdu(:,:,1) * drdv(:,:,2)
 
-      allocate(norm_normal(nu, nvl))
+      allocate(norm_normal(nu, nvl),stat=iflag)
+      if (iflag .ne. 0) stop 'Allocation error!'
       norm_normal = sqrt(normal(:,:,1)**2 + normal(:,:,2)**2 + normal(:,:,3)**2)
 
       contains

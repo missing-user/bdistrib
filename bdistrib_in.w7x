@@ -1,14 +1,19 @@
 &bdistrib
-  nu_plasma=41
-  nv_plasma=48
-  nu_middle=20
-  nv_middle=22
-  nu_current=45
-  nv_current=51
+  nu_plasma=8
+  nv_plasma=7
+  nu_middle=5
+  nv_middle=6
+  nu_current=4
+  nv_current=9
   woutFilename='/global/homes/l/landrema/sfincs/equilibria/wout_w7x_standardConfig.nc'
-  surface_option_middle=2
+
+  surface_option_middle=0
   R0_middle = 7.5
+  a_middle = 1.3
   separation_middle = 0.35
-  surface_option_current=2
+
+  surface_option_current=1
+  R0_current = 5.5
+  a_current = 2.5
   separation_current = 0.7
 /

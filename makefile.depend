@@ -2,10 +2,10 @@
 
 OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildMatrices.o expandPlasmaSurface.o fzero.o globalVariables.o \
 	initCurrentPotentialModes.o initOuterSurfaces.o initPlasma.o \
-	initSurfaceMod.o readInput.o writeOutput.o
+	initSurfaceMod.o readInput.o svdMod.o writeOutput.o
 
 # Dependencies:
-bdistrib.o: globalVariables.o
+bdistrib.o: svdMod.o
 buildInductanceMatrixMod.o: globalVariables.o
 buildMatrices.o: globalVariables.o buildInductanceMatrixMod.o
 expandPlasmaSurface.o:
@@ -16,4 +16,5 @@ initOuterSurfaces.o: globalVariables.o initSurfaceMod.o
 initPlasma.o: globalVariables.o
 initSurfaceMod.o: 
 readInput.o: globalVariables.o
+svdMod.o: globalVariables.o
 writeOutput.o: globalVariables.o

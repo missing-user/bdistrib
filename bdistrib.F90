@@ -2,6 +2,8 @@
 
 program bdistrib
 
+  use svdMod
+
   implicit none
 
   print *,"This is BDISTRIB."
@@ -13,8 +15,11 @@ program bdistrib
   call initOuterSurfaces()
   call initCurrentPotentialModes()
 
-  ! Compute the matrices relating current on the outer surface to B_n on the inner surfaces
+  ! Compute the mutual inductance matrices, which relate current on the outer surface to B_n on the inner surfaces:
   call buildMatrices()
+
+  ! Compute SVD of each of the inductance matrices:
+  call svd1()
 
   call writeOutput()
 

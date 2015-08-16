@@ -29,6 +29,8 @@ vl_current = f.variables['vl_current'][()]
 r_plasma  = f.variables['r_plasma'][()]
 r_middle  = f.variables['r_middle'][()]
 r_current = f.variables['r_current'][()]
+svd_s_inductance_plasma = f.variables['svd_s_inductance_plasma'][()]
+svd_s_inductance_middle = f.variables['svd_s_inductance_middle'][()]
 
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
@@ -37,6 +39,19 @@ print "r_plasma.shape: ",r_plasma.shape
 f.close()
 
 #exit(0)
+
+########################################################
+# Plot singular values
+########################################################
+
+fig = plt.figure(2)
+fig.patch.set_facecolor('white')
+
+plt.plot(svd_s_inductance_plasma,'.r',label='Inductance matrix between plasma and current surfaces')
+plt.plot(svd_s_inductance_middle,'.b',label='Inductance matrix between middle and current surfaces')
+plt.legend(fontsize='x-small')
+plt.title('Singular values')
+plt.yscale('log')
 
 ########################################################
 # For 3D plotting, 'close' the arrays in u and v
