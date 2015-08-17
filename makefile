@@ -13,7 +13,7 @@ all: $(TARGET)
 
 include makefile.depend
 
-%.o: %.F90
+%.o: %.f90
 	$(FC) $(EXTRA_COMPILE_FLAGS) -I $(LIBSTELL_DIR) -c $<
 
 %.o: %.f

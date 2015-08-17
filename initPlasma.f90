@@ -1,17 +1,56 @@
 subroutine initPlasma
 
   use globalVariables
-  use read_wout_mod, only: nfp, xm, xn, rmnc, zmns, mnmax, ns
+  use read_wout_mod, only: nfp, xm, xn, rmnc, zmns, mnmax, ns, Rmajor, read_wout_file
   use stel_constants
 
   implicit none
 
-  integer :: i, iu, iv, imn, tic, toc, countrate, iflag
+  integer :: i, iu, iv, imn, tic, toc, countrate, iflag, ierr, iopen
   real(rprec) :: angle, sinangle, cosangle, dsinangledu, dsinangledv, dcosangledu, dcosangledv
   real(rprec) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
 
   call system_clock(tic, countrate)
   print *,"Initializing plasma surface."
+
+  select case (surface_option_plasma)
+  case (0,1)
+     ! Plain circular torus
+     print *,"  Building a plain circular torus."
+
+     nfp = 1
+     mnmax = 2
+     Rmajor = R0_plasma
+     ns = 1
+     allocate(xm(2),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     allocate(xn(2),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     allocate(rmnc(2,1),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     allocate(zmns(2,1),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     xm = (/0,1/)
+     xn = (/0,0/)
+     rmnc(1,1) = R0_plasma
+     rmnc(2,1) = a_plasma
+     zmns(1,1) = 0
+     zmns(2,1) = a_plasma
+     
+  case (2)
+     call read_wout_file(woutFilename, ierr, iopen)
+     if (iopen .ne. 0) stop 'error opening wout in bn_read_vmecf90'
+     if (ierr .ne. 0) stop 'error reading wout in bn_read_vmecf90'
+     print *,"  Successfully read VMEC data from ",woutFilename
+
+  case default
+     print *,"Error! Invalid setting for surface_option_plasma:",surface_option_plasma
+     stop
+  end select
+
+  nvl_plasma = nv_plasma * nfp
+  nvl_middle = nv_middle * nfp
+  nvl_current = nv_current * nfp
 
   allocate(u_plasma(nu_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
@@ -87,6 +126,6 @@ subroutine initPlasma
   norm_normal_plasma = sqrt(normal_plasma(:,:,1)**2 + normal_plasma(:,:,2)**2 + normal_plasma(:,:,3)**2)
   
   call system_clock(toc)
-  print *,"Done. Took ",real(toc-tic)/countrate," sec."
+  print *,"Done initializing plasma surface. Took ",real(toc-tic)/countrate," sec."
 
 end subroutine initPlasma

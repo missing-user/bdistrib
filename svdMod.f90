@@ -79,7 +79,7 @@ contains
     deallocate(A,U,VT,WORK,IWORK)
 
     call system_clock(toc)
-    print *,"Done. Took ",real(toc-tic)/countrate," sec."
+    print *,"Done with SVD. Took ",real(toc-tic)/countrate," sec."
 
     !*************************************************************************
     ! End of section related to the plasma-to-current inductance matrix.
@@ -140,7 +140,7 @@ contains
     deallocate(A,U,VT,WORK,IWORK)
 
     call system_clock(toc)
-    print *,"Done. Took ",real(toc-tic)/countrate," sec."
+    print *,"Done with SVD. Took ",real(toc-tic)/countrate," sec."
 
     !*************************************************************************
     ! End of section related to the middle-to-current inductance matrix.

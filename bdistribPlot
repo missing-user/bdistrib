@@ -48,7 +48,7 @@ fig = plt.figure(2)
 fig.patch.set_facecolor('white')
 
 plt.plot(svd_s_inductance_plasma,'.r',label='Inductance matrix between plasma and current surfaces')
-plt.plot(svd_s_inductance_middle,'.b',label='Inductance matrix between middle and current surfaces')
+plt.plot(svd_s_inductance_middle,'.m',label='Inductance matrix between middle and current surfaces')
 plt.legend(fontsize='x-small')
 plt.title('Singular values')
 plt.yscale('log')

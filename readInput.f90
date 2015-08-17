@@ -1,16 +1,16 @@
 subroutine readInput
 
   use globalVariables
-  use read_wout_mod
 
   implicit none
 
-  integer :: numargs, ierr, iopen
+  integer :: numargs
   character(len=200) :: inputFilename
   integer :: fileUnit, didFileAccessWork
 
   namelist / bdistrib / nu_plasma, nv_plasma, nu_middle, nv_middle, nu_current, nv_current, &
-       surface_option_middle, surface_option_current, R0_middle, R0_current, a_middle, a_current, &
+       surface_option_plasma, surface_option_middle, surface_option_current, &
+       R0_plasma, R0_middle, R0_current, a_plasma, a_middle, a_current, &
        separation_middle, separation_current, woutFilename
 
   ! getcarg is in LIBSTELL
@@ -43,14 +43,5 @@ subroutine readInput
      print *,"Successfully read parameters from bdistrib namelist in ", trim(inputFilename), "."
   end if
   close(unit = fileUnit)
-
-  call read_wout_file(woutFilename, ierr, iopen)
-  if (iopen .ne. 0) stop 'error opening wout in bn_read_vmecf90'
-  if (ierr .ne. 0) stop 'error reading wout in bn_read_vmecf90'
-  print *,"Successfully read VMEC data from ",woutFilename
-
-  nvl_plasma = nv_plasma * nfp
-  nvl_middle = nv_middle * nfp
-  nvl_current = nv_current * nfp
 
 end subroutine readInput
