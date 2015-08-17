@@ -21,14 +21,14 @@ nfp = f.variables['nfp'][()]
 nu_plasma = f.variables['nu_plasma'][()]
 nvl_plasma = f.variables['nvl_plasma'][()]
 nvl_middle = f.variables['nvl_middle'][()]
-nvl_current = f.variables['nvl_current'][()]
+nvl_outer = f.variables['nvl_outer'][()]
 u_plasma = f.variables['u_plasma'][()]
 vl_plasma = f.variables['vl_plasma'][()]
 vl_middle = f.variables['vl_middle'][()]
-vl_current = f.variables['vl_current'][()]
+vl_outer = f.variables['vl_outer'][()]
 r_plasma  = f.variables['r_plasma'][()]
 r_middle  = f.variables['r_middle'][()]
-r_current = f.variables['r_current'][()]
+r_outer = f.variables['r_outer'][()]
 svd_s_inductance_plasma = f.variables['svd_s_inductance_plasma'][()]
 svd_s_inductance_middle = f.variables['svd_s_inductance_middle'][()]
 
@@ -47,8 +47,8 @@ f.close()
 fig = plt.figure(2)
 fig.patch.set_facecolor('white')
 
-plt.plot(svd_s_inductance_plasma,'.r',label='Inductance matrix between plasma and current surfaces')
-plt.plot(svd_s_inductance_middle,'.m',label='Inductance matrix between middle and current surfaces')
+plt.plot(svd_s_inductance_middle,'.m',label='Inductance matrix between middle and outer surfaces')
+plt.plot(svd_s_inductance_plasma,'.r',label='Inductance matrix between plasma and outer surfaces')
 plt.legend(fontsize='x-small')
 plt.title('Singular values')
 plt.yscale('log')
@@ -65,9 +65,9 @@ r_middle  = np.append(r_middle,  r_middle[:,[0],:], axis=1)
 r_middle  = np.append(r_middle,  r_middle[:,:,[0]], axis=2)
 vl_middle = np.append(vl_middle,nfp)
 
-r_current = np.append(r_current, r_current[:,[0],:], axis=1)
-r_current = np.append(r_current, r_current[:,:,[0]], axis=2)
-vl_current = np.append(vl_current,nfp)
+r_outer = np.append(r_outer, r_outer[:,[0],:], axis=1)
+r_outer = np.append(r_outer, r_outer[:,:,[0]], axis=2)
+vl_outer = np.append(vl_outer,nfp)
 
 ########################################################
 # Extract cross-sections of the 3 surfaces at several toroidal angles
@@ -94,7 +94,7 @@ def getCrossSection(rArray, vl_old, v_new):
 v_slices = [0, 0.25, 0.5, 0.75]
 R_slice_plasma, Z_slice_plasma = getCrossSection(r_plasma, vl_plasma, v_slices)
 R_slice_middle, Z_slice_middle = getCrossSection(r_middle, vl_middle, v_slices)
-R_slice_current, Z_slice_current = getCrossSection(r_current, vl_current, v_slices)
+R_slice_outer, Z_slice_outer = getCrossSection(r_outer, vl_outer, v_slices)
 
 ########################################################
 # Now make plot of surfaces at given toroidal angle
@@ -106,17 +106,17 @@ fig.patch.set_facecolor('white')
 numRows = 2
 numCols = 2
 
-Rmin = R_slice_current.min()
-Rmax = R_slice_current.max()
-Zmin = Z_slice_current.min()
-Zmax = Z_slice_current.max()
+Rmin = R_slice_outer.min()
+Rmax = R_slice_outer.max()
+Zmin = Z_slice_outer.min()
+Zmax = Z_slice_outer.max()
 
 for whichPlot in range(4):
     plt.subplot(numRows,numCols,whichPlot+1)
     v = v_slices[whichPlot]
     plt.plot( R_slice_plasma[whichPlot,:],  Z_slice_plasma[whichPlot,:], 'r.-', label='plasma')
     plt.plot( R_slice_middle[whichPlot,:],  Z_slice_middle[whichPlot,:], 'm.-', label='middle')
-    plt.plot(R_slice_current[whichPlot,:], Z_slice_current[whichPlot,:], 'b.-', label='current')
+    plt.plot(R_slice_outer[whichPlot,:], Z_slice_outer[whichPlot,:], 'b.-', label='outer')
     plt.gca().set_aspect('equal',adjustable='box')
     plt.legend(fontsize='x-small')
     plt.title('v='+str(v))
@@ -142,12 +142,12 @@ maxIndex = int(nvl_middle*0.7)
 ax.plot_surface(r_middle[0,:maxIndex,:], r_middle[1,:maxIndex,:], r_middle[2,:maxIndex,:], rstride=1, cstride=1, color='m',linewidth=0)
 #ax.plot_surface(r_middle[0,:maxIndex,:], r_middle[1,:maxIndex,:], r_middle[2,:maxIndex,:], rstride=1, cstride=1, color='m',linewidth=0,antialiased=False)
 
-maxIndex = int(nvl_current*0.55)
-minIndex = int(nvl_current*0.15)
-ax.plot_surface(r_current[0,minIndex:maxIndex,:], r_current[1,minIndex:maxIndex,:], r_current[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0)
-#ax.plot_surface(r_current[0,minIndex:maxIndex,:], r_current[1,minIndex:maxIndex,:], r_current[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0,antialiased=False)
+maxIndex = int(nvl_outer*0.55)
+minIndex = int(nvl_outer*0.15)
+ax.plot_surface(r_outer[0,minIndex:maxIndex,:], r_outer[1,minIndex:maxIndex,:], r_outer[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0)
+#ax.plot_surface(r_outer[0,minIndex:maxIndex,:], r_outer[1,minIndex:maxIndex,:], r_outer[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0,antialiased=False)
 
-plotLMax = r_current.max()
+plotLMax = r_outer.max()
 ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
 #plt.title('Plasma surface')
 
@@ -162,10 +162,10 @@ ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plot
 #fig = plt.figure(3)
 #fig.patch.set_facecolor('white')
 #ax = fig.gca(projection='3d')
-#ax.plot_surface(r_current[0,:,:], r_current[1,:,:], r_current[2,:,:], rstride=1, cstride=1, color='b',linewidth=0,antialiased=False)
-#plotLMax = r_current.max()
+#ax.plot_surface(r_outer[0,:,:], r_outer[1,:,:], r_outer[2,:,:], rstride=1, cstride=1, color='b',linewidth=0,antialiased=False)
+#plotLMax = r_outer.max()
 #ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
-#plt.title('Current surface')
+#plt.title('Outer surface')
 
 
 plt.show()

@@ -1,4 +1,4 @@
-subroutine initOuterSurfaces
+subroutine initOuter2Surfaces
 
   use globalVariables
   use initSurfaceMod
@@ -16,11 +16,11 @@ subroutine initOuterSurfaces
   print *,"Done initializing middle surface. Took ",real(toc-tic)/countrate," sec."
 
   call system_clock(tic)
-  print *,"Initializing current surface."
-  call initSurface(nu_current, nv_current, nvl_current, u_current, v_current, vl_current, &
-       r_current, drdu_current, drdv_current, normal_current, norm_normal_current, &
-       surface_option_current, R0_current, a_current, separation_current)
+  print *,"Initializing outer surface."
+  call initSurface(nu_outer, nv_outer, nvl_outer, u_outer, v_outer, vl_outer, &
+       r_outer, drdu_outer, drdv_outer, normal_outer, norm_normal_outer, &
+       surface_option_outer, R0_outer, a_outer, separation_outer)
   call system_clock(toc)
-  print *,"Done initializing current surface. Took ",real(toc-tic)/countrate," sec."
+  print *,"Done initializing outer surface. Took ",real(toc-tic)/countrate," sec."
 
-end subroutine initOuterSurfaces
+end subroutine initOuter2Surfaces

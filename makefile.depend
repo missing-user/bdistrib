@@ -1,20 +1,23 @@
 # -*- mode: makefile -*-
 
-OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildMatrices.o expandPlasmaSurface.o fzero.o globalVariables.o \
-	initCurrentPotentialModes.o initOuterSurfaces.o initPlasma.o \
-	initSurfaceMod.o readInput.o svdMod.o writeOutput.o
+OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildInductanceMatrices.o buildTransferMatrix.o \
+	expandPlasmaSurface.o fzero.o globalVariables.o \
+	initCurrentPotentialModes.o initOuter2Surfaces.o initPlasma.o \
+	initSurfaceMod.o readInput.o svdInductanceMatrices.o validateInput.o writeOutput.o
 
 # Dependencies:
-bdistrib.o: svdMod.o
+bdistrib.o:
 buildInductanceMatrixMod.o: globalVariables.o
-buildMatrices.o: globalVariables.o buildInductanceMatrixMod.o
+buildInductanceMatrices.o: globalVariables.o buildInductanceMatrixMod.o
+buildTransferMatrix.o: globalVariables.o
 expandPlasmaSurface.o:
 fzero.o: 
 initCurrentPotentialModes.o: globalVariables.o
 globalVariables.o: 
-initOuterSurfaces.o: globalVariables.o initSurfaceMod.o
+initOuter2Surfaces.o: globalVariables.o initSurfaceMod.o
 initPlasma.o: globalVariables.o
 initSurfaceMod.o: 
 readInput.o: globalVariables.o
-svdMod.o: globalVariables.o
+svdInductanceMatrices.o: globalVariables.o
+validateInput.o: globalVariables.o
 writeOutput.o: globalVariables.o

@@ -50,7 +50,7 @@ subroutine initPlasma
 
   nvl_plasma = nv_plasma * nfp
   nvl_middle = nv_middle * nfp
-  nvl_current = nv_current * nfp
+  nvl_outer = nv_outer * nfp
 
   allocate(u_plasma(nu_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'

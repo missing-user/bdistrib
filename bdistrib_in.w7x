@@ -1,23 +1,30 @@
+! For documentation of these input parameters and their default values, see the README.
+
 &bdistrib
-  nu_plasma=16
-  nv_plasma=16
-  nu_middle=16
+  nu_plasma=18
+  nv_plasma=17
+  nu_middle=15
   nv_middle=16
-  nu_current=16
-  nv_current=16
+  nu_outer=14
+  nv_outer=19
 
   surface_option_plasma = 0
-  R0_plasma = 5.0
-  a_plasma = 0.8
+  R0_plasma = 5.5
+  a_plasma = 0.5
   woutFilename='/global/homes/l/landrema/sfincs/equilibria/wout_w7x_standardConfig.nc'
 
   surface_option_middle=0
   R0_middle = 7.5
-  a_middle = 1.3
+  a_middle = 1.0
   separation_middle = 0.35
 
-  surface_option_current=1
-  R0_current = 5.5
-  a_current = 2.5
-  separation_current = 0.7
+  surface_option_outer=1
+  R0_outer = 5.5
+  a_outer = 1.5
+  separation_outer = 0.7
+
+  pseudoinverse_thresholds = 1e-1 1e-2 1e-10
+
+  save_level=0
+  n_singular_vectors_to_save = 6
 /

@@ -6,12 +6,14 @@ subroutine readInput
 
   integer :: numargs
   character(len=200) :: inputFilename
-  integer :: fileUnit, didFileAccessWork
+  integer :: fileUnit, didFileAccessWork, i
+  integer, parameter :: uninitialized = -9999
 
-  namelist / bdistrib / nu_plasma, nv_plasma, nu_middle, nv_middle, nu_current, nv_current, &
-       surface_option_plasma, surface_option_middle, surface_option_current, &
-       R0_plasma, R0_middle, R0_current, a_plasma, a_middle, a_current, &
-       separation_middle, separation_current, woutFilename
+  namelist / bdistrib / nu_plasma, nv_plasma, nu_middle, nv_middle, nu_outer, nv_outer, &
+       surface_option_plasma, surface_option_middle, surface_option_outer, &
+       R0_plasma, R0_middle, R0_outer, a_plasma, a_middle, a_outer, &
+       separation_middle, separation_outer, woutFilename, pseudoinverse_thresholds, &
+       save_level, n_singular_vectors_to_save
 
   ! getcarg is in LIBSTELL
   call getcarg(1, inputFilename, numargs)
@@ -28,6 +30,10 @@ subroutine readInput
 
   outputFilename = "bdistrib_out" // trim(inputFilename(12:)) // ".nc"
 
+  pseudoinverse_thresholds = uninitialized
+  ! Default: a single threshold
+  pseudoinverse_thresholds(1) = 1e-10
+
   fileUnit=11
   open(unit=fileUnit, file=inputFilename, action="read", status="old", iostat=didFileAccessWork)
   if (didFileAccessWork /= 0) then
@@ -43,5 +49,12 @@ subroutine readInput
      print *,"Successfully read parameters from bdistrib namelist in ", trim(inputFilename), "."
   end if
   close(unit = fileUnit)
+
+  do i=1,nmax_pseudoinverse_thresholds
+     if (pseudoinverse_thresholds(i) == uninitialized) then
+        n_pseudoinverse_thresholds = i-1
+        exit
+     end if
+  end do
 
 end subroutine readInput

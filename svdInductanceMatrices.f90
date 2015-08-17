@@ -1,155 +1,160 @@
-module svdMod
+! Documentation of LAPACK's SVD subroutine DGESDD is copied at the end of this file for convenience.
+subroutine svdInductanceMatrices()
+  ! This subroutine finds the singular values of the two inductance matrices
 
-  ! Documentation of LAPACK's SVD subroutine DGESDD is copied at the end of this file for convenience.
-
-  implicit none
-
-contains
-
-  subroutine svd1()
-    ! This subroutine finds the singular values of the two inductance matrices
-
-    use globalVariables, only: inductance_plasma, inductance_middle, &
-         nu_plasma, nv_plasma, nu_middle, nv_middle, nu_current, nv_current, &
-         n_singular_values_inductance_plasma, n_singular_values_inductance_middle, &
-         svd_s_inductance_plasma, svd_s_inductance_middle
-
-    use stel_kinds
-
-    implicit none
-
-    character :: JOBZ
-    integer :: INFO, LDA, LDU, LDVT, LWORK, M, N, iflag, tic, toc, countrate
-    real(rprec), dimension(:,:), allocatable :: A, U, VT
-    real(rprec), dimension(:), allocatable :: WORK
-    integer, dimension(:), allocatable :: IWORK
-
-    !*************************************************************************
-    ! Beginning of section related to the plasma-to-current inductance matrix.
-    !*************************************************************************
-
-    print *,"Beginning SVD of the inductance matrix between the plasma and current surfaces."
-    call system_clock(tic,countrate)
-
-    JOBZ='N'  ! For now compute none of the singular vectors. We could change this.
-    M = nu_plasma*nv_plasma
-    N = nu_current*nv_current
-    LDA = M
-    LDU = M
-    LDVT = N
-    ! This next formula comes from the LAPACK documentation at the end of the file.
-    LWORK = max( 3*min(M,N) + max(max(M,N),7*min(M,N)), &
-         3*min(M,N) + max(max(M,N),5*min(M,N)*min(M,N)+4*min(M,N)), &
-         min(M,N)*(6+4*min(M,N))+max(M,N))
-
-    allocate(WORK(LWORK),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-    allocate(IWORK(8*min(M,N)),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-
-    n_singular_values_inductance_plasma = min(M,N)
-    allocate(svd_s_inductance_plasma(n_singular_values_inductance_plasma),stat=iflag)
-    
-    ! Matrix is destroyed by LAPACK, so make a copy:
-    allocate(A(M,N),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-    A = inductance_plasma
-
-    allocate(U(M,M),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-    allocate(VT(N,N),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-
-    ! Call LAPACK to do the SVD:
-    call DGESDD(JOBZ, M, N, A, LDA, svd_s_inductance_plasma, U, LDU, VT, LDVT, WORK, LWORK, IWORK, INFO)
-
-    if (INFO==0) then
-       print *,"SVD (DGESDD) successful."
-       if (n_singular_values_inductance_plasma<5) then
-          print *,"Singular values:",svd_s_inductance_plasma
-       else
-          print *,"First 5 singular values:",svd_s_inductance_plasma(1:5)
-       end if
-    else if (INFO>0) then
-       print *,"Error in SVD (DGESDD): Did not converge."
-    else
-       print *,"Error in SVD (DGESDD): Argument",INFO," was invalid."
-    end if
-
-    deallocate(A,U,VT,WORK,IWORK)
-
-    call system_clock(toc)
-    print *,"Done with SVD. Took ",real(toc-tic)/countrate," sec."
-
-    !*************************************************************************
-    ! End of section related to the plasma-to-current inductance matrix.
-    !*************************************************************************
-
-    !*************************************************************************
-    ! Beginning of section related to the middle-to-current inductance matrix.
-    !*************************************************************************
-
-    print *,"Beginning SVD of the inductance matrix between the middle and current surfaces."
-    call system_clock(tic,countrate)
-
-    JOBZ='A'
-    M = nu_middle*nv_middle
-    N = nu_current*nv_current
-    LDA = M
-    LDU = M
-    LDVT = N
-    ! This next formula comes from the LAPACK documentation at the end of the file.
-    LWORK = max( 3*min(M,N) + max(max(M,N),7*min(M,N)), &
-         3*min(M,N) + max(max(M,N),5*min(M,N)*min(M,N)+4*min(M,N)), &
-         min(M,N)*(6+4*min(M,N))+max(M,N))
-
-    allocate(WORK(LWORK),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-    allocate(IWORK(8*min(M,N)),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-
-    n_singular_values_inductance_middle = min(M,N)
-    allocate(svd_s_inductance_middle(n_singular_values_inductance_middle),stat=iflag)
-    
-    ! Matrix is destroyed by LAPACK, so make a copy:
-    allocate(A(M,N),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-    A = inductance_middle
-
-    allocate(U(M,M),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-    allocate(VT(N,N),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-
-    ! Call LAPACK to do the SVD:
-    call DGESDD(JOBZ, M, N, A, LDA, svd_s_inductance_middle, U, LDU, VT, LDVT, WORK, LWORK, IWORK, INFO)
-
-    if (INFO==0) then
-       print *,"SVD (DGESDD) successful."
-       if (n_singular_values_inductance_middle<5) then
-          print *,"Singular values:",svd_s_inductance_middle
-       else
-          print *,"First 5 singular values:",svd_s_inductance_middle(1:5)
-       end if
-    else if (INFO>0) then
-       print *,"Error in SVD (DGESDD): Did not converge."
-    else
-       print *,"Error in SVD (DGESDD): Argument",INFO," was invalid."
-    end if
-
-    deallocate(A,U,VT,WORK,IWORK)
-
-    call system_clock(toc)
-    print *,"Done with SVD. Took ",real(toc-tic)/countrate," sec."
-
-    !*************************************************************************
-    ! End of section related to the middle-to-current inductance matrix.
-    !*************************************************************************
+  use globalVariables, only: inductance_plasma, inductance_middle, &
+       nu_plasma, nv_plasma, nu_middle, nv_middle, nu_outer, nv_outer, &
+       n_singular_values_inductance_plasma, n_singular_values_inductance_middle, &
+       svd_s_inductance_plasma, svd_s_inductance_middle, &
+       svd_uT_inductance_middle, svd_v_inductance_middle
   
+  use stel_kinds
+  
+  implicit none
+  
+  character :: JOBZ
+  integer :: INFO, LDA, LDU, LDVT, LWORK, M, N, iflag, tic, toc, countrate
+  real(rprec), dimension(:,:), allocatable :: A, U, VT
+  real(rprec), dimension(:), allocatable :: WORK
+  integer, dimension(:), allocatable :: IWORK
+  
+  !*************************************************************************
+  ! Beginning of section related to the plasma-to-outer inductance matrix.
+  !*************************************************************************
+  
+  print *,"Beginning SVD of the inductance matrix between the plasma and outer surfaces."
+  call system_clock(tic,countrate)
+  
+  JOBZ='N'  ! For now compute none of the singular vectors. We could change this.
+  M = nu_plasma*nv_plasma
+  N = nu_outer*nv_outer
+  LDA = M
+  LDU = M
+  LDVT = N
+  ! This next formula comes from the LAPACK documentation at the end of the file.
+  LWORK = max( 3*min(M,N) + max(max(M,N),7*min(M,N)), &
+       3*min(M,N) + max(max(M,N),5*min(M,N)*min(M,N)+4*min(M,N)), &
+       min(M,N)*(6+4*min(M,N))+max(M,N))
+  
+  allocate(WORK(LWORK),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(IWORK(8*min(M,N)),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  
+  n_singular_values_inductance_plasma = min(M,N)
+  allocate(svd_s_inductance_plasma(n_singular_values_inductance_plasma),stat=iflag)
+  
+  ! Matrix is destroyed by LAPACK, so make a copy:
+  allocate(A(M,N),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  A = inductance_plasma
+  
+  allocate(U(M,M),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(VT(N,N),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  
+  ! Call LAPACK to do the SVD:
+  call DGESDD(JOBZ, M, N, A, LDA, svd_s_inductance_plasma, U, LDU, VT, LDVT, WORK, LWORK, IWORK, INFO)
+  
+  if (INFO==0) then
+     print *,"SVD (DGESDD) successful."
+     if (n_singular_values_inductance_plasma<5) then
+        print *,"Singular values:",svd_s_inductance_plasma
+     else
+        print *,"First 5 singular values:",svd_s_inductance_plasma(1:5)
+        print *,"Last 5 singular values:", &
+             svd_s_inductance_plasma(n_singular_values_inductance_plasma-4:n_singular_values_inductance_plasma)
+     end if
+  else if (INFO>0) then
+     print *,"Error in SVD (DGESDD): Did not converge."
+  else
+     print *,"Error in SVD (DGESDD): Argument",INFO," was invalid."
+  end if
+  
+  deallocate(A,U,VT,WORK,IWORK)
+  
+  call system_clock(toc)
+  print *,"Done with SVD. Took ",real(toc-tic)/countrate," sec."
+  
+  !*************************************************************************
+  ! End of section related to the plasma-to-outer inductance matrix.
+  !*************************************************************************
+  
+  !*************************************************************************
+  ! Beginning of section related to the middle-to-outer inductance matrix.
+  !*************************************************************************
+  
+  print *,"Beginning SVD of the inductance matrix between the middle and outer surfaces."
+  call system_clock(tic,countrate)
+  
+  JOBZ='A'  ! For the middle-outer inductance matrix, we need all the singular vectors.
+  M = nu_middle*nv_middle
+  N = nu_outer*nv_outer
+  LDA = M
+  LDU = M
+  LDVT = N
+  ! This next formula comes from the LAPACK documentation at the end of the file.
+  LWORK = max( 3*min(M,N) + max(max(M,N),7*min(M,N)), &
+       3*min(M,N) + max(max(M,N),5*min(M,N)*min(M,N)+4*min(M,N)), &
+       min(M,N)*(6+4*min(M,N))+max(M,N))
+  
+  allocate(WORK(LWORK),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(IWORK(8*min(M,N)),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  
+  n_singular_values_inductance_middle = min(M,N)
+  allocate(svd_s_inductance_middle(n_singular_values_inductance_middle),stat=iflag)
+  
+  ! Matrix is destroyed by LAPACK, so make a copy:
+  allocate(A(M,N),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  A = inductance_middle
+  
+  allocate(U(M,M),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(VT(N,N),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(svd_uT_inductance_middle(M,M),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(svd_v_inductance_middle(N,N),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  
+  ! Call LAPACK to do the SVD:
+  call DGESDD(JOBZ, M, N, A, LDA, svd_s_inductance_middle, U, LDU, &
+       VT, LDVT, WORK, LWORK, IWORK, INFO)
+  
+  if (INFO==0) then
+     print *,"SVD (DGESDD) successful."
+     if (n_singular_values_inductance_middle<5) then
+        print *,"Singular values:",svd_s_inductance_middle
+     else
+        print *,"First 5 singular values:",svd_s_inductance_middle(1:5)
+        print *,"Last 5 singular values:", &
+             svd_s_inductance_middle(n_singular_values_inductance_middle-4:n_singular_values_inductance_middle)
+     end if
+  else if (INFO>0) then
+     print *,"Error in SVD (DGESDD): Did not converge."
+  else
+     print *,"Error in SVD (DGESDD): Argument",INFO," was invalid."
+  end if
+  
+  svd_uT_inductance_middle = transpose(U)
+  svd_v_inductance_middle = transpose(VT)
+  deallocate(A,U,VT,WORK,IWORK)
+  
+  call system_clock(toc)
+  print *,"Done with SVD. Took ",real(toc-tic)/countrate," sec."
+  
+  !*************************************************************************
+  ! End of section related to the middle-to-outer inductance matrix.
+  !*************************************************************************
+  
+  
+end subroutine svdInductanceMatrices
 
-  end subroutine svd1
 
-end module svdMod
 
     ! Here is the LAPACK documentation for the relevant SVD subroutine:
 

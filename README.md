@@ -1,6 +1,6 @@
 # bdistrib
 
-There are 3 surfaces, named 'plasma', 'middle', and 'current',
+There are 3 surfaces, named 'plasma', 'middle', and 'outer',
 The 'plasma' surface corresponds to the outermost surface of the VMEC equilibrium.
 The name of the relevant surface appears as a suffix on most variables.
 
@@ -32,6 +32,14 @@ must be positive, rather than non-negative as in VMEC. This difference arises be
 the current potential is only defined up to a constant, so we force the constant mode to be zero.
 
 
+Parameter: save_level
+Type: int
+Default: 1
+When it matters:
+Description: How much information to save in the .nc output file.
+  0: Save everything
+  1: Save everything but the interpolation matrices
+
 Parameter: nu_plasma
 Type: int
 Default: 16
@@ -44,14 +52,14 @@ Default: 32
 When it matters: always
 Description: Number of grid points in the toroidal direction (per period) on the plasma surface
 
-Parameter: surface_option_current
+Parameter: surface_option_outer
 Type: int
 Default: 0
 When it matters: always
 Description:
- 0 - The current surface will be a torus. The major radius will be Rmajor_p from the wout file.
-     The minor radius will be a_current.
- 1 - Same as option 0, except the major radius will be R_current.
- 2 - The current surface will computing by expanding the plasma LCFS uniformly by a distance separation_current.
+ 0 - The outer surface will be a torus. The major radius will be Rmajor_p from the wout file.
+     The minor radius will be a_outer.
+ 1 - Same as option 0, except the major radius will be R_outer.
+ 2 - The outer surface will computing by expanding the plasma LCFS uniformly by a distance separation_outer.
 
 
