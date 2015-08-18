@@ -6,16 +6,16 @@ subroutine expandPlasmaSurface(u, v, separation, x,y,z)
 
   implicit none
 
-  real(rprec), intent(in) :: u,v,separation
-  real(rprec), intent(out) :: x,y,z
+  real(dp), intent(in) :: u,v,separation
+  real(dp), intent(out) :: x,y,z
 
   integer :: imn
-  real(rprec) :: dxdu, dxdv, dydu, dydv, dzdu, dzdv
-  real(rprec) :: angle, sinangle, cosangle
-  real(rprec) :: dsinangledu, dsinangledv, dcosangledu, dcosangledv
-  real(rprec) :: phi, sinphi, cosphi
-  real(rprec) :: dsinphidv, dcosphidv
-  real(rprec) :: normal_x, normal_y, normal_z, normal_abs
+  real(dp) :: dxdu, dxdv, dydu, dydv, dzdu, dzdv
+  real(dp) :: angle, sinangle, cosangle
+  real(dp) :: dsinangledu, dsinangledv, dcosangledu, dcosangledv
+  real(dp) :: phi, sinphi, cosphi
+  real(dp) :: dsinphidv, dcosphidv
+  real(dp) :: normal_x, normal_y, normal_z, normal_abs
 
   x=0
   y=0

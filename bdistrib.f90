@@ -2,7 +2,8 @@
 
 program bdistrib
 
-  use globalVariables, only: allSVDsSucceeded
+  use globalVariables
+  use initFourierModesMod
 
   implicit none
 
@@ -18,8 +19,9 @@ program bdistrib
   call initPlasma()
   call initOuter2Surfaces()
 
-  ! This next subroutine is not used yet.
-  call initCurrentPotentialModes()
+  call initFourierModes(mpol_plasma, ntor_plasma, mnmax_plasma, xm_plasma, xn_plasma)
+  call initFourierModes(mpol_middle, ntor_middle, mnmax_middle, xm_middle, xn_middle)
+  call initFourierModes(mpol_outer, ntor_outer, mnmax_outer, xm_outer, xn_outer)
 
   ! Compute the mutual inductance matrices, which relate current on the outer surface to B_n on the inner surfaces:
   call buildInductanceMatrices()

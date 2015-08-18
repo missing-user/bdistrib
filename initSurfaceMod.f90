@@ -9,7 +9,7 @@ module initSurfaceMod
 
     subroutine initSurface(nu, nv, nvl, u, v, vl, &
          r, drdu, drdv, normal, norm_normal, &
-         surface_option, R_specified, a, separation)
+         surface_option, R_specified, a, separation, du, dv)
 
       use read_wout_mod
       use stel_kinds
@@ -18,16 +18,16 @@ module initSurfaceMod
       implicit none
 
       integer :: nu, nv, nvl, surface_option, iflag
-      real(rprec) :: R_specified, a, separation
-      real(rprec), dimension(:), allocatable :: u, v, vl
-      real(rprec), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
-      real(rprec), dimension(:,:), allocatable :: norm_normal
-      real(rprec) :: R0_to_use
-      real(rprec) :: angle, sinangle, cosangle, dsinangledu, dcosangledu
-      real(rprec) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
+      real(dp) :: R_specified, a, separation, du, dv
+      real(dp), dimension(:), allocatable :: u, v, vl
+      real(dp), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
+      real(dp), dimension(:,:), allocatable :: norm_normal
+      real(dp) :: R0_to_use
+      real(dp) :: angle, sinangle, cosangle, dsinangledu, dcosangledu
+      real(dp) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
       integer :: i, iu, iv, fzeroFlag
-      real(rprec) :: u_rootSolve, rootSolve_abserr, rootSolve_relerr, v_rootSolve_min, v_rootSolve_max
-      real(rprec) :: v_rootSolve_target, v_plasma_rootSolveSolution, x_new, y_new, z_new
+      real(dp) :: u_rootSolve, rootSolve_abserr, rootSolve_relerr, v_rootSolve_min, v_rootSolve_max
+      real(dp) :: v_rootSolve_target, v_plasma_rootSolveSolution, x_new, y_new, z_new
 
       allocate(u(nu),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
@@ -37,16 +37,19 @@ module initSurfaceMod
       if (iflag .ne. 0) stop 'Allocation error!'
 
       do i = 1,nu
-         u(i) = (i-1.0_rprec)/nu
+         u(i) = (i-1.0_dp)/nu
       end do
 
       do i = 1,nv
-         v(i) = (i-1.0_rprec)/nv
+         v(i) = (i-1.0_dp)/nv
       end do
 
       do i = 1,nvl
-         vl(i) = (i-1.0_rprec)/nv
+         vl(i) = (i-1.0_dp)/nv
       end do
+
+      du = u(2)-u(1)
+      dv = v(2)-v(1)
 
       ! Last dimension is the Cartesian component x, y, or z.
       allocate(r(nu,nvl,3),stat=iflag)
@@ -107,8 +110,8 @@ module initSurfaceMod
 
          !rootSolve_abserr = 0
          !rootSolve_relerr = 0
-         rootSolve_abserr = 1.0e-10_rprec
-         rootSolve_relerr = 1.0e-10_rprec
+         rootSolve_abserr = 1.0e-10_dp
+         rootSolve_relerr = 1.0e-10_dp
          do iu = 1,nu
             u_rootSolve = u(iu)
             do iv = 1,nvl
@@ -154,16 +157,16 @@ module initSurfaceMod
 
           implicit none
 
-          real(rprec) :: v_plasma_test, fzero_residual
-          real(rprec) :: x_outer, y_outer, z_outer, v_outer_new, v_error
+          real(dp) :: v_plasma_test, fzero_residual
+          real(dp) :: x_outer, y_outer, z_outer, v_outer_new, v_error
 
           call expandPlasmaSurface(u_rootSolve, v_plasma_test, separation, x_outer, y_outer, z_outer)
           v_outer_new = atan2(y_outer,x_outer)*nfp/twopi
           v_error = v_outer_new - v_rootSolve_target
-          if (v_error < -nfp/2.0_rprec) then
+          if (v_error < -nfp/2.0_dp) then
              v_error = v_error + nfp
           end if
-          if (v_error > nfp/2.0_rprec) then
+          if (v_error > nfp/2.0_dp) then
              v_error = v_error - nfp
           end if
           fzero_residual = v_error

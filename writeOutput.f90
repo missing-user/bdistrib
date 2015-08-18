@@ -48,11 +48,21 @@ subroutine writeOutput
        vn_norm_normal_plasma  = "norm_normal_plasma", &
        vn_norm_normal_middle  = "norm_normal_middle", &
        vn_norm_normal_outer = "norm_normal_outer", &
-       vn_currentPotential_mpol = "currentPotential_mpol", &
-       vn_currentPotential_ntor = "currentPotential_ntor", &
-       vn_currentPotential_mnmax = "currentPotential_mnmax", &
-       vn_currentPotential_xm = "currentPotential_xm", &
-       vn_currentPotential_xn = "currentPotential_xn", &
+       vn_mpol_plasma = "mpol_plasma", &
+       vn_ntor_plasma = "ntor_plasma", &
+       vn_mnmax_plasma = "mnmax_plasma", &
+       vn_xm_plasma = "xm_plasma", &
+       vn_xn_plasma = "xn_plasma", &
+       vn_mpol_middle = "mpol_middle", &
+       vn_ntor_middle = "ntor_middle", &
+       vn_mnmax_middle = "mnmax_middle", &
+       vn_xm_middle = "xm_middle", &
+       vn_xn_middle = "xn_middle", &
+       vn_mpol_outer = "mpol_outer", &
+       vn_ntor_outer = "ntor_outer", &
+       vn_mnmax_outer = "mnmax_outer", &
+       vn_xm_outer = "xm_outer", &
+       vn_xn_outer = "xn_outer", &
        vn_inductance_plasma = "inductance_plasma", &
        vn_inductance_middle = "inductance_middle", &
        vn_n_singular_values_inductance_plasma = "n_singular_values_inductance_plasma", &
@@ -79,7 +89,9 @@ subroutine writeOutput
        nu_outer_dim = (/'nu_outer'/), &
        nv_outer_dim = (/'nv_outer'/), &
        nvl_outer_dim = (/'nvl_outer'/), &
-       currentPotential_mnmax_dim = (/'currentPotential_mnmax'/), &
+       mnmax_plasma_dim = (/'mnmax_plasma'/), &
+       mnmax_middle_dim = (/'mnmax_middle'/), &
+       mnmax_outer_dim = (/'mnmax_outer'/), &
        n_singular_values_inductance_plasma_dim = (/'n_singular_values_inductance_plasma'/), &
        n_singular_values_inductance_middle_dim = (/'n_singular_values_inductance_middle'/), &
        n_pseudoinverse_thresholds_dim = (/'n_pseudoinverse_thresholds'/)
@@ -89,19 +101,23 @@ subroutine writeOutput
        u_vl_plasma_dim = (/'nu_plasma','nvl_plasma'/), &
        u_vl_middle_dim = (/'nu_middle','nvl_middle'/), &
        u_vl_outer_dim = (/'nu_outer','nvl_outer'/), &
-       u_v_uprime_vprime_plasma_dim = (/'nu_nv_plasma','nu_nv_outer'/),&
-       u_v_uprime_vprime_middle_dim = (/'nu_nv_middle','nu_nv_outer'/), &
+       mnmax_plasma_outer_dim = (/'mnmax_plasma','mnmax_outer'/), &
+       mnmax_middle_outer_dim = (/'mnmax_middle','mnmax_outer'/), &
        n_singular_values_thresholds_dim = &
             (/'n_singular_values_transferMatrix','n_pseudoinverse_thresholds'/)
 !       uvl_plasma_dim = (/'nvl_plasma','nu_plasma'/)
+!       u_v_uprime_vprime_plasma_dim = (/'nu_nv_plasma','nu_nv_outer'/),&
+!       u_v_uprime_vprime_middle_dim = (/'nu_nv_middle','nu_nv_outer'/), &
 
   ! Arrays with dimension 3:
   character(len=*), parameter, dimension(3) :: &
        u_vl_xyz_plasma_dim  = (/'nu_plasma' ,'nvl_plasma' ,'xyz'/), &
        u_vl_xyz_middle_dim  = (/'nu_middle' ,'nvl_middle' ,'xyz'/), &
        u_vl_xyz_outer_dim = (/'nu_outer','nvl_outer','xyz'/), &
-       u_v_plasma_nsave_thresholds_dim = (/'nu_nv_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
-       u_v_middle_nsave_thresholds_dim = (/'nu_nv_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/)
+       mnmax_plasma_nsave_thresholds_dim = (/'mnmax_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
+       mnmax_middle_nsave_thresholds_dim = (/'mnmax_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/)
+!       u_v_plasma_nsave_thresholds_dim = (/'nu_nv_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
+!       u_v_middle_nsave_thresholds_dim = (/'nu_nv_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/)
 
   call cdf_open(ncid,outputFilename,'w',ierr)
   IF (ierr .ne. 0) then
@@ -124,9 +140,15 @@ subroutine writeOutput
   call cdf_define(ncid, vn_nu_outer, nu_outer)
   call cdf_define(ncid, vn_nv_outer, nv_outer)
   call cdf_define(ncid, vn_nvl_outer, nvl_outer)
-  call cdf_define(ncid, vn_currentPotential_mpol, currentPotential_mpol)
-  call cdf_define(ncid, vn_currentPotential_ntor, currentPotential_ntor)
-  call cdf_define(ncid, vn_currentPotential_mnmax, currentPotential_mnmax)
+  call cdf_define(ncid, vn_mpol_plasma, mpol_plasma)
+  call cdf_define(ncid, vn_ntor_plasma, ntor_plasma)
+  call cdf_define(ncid, vn_mnmax_plasma, mnmax_plasma)
+  call cdf_define(ncid, vn_mpol_middle, mpol_middle)
+  call cdf_define(ncid, vn_ntor_middle, ntor_middle)
+  call cdf_define(ncid, vn_mnmax_middle, mnmax_middle)
+  call cdf_define(ncid, vn_mpol_outer, mpol_outer)
+  call cdf_define(ncid, vn_ntor_outer, ntor_outer)
+  call cdf_define(ncid, vn_mnmax_outer, mnmax_outer)
   call cdf_define(ncid, vn_n_singular_values_inductance_plasma, n_singular_values_inductance_plasma)
   call cdf_define(ncid, vn_n_singular_values_inductance_middle, n_singular_values_inductance_middle)
   call cdf_define(ncid, vn_n_pseudoinverse_thresholds, n_pseudoinverse_thresholds)
@@ -143,8 +165,12 @@ subroutine writeOutput
   call cdf_define(ncid, vn_u_outer, u_outer, dimname=nu_outer_dim)
   call cdf_define(ncid, vn_v_outer, v_outer, dimname=nv_outer_dim)
   call cdf_define(ncid, vn_vl_outer, vl_outer, dimname=nvl_outer_dim)
-  call cdf_define(ncid, vn_currentPotential_xm, currentPotential_xm, dimname=currentPotential_mnmax_dim)
-  call cdf_define(ncid, vn_currentPotential_xn, currentPotential_xn, dimname=currentPotential_mnmax_dim)
+  call cdf_define(ncid, vn_xm_plasma, xm_plasma, dimname=mnmax_plasma_dim)
+  call cdf_define(ncid, vn_xn_plasma, xn_plasma, dimname=mnmax_plasma_dim)
+  call cdf_define(ncid, vn_xm_middle, xm_middle, dimname=mnmax_middle_dim)
+  call cdf_define(ncid, vn_xn_middle, xn_middle, dimname=mnmax_middle_dim)
+  call cdf_define(ncid, vn_xm_outer, xm_outer, dimname=mnmax_outer_dim)
+  call cdf_define(ncid, vn_xn_outer, xn_outer, dimname=mnmax_outer_dim)
   call cdf_define(ncid, vn_svd_s_inductance_plasma, svd_s_inductance_plasma, dimname=n_singular_values_inductance_plasma_dim)
   call cdf_define(ncid, vn_svd_s_inductance_middle, svd_s_inductance_middle, dimname=n_singular_values_inductance_middle_dim)
   call cdf_define(ncid, vn_pseudoinverse_thresholds, &
@@ -157,8 +183,8 @@ subroutine writeOutput
   call cdf_define(ncid, vn_norm_normal_middle,  norm_normal_middle,  dimname=u_vl_middle_dim)
   call cdf_define(ncid, vn_norm_normal_outer,  norm_normal_outer,  dimname=u_vl_outer_dim)
   if (save_level<1) then
-     call cdf_define(ncid, vn_inductance_plasma, inductance_plasma, dimname=u_v_uprime_vprime_plasma_dim)
-     call cdf_define(ncid, vn_inductance_middle, inductance_middle, dimname=u_v_uprime_vprime_middle_dim)
+     call cdf_define(ncid, vn_inductance_plasma, inductance_plasma, dimname=mnmax_plasma_outer_dim)
+     call cdf_define(ncid, vn_inductance_middle, inductance_middle, dimname=mnmax_middle_outer_dim)
   end if
   call cdf_define(ncid, vn_svd_s_transferMatrix, svd_s_transferMatrix, dimname=n_singular_values_thresholds_dim)
 
@@ -180,8 +206,8 @@ subroutine writeOutput
   call cdf_define(ncid, vn_normal_middle,  normal_middle,  dimname=u_vl_xyz_middle_dim)
   call cdf_define(ncid, vn_normal_outer, normal_outer, dimname=u_vl_xyz_outer_dim)
 
-  call cdf_define(ncid, vn_svd_u_transferMatrix, svd_u_transferMatrix, dimname=u_v_plasma_nsave_thresholds_dim)
-  call cdf_define(ncid, vn_svd_v_transferMatrix, svd_v_transferMatrix, dimname=u_v_middle_nsave_thresholds_dim)
+  call cdf_define(ncid, vn_svd_u_transferMatrix, svd_u_transferMatrix, dimname=mnmax_plasma_nsave_thresholds_dim)
+  call cdf_define(ncid, vn_svd_v_transferMatrix, svd_v_transferMatrix, dimname=mnmax_middle_nsave_thresholds_dim)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
   ! Done with cdf_define calls. Now write the data.
@@ -202,9 +228,15 @@ subroutine writeOutput
   call cdf_write(ncid, vn_nu_outer, nu_outer)
   call cdf_write(ncid, vn_nv_outer, nv_outer)
   call cdf_write(ncid, vn_nvl_outer, nvl_outer)
-  call cdf_write(ncid, vn_currentPotential_mpol, currentPotential_mpol)
-  call cdf_write(ncid, vn_currentPotential_ntor, currentPotential_ntor)
-  call cdf_write(ncid, vn_currentPotential_mnmax, currentPotential_mnmax)
+  call cdf_write(ncid, vn_mpol_plasma, mpol_plasma)
+  call cdf_write(ncid, vn_ntor_plasma, ntor_plasma)
+  call cdf_write(ncid, vn_mnmax_plasma, mnmax_plasma)
+  call cdf_write(ncid, vn_mpol_middle, mpol_middle)
+  call cdf_write(ncid, vn_ntor_middle, ntor_middle)
+  call cdf_write(ncid, vn_mnmax_middle, mnmax_middle)
+  call cdf_write(ncid, vn_mpol_outer, mpol_outer)
+  call cdf_write(ncid, vn_ntor_outer, ntor_outer)
+  call cdf_write(ncid, vn_mnmax_outer, mnmax_outer)
   call cdf_write(ncid, vn_n_singular_values_inductance_plasma, n_singular_values_inductance_plasma)
   call cdf_write(ncid, vn_n_singular_values_inductance_middle, n_singular_values_inductance_middle)
   call cdf_write(ncid, vn_n_pseudoinverse_thresholds, n_pseudoinverse_thresholds)
@@ -221,8 +253,12 @@ subroutine writeOutput
   call cdf_write(ncid, vn_u_outer, u_outer)
   call cdf_write(ncid, vn_v_outer, v_outer)
   call cdf_write(ncid, vn_vl_outer, vl_outer)
-  call cdf_write(ncid, vn_currentPotential_xm, currentPotential_xm)
-  call cdf_write(ncid, vn_currentPotential_xn, currentPotential_xn)
+  call cdf_write(ncid, vn_xm_plasma, xm_plasma)
+  call cdf_write(ncid, vn_xn_plasma, xn_plasma)
+  call cdf_write(ncid, vn_xm_middle, xm_middle)
+  call cdf_write(ncid, vn_xn_middle, xn_middle)
+  call cdf_write(ncid, vn_xm_outer, xm_outer)
+  call cdf_write(ncid, vn_xn_outer, xn_outer)
   call cdf_write(ncid, vn_svd_s_inductance_plasma, svd_s_inductance_plasma)
   call cdf_write(ncid, vn_svd_s_inductance_middle, svd_s_inductance_middle)
   call cdf_write(ncid, vn_pseudoinverse_thresholds, &

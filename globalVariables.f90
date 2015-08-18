@@ -30,8 +30,13 @@ module globalVariables
 
   real(dp), dimension(:,:), allocatable :: norm_normal_plasma, norm_normal_middle, norm_normal_outer
 
-  integer :: currentPotential_mnmax, currentPotential_mpol=4, currentPotential_ntor=4
-  integer, dimension(:), allocatable :: currentPotential_xm, currentPotential_xn
+  real(dp) :: du_plasma, dv_plasma, du_middle, dv_middle, du_outer, dv_outer
+
+  integer :: mpol_plasma=8, mpol_middle=8, mpol_outer=8
+  integer :: ntor_plasma=8, ntor_middle=8, ntor_outer=8
+  integer :: mnmax_plasma, mnmax_middle, mnmax_outer
+  integer, dimension(:), allocatable :: xm_plasma, xm_middle, xm_outer
+  integer, dimension(:), allocatable :: xn_plasma, xn_middle, xn_outer
 
   real(dp), dimension(:,:), allocatable :: inductance_plasma, inductance_middle
 

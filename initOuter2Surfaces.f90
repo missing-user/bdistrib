@@ -11,7 +11,7 @@ subroutine initOuter2Surfaces
   print *,"Initializing middle surface."
   call initSurface(nu_middle, nv_middle, nvl_middle, u_middle, v_middle, vl_middle, &
        r_middle, drdu_middle, drdv_middle, normal_middle, norm_normal_middle, &
-       surface_option_middle, R0_middle, a_middle, separation_middle)
+       surface_option_middle, R0_middle, a_middle, separation_middle, du_middle, dv_middle)
   call system_clock(toc)
   print *,"Done initializing middle surface. Took ",real(toc-tic)/countrate," sec."
 
@@ -19,7 +19,7 @@ subroutine initOuter2Surfaces
   print *,"Initializing outer surface."
   call initSurface(nu_outer, nv_outer, nvl_outer, u_outer, v_outer, vl_outer, &
        r_outer, drdu_outer, drdv_outer, normal_outer, norm_normal_outer, &
-       surface_option_outer, R0_outer, a_outer, separation_outer)
+       surface_option_outer, R0_outer, a_outer, separation_outer, du_outer, dv_outer)
   call system_clock(toc)
   print *,"Done initializing outer surface. Took ",real(toc-tic)/countrate," sec."
 

@@ -3,7 +3,7 @@ subroutine svdInductanceMatrices()
   ! This subroutine finds the singular values of the two inductance matrices
 
   use globalVariables, only: inductance_plasma, inductance_middle, &
-       nu_plasma, nv_plasma, nu_middle, nv_middle, nu_outer, nv_outer, &
+       mnmax_plasma, mnmax_middle, mnmax_outer, &
        n_singular_values_inductance_plasma, n_singular_values_inductance_middle, &
        svd_s_inductance_plasma, svd_s_inductance_middle, &
        svd_uT_inductance_middle, svd_v_inductance_middle, allSVDsSucceeded
@@ -14,8 +14,8 @@ subroutine svdInductanceMatrices()
   
   character :: JOBZ
   integer :: INFO, LDA, LDU, LDVT, LWORK, M, N, iflag, tic, toc, countrate
-  real(rprec), dimension(:,:), allocatable :: A, U, VT
-  real(rprec), dimension(:), allocatable :: WORK
+  real(dp), dimension(:,:), allocatable :: A, U, VT
+  real(dp), dimension(:), allocatable :: WORK
   integer, dimension(:), allocatable :: IWORK
   
   !*************************************************************************
@@ -28,8 +28,8 @@ subroutine svdInductanceMatrices()
   call system_clock(tic,countrate)
   
   JOBZ='N'  ! For now compute none of the singular vectors. We could change this.
-  M = nu_plasma*nv_plasma
-  N = nu_outer*nv_outer
+  M = mnmax_plasma
+  N = mnmax_outer
   LDA = M
   LDU = M
   LDVT = N
@@ -93,8 +93,8 @@ subroutine svdInductanceMatrices()
   call system_clock(tic,countrate)
   
   JOBZ='A'  ! For the middle-outer inductance matrix, we need all the singular vectors.
-  M = nu_middle*nv_middle
-  N = nu_outer*nv_outer
+  M = mnmax_middle
+  N = mnmax_outer
   LDA = M
   LDU = M
   LDVT = N

@@ -8,23 +8,23 @@ subroutine buildTransferMatrix
   implicit none
 
   integer :: whichThreshold, iflag, tic, toc, countrate
-  real(rprec), dimension(:,:), allocatable :: Mpc_V, tempMatrix, transferMatrix
-  real(rprec) :: threshold
+  real(dp), dimension(:,:), allocatable :: Mpc_V, tempMatrix, transferMatrix
+  real(dp) :: threshold
   integer :: max_singular_value_index, i
 
   ! Stuff needed by LAPACK:
   character :: JOBZ
   integer :: INFO, LDA, LDU, LDVT, LWORK, M, N
-  real(rprec), dimension(:,:), allocatable :: U, VT
-  real(rprec), dimension(:), allocatable :: WORK, svd_s_transferMatrix_single
+  real(dp), dimension(:,:), allocatable :: U, VT
+  real(dp), dimension(:), allocatable :: WORK, svd_s_transferMatrix_single
   integer, dimension(:), allocatable :: IWORK
 
 
-  allocate(Mpc_V(nu_plasma*nv_plasma, nu_outer*nv_outer), stat=iflag)
+  allocate(Mpc_V(mnmax_plasma, mnmax_outer), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(tempMatrix(nu_outer*nv_outer, nu_middle*nv_middle), stat=iflag)
+  allocate(tempMatrix(mnmax_outer, mnmax_middle), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(transferMatrix(nu_plasma*nv_plasma, nu_middle*nv_middle), stat=iflag)
+  allocate(transferMatrix(mnmax_plasma, mnmax_middle), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
   allocate(n_singular_values_retained(n_pseudoinverse_thresholds), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
@@ -39,8 +39,8 @@ subroutine buildTransferMatrix
   ! Before beginning the loop over thresholds, do the initialization that will be needed for the SVD.
 
   JOBZ='A'  ! Compute all the singular vectors.  Consider changing this if performance is an issue.
-  M = nu_plasma*nv_plasma
-  N = nu_middle*nv_middle
+  M = mnmax_plasma
+  N = mnmax_middle
   LDA = M
   LDU = M
   LDVT = N

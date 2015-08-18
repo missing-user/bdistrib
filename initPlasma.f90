@@ -7,8 +7,8 @@ subroutine initPlasma
   implicit none
 
   integer :: i, iu, iv, imn, tic, toc, countrate, iflag, ierr, iopen
-  real(rprec) :: angle, sinangle, cosangle, dsinangledu, dsinangledv, dcosangledu, dcosangledv
-  real(rprec) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
+  real(dp) :: angle, sinangle, cosangle, dsinangledu, dsinangledv, dcosangledu, dcosangledv
+  real(dp) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
 
   call system_clock(tic, countrate)
   print *,"Initializing plasma surface."
@@ -60,15 +60,15 @@ subroutine initPlasma
   if (iflag .ne. 0) stop 'Allocation error!'
 
   do i=1,nu_plasma
-     u_plasma(i) = (i-1.0_rprec)/nu_plasma
+     u_plasma(i) = (i-1.0_dp)/nu_plasma
   end do
 
   do i=1,nv_plasma
-     v_plasma(i) = (i-1.0_rprec)/nv_plasma
+     v_plasma(i) = (i-1.0_dp)/nv_plasma
   end do
 
   do i=1,nvl_plasma
-     vl_plasma(i) = (i-1.0_rprec)/nv_plasma
+     vl_plasma(i) = (i-1.0_dp)/nv_plasma
   end do
 
   ! Last coordinate is the Cartesian component x, y, or z
@@ -124,6 +124,9 @@ subroutine initPlasma
   allocate(norm_normal_plasma(nu_plasma, nvl_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
   norm_normal_plasma = sqrt(normal_plasma(:,:,1)**2 + normal_plasma(:,:,2)**2 + normal_plasma(:,:,3)**2)
+
+  du_plasma = u_plasma(2)-u_plasma(1)
+  dv_plasma = v_plasma(2)-v_plasma(1)
   
   call system_clock(toc)
   print *,"Done initializing plasma surface. Took ",real(toc-tic)/countrate," sec."
