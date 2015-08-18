@@ -6,7 +6,7 @@ subroutine svdInductanceMatrices()
        nu_plasma, nv_plasma, nu_middle, nv_middle, nu_outer, nv_outer, &
        n_singular_values_inductance_plasma, n_singular_values_inductance_middle, &
        svd_s_inductance_plasma, svd_s_inductance_middle, &
-       svd_uT_inductance_middle, svd_v_inductance_middle
+       svd_uT_inductance_middle, svd_v_inductance_middle, allSVDsSucceeded
   
   use stel_kinds
   
@@ -22,6 +22,8 @@ subroutine svdInductanceMatrices()
   ! Beginning of section related to the plasma-to-outer inductance matrix.
   !*************************************************************************
   
+  allSVDsSucceeded = .true.
+
   print *,"Beginning SVD of the inductance matrix between the plasma and outer surfaces."
   call system_clock(tic,countrate)
   
@@ -68,8 +70,10 @@ subroutine svdInductanceMatrices()
      end if
   else if (INFO>0) then
      print *,"Error in SVD (DGESDD): Did not converge."
+     allSVDsSucceeded = .false.
   else
      print *,"Error in SVD (DGESDD): Argument",INFO," was invalid."
+     allSVDsSucceeded = .false.
   end if
   
   deallocate(A,U,VT,WORK,IWORK)
@@ -136,8 +140,10 @@ subroutine svdInductanceMatrices()
      end if
   else if (INFO>0) then
      print *,"Error in SVD (DGESDD): Did not converge."
+     allSVDsSucceeded = .false.
   else
      print *,"Error in SVD (DGESDD): Argument",INFO," was invalid."
+     allSVDsSucceeded = .false.
   end if
   
   svd_uT_inductance_middle = transpose(U)

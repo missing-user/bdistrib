@@ -127,8 +127,10 @@ subroutine buildTransferMatrix
         end if
      else if (INFO>0) then
         print *,"  Error in SVD (DGESDD): Did not converge."
+        allSVDsSucceeded = .false.
      else
         print *,"  Error in SVD (DGESDD): Argument",INFO," was invalid."
+        allSVDsSucceeded = .false.
      end if
 
      call system_clock(toc)

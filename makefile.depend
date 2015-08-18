@@ -6,7 +6,7 @@ OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildInductanceMatrices.o buil
 	initSurfaceMod.o readInput.o svdInductanceMatrices.o validateInput.o writeOutput.o
 
 # Dependencies:
-bdistrib.o:
+bdistrib.o: globalVariables.o
 buildInductanceMatrixMod.o: globalVariables.o
 buildInductanceMatrices.o: globalVariables.o buildInductanceMatrixMod.o
 buildTransferMatrix.o: globalVariables.o

@@ -14,6 +14,12 @@ In the various variable names in the code and output file, 'r' refers to the pos
 
 The 'normal' quantities in the code and output file refer to the surface normal vector N = (dr/dv) cross (dr/du) as in the NESCOIL paper. Note that this vector does not have unit magnitude.
 
+Requirements:
+* LIBSTELL (for reading VMEC wout files)
+* NetCDF (for writing the output file)
+* LAPACK (for the SVD subroutine)
+
+
 *******************************************************************
 Resolution parameters
 *******************************************************************

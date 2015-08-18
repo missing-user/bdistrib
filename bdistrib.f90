@@ -2,9 +2,14 @@
 
 program bdistrib
 
+  use globalVariables, only: allSVDsSucceeded
+
   implicit none
 
+  integer :: tic, toc, countrate
+
   print *,"This is BDISTRIB."
+  call system_clock(tic,countrate)
 
   call readInput()
   call validateInput()
@@ -26,6 +31,15 @@ program bdistrib
 
   call writeOutput()
 
-  print *,"BDISTRIB complete."
+  if (allSVDsSucceeded) then
+     print *,"All SVDs succeeded."
+  else
+     print *,"**************************"
+     print *,"At least one SVD failed!!!"
+     print *,"**************************"
+  end if
+
+  call system_clock(toc)
+  print *,"BDISTRIB complete. Total time=",real(toc-tic)/countrate,"sec."
 
 end program bdistrib

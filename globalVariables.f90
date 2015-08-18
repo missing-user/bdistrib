@@ -50,5 +50,7 @@ module globalVariables
   real(dp), dimension(:,:), allocatable :: svd_s_transferMatrix
   real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix, svd_v_transferMatrix
 
+  logical :: allSVDsSucceeded
+
 end module globalVariables
 

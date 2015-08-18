@@ -2,6 +2,7 @@
 
 print "usage: bdistribPlot bdistrib_out.XXX.nc"
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
@@ -19,10 +20,20 @@ if len(sys.argv) != 2:
 f = netcdf.netcdf_file(sys.argv[1],'r',mmap=False)
 nfp = f.variables['nfp'][()]
 nu_plasma = f.variables['nu_plasma'][()]
+nu_middle = f.variables['nu_middle'][()]
+nu_outer = f.variables['nu_outer'][()]
+nv_plasma = f.variables['nv_plasma'][()]
+nv_middle = f.variables['nv_middle'][()]
+nv_outer = f.variables['nv_outer'][()]
 nvl_plasma = f.variables['nvl_plasma'][()]
 nvl_middle = f.variables['nvl_middle'][()]
 nvl_outer = f.variables['nvl_outer'][()]
 u_plasma = f.variables['u_plasma'][()]
+u_middle = f.variables['u_middle'][()]
+u_outer  = f.variables['u_outer'][()]
+v_plasma = f.variables['v_plasma'][()]
+v_middle = f.variables['v_middle'][()]
+v_outer  = f.variables['v_outer'][()]
 vl_plasma = f.variables['vl_plasma'][()]
 vl_middle = f.variables['vl_middle'][()]
 vl_outer = f.variables['vl_outer'][()]
@@ -31,10 +42,18 @@ r_middle  = f.variables['r_middle'][()]
 r_outer = f.variables['r_outer'][()]
 svd_s_inductance_plasma = f.variables['svd_s_inductance_plasma'][()]
 svd_s_inductance_middle = f.variables['svd_s_inductance_middle'][()]
+svd_s_transferMatrix = f.variables['svd_s_transferMatrix'][()]
+svd_u_transferMatrix = f.variables['svd_u_transferMatrix'][()]
+svd_v_transferMatrix = f.variables['svd_v_transferMatrix'][()]
+n_pseudoinverse_thresholds = f.variables['n_pseudoinverse_thresholds'][()]
+n_singular_vectors_to_save = f.variables['n_singular_vectors_to_save'][()]
+pseudoinverse_thresholds = f.variables['pseudoinverse_thresholds'][()]
 
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
 print "r_plasma.shape: ",r_plasma.shape
+print "svd_s_transferMatrix.shape: ",svd_s_transferMatrix.shape
+print "svd_u_transferMatrix.shape: ",svd_u_transferMatrix.shape
 
 f.close()
 
@@ -44,11 +63,15 @@ f.close()
 # Plot singular values
 ########################################################
 
-fig = plt.figure(2)
+figureNum = 1
+fig = plt.figure(figureNum)
 fig.patch.set_facecolor('white')
 
 plt.plot(svd_s_inductance_middle,'.m',label='Inductance matrix between middle and outer surfaces')
 plt.plot(svd_s_inductance_plasma,'.r',label='Inductance matrix between plasma and outer surfaces')
+colors=['y','g','k','c','orange']
+for i in range(n_pseudoinverse_thresholds):
+    plt.plot(svd_s_transferMatrix[i,:],'.',color=colors[i],label='Transfer matrix, thresh='+str(pseudoinverse_thresholds[i]))
 plt.legend(fontsize='x-small')
 plt.title('Singular values')
 plt.yscale('log')
@@ -100,7 +123,8 @@ R_slice_outer, Z_slice_outer = getCrossSection(r_outer, vl_outer, v_slices)
 # Now make plot of surfaces at given toroidal angle
 ########################################################
 
-fig = plt.figure(4)
+figureNum += 1
+fig = plt.figure(figureNum)
 fig.patch.set_facecolor('white')
 
 numRows = 2
@@ -128,10 +152,61 @@ for whichPlot in range(4):
 plt.tight_layout()
 
 ########################################################
+# Plot singular vectors on the plasma surface
+########################################################
+
+numContours = 20
+
+for whichThreshold in range(n_pseudoinverse_thresholds):
+    figureNum += 1
+    fig = plt.figure(figureNum)
+    fig.patch.set_facecolor('white')
+    numCols = int(np.ceil(np.sqrt(n_singular_vectors_to_save)))
+    numRows = int(np.ceil(n_singular_vectors_to_save*1.0/numCols))
+
+    for whichPlot in range(n_singular_vectors_to_save):
+        plt.subplot(numRows,numCols,whichPlot+1)
+        data = np.reshape(svd_u_transferMatrix[whichThreshold,whichPlot,:],(nu_plasma,nv_plasma),order='F')
+        plt.contourf(v_plasma,u_plasma,data,numContours)
+        #plt.colorbar()
+        plt.xlabel('v',fontsize='x-small')
+        plt.ylabel('u',fontsize='x-small')
+        plt.title('Singular vector u '+str(whichPlot+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot]),fontsize='x-small')
+
+    plt.tight_layout()
+    ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
+    ax.text(0.5,0.99,"Efficiency-ordered B_n distributions on the plasma surface (threshold="+str(pseudoinverse_thresholds[whichThreshold])+")",horizontalalignment='center',verticalalignment='top',fontsize='small')
+
+########################################################
+# Plot singular vectors on the middle surface
+########################################################
+
+for whichThreshold in range(n_pseudoinverse_thresholds):
+    figureNum += 1
+    fig = plt.figure(figureNum)
+    fig.patch.set_facecolor('white')
+    numCols = int(np.ceil(np.sqrt(n_singular_vectors_to_save)))
+    numRows = int(np.ceil(n_singular_vectors_to_save*1.0/numCols))
+
+    for whichPlot in range(n_singular_vectors_to_save):
+        plt.subplot(numRows,numCols,whichPlot+1)
+        data = np.reshape(svd_v_transferMatrix[whichThreshold,whichPlot,:],(nu_middle,nv_middle),order='F')
+        plt.contourf(v_middle,u_middle,data,numContours)
+        #plt.colorbar()
+        plt.xlabel('v',fontsize='x-small')
+        plt.ylabel('u',fontsize='x-small')
+        plt.title('Singular vector v '+str(whichPlot+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot]),fontsize='x-small')
+
+    plt.tight_layout()
+    ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
+    ax.text(0.5,0.99,"Efficiency-ordered B_n distributions on the middle surface (threshold="+str(pseudoinverse_thresholds[whichThreshold])+")",horizontalalignment='center',verticalalignment='top',fontsize='small')
+
+########################################################
 # Now make 3D surface plot
 ########################################################
 
-fig = plt.figure(1)
+figureNum += 1
+fig = plt.figure(figureNum)
 fig.patch.set_facecolor('white')
 ax = fig.gca(projection='3d')
 ax.plot_surface(r_plasma[0,:,:], r_plasma[1,:,:], r_plasma[2,:,:], rstride=1, cstride=1, color='r',linewidth=0)
