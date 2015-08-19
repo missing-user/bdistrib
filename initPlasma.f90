@@ -18,7 +18,7 @@ subroutine initPlasma
      ! Plain circular torus
      print *,"  Building a plain circular torus."
 
-     nfp = 1
+     nfp = nfp_imposed
      mnmax = 2
      Rmajor = R0_plasma
      ns = 1

@@ -56,6 +56,7 @@ module globalVariables
   real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix, svd_v_transferMatrix
 
   logical :: allSVDsSucceeded
+  integer :: nfp_imposed = 1
 
 end module globalVariables
 

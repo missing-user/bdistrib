@@ -11,6 +11,7 @@ contains
     use read_wout_mod, only: nfp
     use stel_constants
     use stel_kinds
+    use omp_lib
 
     implicit none
 
@@ -24,7 +25,7 @@ contains
     real(dp) :: x, y, z, dx, dy, dz, dr2, dr32, du, dv
     integer :: imn, imn_outer, index, index_outer
     real(dp), dimension(:,:), allocatable :: inductance_xbasis, xToFourier, xToFourier_outer
-    integer :: tic, toc, countrate
+    integer :: tic, toc, countrate, omp_num_threads
 
     du = u(2)-u(1)
     dv = v(2)-v(1)
@@ -65,15 +66,24 @@ contains
 
     inductance_xbasis = 0
 
-    do iu = 1, nu
-       do iv = 1, nv
-          index = (iv-1)*nu + iu
-          x = r(iu,iv,1)
-          y = r(iu,iv,2)
-          z = r(iu,iv,3)
-          do iu_outer = 1, nu_outer
-             do iv_outer = 1, nv_outer
-                index_outer = (iv_outer-1)*nu_outer + iu_outer
+    !$OMP PARALLEL PRIVATE(omp_num_threads)
+
+    !omp_num_threads = omp_get_thread_limit()
+    !$OMP CRITICAL
+    omp_num_threads = omp_get_thread_num()
+    write (*,*) "  Hello from thread ",omp_num_threads
+    !$OMP END CRITICAL
+
+    !$OMP DO PRIVATE(index_outer,index,x,y,z,ivl_outer,dx,dy,dz,dr2,dr32)
+    do iv_outer = 1, nv_outer
+       do iu_outer = 1, nu_outer
+          index_outer = (iv_outer-1)*nu_outer + iu_outer
+          do iv = 1, nv
+             do iu = 1, nu
+                index = (iv-1)*nu + iu
+                x = r(iu,iv,1)
+                y = r(iu,iv,2)
+                z = r(iu,iv,3)
                 do l_outer = 0, (nfp-1)
                    ivl_outer = iv_outer + l_outer*nv_outer
                    dx = x - r_outer(iu_outer,ivl_outer,1)
@@ -97,6 +107,8 @@ contains
           end do
        end do
     end do
+    !$OMP END DO
+    !$OMP END PARALLEL
 
     call system_clock(toc)
     print *,"  inductance_xbasis:",real(toc-tic)/countrate,"sec."

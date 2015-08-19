@@ -13,7 +13,7 @@ subroutine readInput
        surface_option_plasma, surface_option_middle, surface_option_outer, &
        R0_plasma, R0_middle, R0_outer, a_plasma, a_middle, a_outer, &
        separation_middle, separation_outer, woutFilename, pseudoinverse_thresholds, &
-       save_level, n_singular_vectors_to_save, &
+       save_level, n_singular_vectors_to_save, nfp_imposed, &
        mpol_plasma, ntor_plasma, mpol_middle, ntor_middle, mpol_outer, ntor_outer
 
   ! getcarg is in LIBSTELL

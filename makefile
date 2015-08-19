@@ -1,7 +1,7 @@
 FC = ftn
 LIBSTELL_DIR = /global/homes/l/landrema/20150410-02-stellinstall_245_edison/LIBSTELL/Release
-EXTRA_COMPILE_FLAGS = -O3
-EXTRA_LINK_FLAGS = 
+EXTRA_COMPILE_FLAGS = -O3 -openmp
+EXTRA_LINK_FLAGS =  -openmp
 
 # End of system-dependent variable assignments
 

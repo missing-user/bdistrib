@@ -81,7 +81,7 @@ plt.plot(svd_s_inductance_plasma,'.r',label='Inductance matrix between plasma an
 colors=['y','g','k','c','orange']
 for i in range(n_pseudoinverse_thresholds):
     plt.plot(svd_s_transferMatrix[i,:],'.',color=colors[i],label='Transfer matrix, thresh='+str(pseudoinverse_thresholds[i]))
-plt.legend(fontsize='x-small')
+plt.legend(fontsize='x-small',loc=3)
 plt.title('Singular values')
 plt.yscale('log')
 
