@@ -109,9 +109,8 @@ contains
     ! Multiply by some overall constants:
     inductance = inductance * (2 * nfp * du * dv * du_outer * dv_outer * mu0 / (4*pi))
                    
-    !deallocate(inductance_xbasis, xToFourier, xToFourier_outer)
+    deallocate(inductance_xbasis, xToFourier, xToFourier_outer)
 
-    print *,"ZZZZ"
   end subroutine buildInductanceMatrix
 
 end module buildInductanceMatrixMod

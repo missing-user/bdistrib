@@ -169,9 +169,16 @@ mpl.rc('ytick',labelsize=7)
 
 numContours = 20
 
-u_plot = np.linspace(0,1,num=100)
-v_plot = np.linspace(0,1,num=102)
+nu_plot = 100
+nv_plot = 102
+u_plot = np.linspace(0,1,num=nu_plot)
+v_plot = np.linspace(0,1,num=nv_plot)
 v_plot_2D, u_plot_2D = np.meshgrid(v_plot, u_plot)
+v_plot_2D_column = np.reshape(v_plot_2D,[nu_plot*nv_plot],order='F')
+u_plot_2D_column = np.reshape(u_plot_2D,[nu_plot*nv_plot],order='F')
+FourierToX = np.zeros([nu_plot*nv_plot, mnmax_plasma])
+for imn in range(mnmax_plasma):
+    FourierToX[:,imn] = np.sin(2*np.pi*(xm_plasma[imn]*u_plot_2D_column+xn_plasma[imn]*v_plot_2D_column))
 
 for whichThreshold in range(n_pseudoinverse_thresholds):
     figureNum += 1
@@ -182,10 +189,7 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
 
     for whichPlot in range(n_singular_vectors_to_save):
         plt.subplot(numRows,numCols,whichPlot+1)
-        data = np.zeros([len(u_plot),len(v_plot)])
-        for imn in range(mnmax_plasma):
-            angle = 2*np.pi*(xm_plasma[imn]*u_plot_2D + xn_plasma[imn]*v_plot_2D)
-            data += svd_u_transferMatrix[whichThreshold,whichPlot,imn]*np.sin(angle)
+        data = np.reshape(np.dot(FourierToX, svd_u_transferMatrix[whichThreshold,whichPlot,:]), [nu_plot,nv_plot],order='F')
         plt.contourf(v_plot, u_plot, data, numContours)
         #plt.colorbar()
         plt.xlabel('v',fontsize='x-small')
@@ -200,6 +204,10 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
 # Plot singular vectors on the middle surface
 ########################################################
 
+FourierToX = np.zeros([nu_plot*nv_plot, mnmax_middle])
+for imn in range(mnmax_middle):
+    FourierToX[:,imn] = np.sin(2*np.pi*(xm_middle[imn]*u_plot_2D_column+xn_middle[imn]*v_plot_2D_column))
+
 for whichThreshold in range(n_pseudoinverse_thresholds):
     figureNum += 1
     fig = plt.figure(figureNum)
@@ -209,10 +217,7 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
 
     for whichPlot in range(n_singular_vectors_to_save):
         plt.subplot(numRows,numCols,whichPlot+1)
-        data = np.zeros([len(u_plot),len(v_plot)])
-        for imn in range(mnmax_plasma):
-            angle = 2*np.pi*(xm_plasma[imn]*u_plot_2D + xn_plasma[imn]*v_plot_2D)
-            data += svd_u_transferMatrix[whichThreshold,whichPlot,imn]*np.sin(angle)
+        data = np.reshape(np.dot(FourierToX, svd_v_transferMatrix[whichThreshold,whichPlot,:]), [nu_plot,nv_plot],order='F')
         plt.contourf(v_plot, u_plot, data, numContours)
         #plt.colorbar()
         plt.xlabel('v',fontsize='x-small')
@@ -232,37 +237,19 @@ fig = plt.figure(figureNum)
 fig.patch.set_facecolor('white')
 ax = fig.gca(projection='3d')
 ax.plot_surface(r_plasma[0,:,:], r_plasma[1,:,:], r_plasma[2,:,:], rstride=1, cstride=1, color='r',linewidth=0)
-#ax.plot_surface(r_plasma[0,:,:], r_plasma[1,:,:], r_plasma[2,:,:], rstride=1, cstride=1, color='r',linewidth=0,antialiased=False)
-#plotLMax = r_plasma.max()
 
 maxIndex = int(nvl_middle*0.7)
 ax.plot_surface(r_middle[0,:maxIndex,:], r_middle[1,:maxIndex,:], r_middle[2,:maxIndex,:], rstride=1, cstride=1, color='m',linewidth=0)
-#ax.plot_surface(r_middle[0,:maxIndex,:], r_middle[1,:maxIndex,:], r_middle[2,:maxIndex,:], rstride=1, cstride=1, color='m',linewidth=0,antialiased=False)
 
 maxIndex = int(nvl_outer*0.55)
 minIndex = int(nvl_outer*0.15)
 ax.plot_surface(r_outer[0,minIndex:maxIndex,:], r_outer[1,minIndex:maxIndex,:], r_outer[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0)
-#ax.plot_surface(r_outer[0,minIndex:maxIndex,:], r_outer[1,minIndex:maxIndex,:], r_outer[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0,antialiased=False)
 
 plotLMax = r_outer.max()
 ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
-#plt.title('Plasma surface')
 
-#fig = plt.figure(2)
-#fig.patch.set_facecolor('white')
-#ax = fig.gca(projection='3d')
-#ax.plot_surface(r_middle[0,:,:], r_middle[1,:,:], r_middle[2,:,:], rstride=1, cstride=1, color='m',linewidth=0,antialiased=False)
-#plotLMax = r_middle.max()
-#ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
-#plt.title('Middle surface')
 
-#fig = plt.figure(3)
-#fig.patch.set_facecolor('white')
-#ax = fig.gca(projection='3d')
-#ax.plot_surface(r_outer[0,:,:], r_outer[1,:,:], r_outer[2,:,:], rstride=1, cstride=1, color='b',linewidth=0,antialiased=False)
-#plotLMax = r_outer.max()
-#ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
-#plt.title('Outer surface')
+
 
 
 plt.show()

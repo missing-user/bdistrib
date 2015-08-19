@@ -43,5 +43,6 @@ program bdistrib
 
   call system_clock(toc)
   print *,"BDISTRIB complete. Total time=",real(toc-tic)/countrate,"sec."
+  print *,"You can run ./bdistribPlot ",trim(outputFilename)," to plot results."
 
 end program bdistrib

@@ -11,7 +11,6 @@ subroutine buildInductanceMatrices()
   print *,"Building inductance matrix between plasma surface and outer surface."
   call buildInductanceMatrix(inductance_plasma, r_plasma, normal_plasma, nu_plasma, nv_plasma, &
        mnmax_plasma, xm_plasma, xn_plasma, u_plasma, v_plasma)
-  print *,"QQQ"
   call system_clock(toc)
   print *,"Done building inductance matrix. Took ",real(toc-tic)/countrate," sec."
 
