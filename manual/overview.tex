@@ -1,0 +1,38 @@
+\chapter{Overview}
+
+This program computes efficiency-ordered distributions of magnetic fields as described in \cite{boozer2015}.  The main method is described on page 12, and some key definitions are given on page 9.
+
+There are 3 surfaces, named 'plasma', 'middle', and 'outer', The 'plasma' surface can correspond to the outermost surface of a VMEC equilibrium, or it can be a plain circular toroidal surface. The name of the relevant surface appears as a suffix on
+most variables.
+
+On each surface we use a poloidal angle u and a toroidal angle v, defined as in NESCOIL.  The coordinate u lies in the range [0,1]. The stellarator has nfp identical toroidal periods, and an increase in v by 1 corresponds to 1 of these periods. Thus,
+v increases by nfp in a complete toroidal revolution. In the output file, there is an array v corresponding to one toroidal period, as well as an array vl corresponding to all nfp toroidal periods.  Note that v is proportional to the standard
+cylindrical angle phi: phi = 2*pi*v/nfp.  Generally, field lines are not straight in the (u,v) coordinates.  On the plasma surface, u is identical to the VMEC poloidal angle divided by 2*pi, while the VMEC toroidal angle differs by a sign relative to
+v.
+
+In the various variable names in the code and output file, 'r' refers to the position vector, not to a radius.  In various arrays with a dimension of length 3, this dimension always corresponds to Cartesian coordinates (x,y,z).
+
+The 'normal' quantities in the code and output file refer to the surface normal vector N = (dr/dv) cross (dr/du) as in the NESCOIL paper. Note that this vector does not have unit magnitude.
+
+
+
+\section{Required libraries}
+
+\begin{itemize}
+
+\item LIBSTELL (for reading VMEC wout files)
+\item NetCDF (for writing the output file)
+\item LAPACK (for the SVD subroutine)
+\end{itemize}
+
+\section{Questions, Bugs, and Feedback}
+
+We welcome any contributions to the code or documentation.
+For write permission to the repository, or to report any bugs, provide feedback, or ask questions, contact Matt Landreman at
+\href{mailto:matt.landreman@gmail.com}{\nolinkurl{matt.landreman@gmail.com} }
+
+
+
+
+
+

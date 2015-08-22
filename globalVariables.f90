@@ -4,13 +4,13 @@ module globalVariables
 
   implicit none
 
-  integer :: nu_plasma=16, nv_plasma=18, nvl_plasma
-  integer :: nu_middle=20, nv_middle=22, nvl_middle
-  integer :: nu_outer=24, nv_outer=26, nvl_outer
+  integer :: nu_plasma=64, nv_plasma=64, nvl_plasma
+  integer :: nu_middle=64, nv_middle=64, nvl_middle
+  integer :: nu_outer =64, nv_outer =64, nvl_outer
 
-  integer :: surface_option_plasma  = 2
-  integer :: surface_option_middle  = 0
-  integer :: surface_option_outer = 0
+  integer :: geometry_option_plasma = 2
+  integer :: geometry_option_middle = 0
+  integer :: geometry_option_outer  = 0
 
   real(dp) :: R0_plasma = 5.5, R0_middle = 5.5, R0_outer = 5.5
   real(dp) :: a_plasma = 1.0, a_middle = 1.5, a_outer = 2.0

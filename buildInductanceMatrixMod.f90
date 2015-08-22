@@ -27,6 +27,13 @@ contains
     real(dp), dimension(:,:), allocatable :: inductance_xbasis, xToFourier, xToFourier_outer
     integer :: tic, toc, countrate, omp_num_threads
 
+    ! Variables needed by BLAS DGEMM:
+    character :: TRANSA='N', TRANSB='N'
+    integer :: M, N, K, LDA, LDB, LDC
+    real(dp) :: ALPHA=1, BETA=0
+    real(dp), dimension(:,:), allocatable :: tempMatrix
+
+
     du = u(2)-u(1)
     dv = v(2)-v(1)
 
@@ -66,12 +73,12 @@ contains
 
     inductance_xbasis = 0
 
-    !$OMP PARALLEL PRIVATE(omp_num_threads)
+    !$OMP PARALLEL
 
-    !omp_num_threads = omp_get_thread_limit()
     !$OMP CRITICAL
-    omp_num_threads = omp_get_thread_num()
-    write (*,*) "  Hello from thread ",omp_num_threads
+    !omp_num_threads = omp_get_thread_num()
+    write (*,*) "  Hello from thread ",omp_get_thread_num()
+    !write (*,*) "  Hello from thread ",omp_num_threads
     !$OMP END CRITICAL
 
     !$OMP DO PRIVATE(index_outer,index,x,y,z,ivl_outer,dx,dy,dz,dr2,dr32)
@@ -115,6 +122,65 @@ contains
 
     call system_clock(tic)
     inductance = matmul(xToFourier, matmul(inductance_xbasis, xToFourier_outer))
+
+!!$    !*******************************************************
+!!$    ! Call BLAS3 subroutine DGEMM for matrix multiplications:
+!!$    !*******************************************************
+!!$
+!!$
+!!$    ! tempMatrix = inductance_xbasis * xToFourier_outer
+!!$    ! A = inductance_xbasis
+!!$    ! B = xToFourier_outer
+!!$    ! C = tempMatrix
+!!$    M = nu*nv ! # rows of A
+!!$    N = mnmax_outer ! # cols of B
+!!$    K = nu_outer*nv_outer ! Common dimension of A and B
+!!$    LDA = M
+!!$    LDB = K
+!!$    LDC = M
+!!$    allocate(tempMatrix(M,N))
+!!$    print *,"AAA"
+!!$
+!!$    !$OMP PARALLEL
+!!$    !$OMP CRITICAL
+!!$    print *, "  Hello from thread ",omp_get_thread_num()
+!!$    !$OMP END CRITICAL
+!!$    !$OMP END PARALLEL
+!!$
+!!$    !$OMP BARRIER
+!!$    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,xToFourier_outer,LDB,BETA,tempMatrix,LDC)
+!!$
+!!$
+!!$    !$OMP PARALLEL
+!!$    !$OMP CRITICAL
+!!$    print *, "  Hello from thread ",omp_get_thread_num()
+!!$    !$OMP END CRITICAL
+!!$    !$OMP END PARALLEL
+!!$    
+!!$    print *,"BBB"
+!!$!    !$OMP END PARALLEL
+!!$    ! inductance = xToFourier * tempMatrix
+!!$    ! A = inductance_xbasis
+!!$    ! B = xToFourier_outer
+!!$    ! C = tempMatrix
+!!$    M = mnmax ! # rows of A
+!!$    N = mnmax_outer ! # cols of B
+!!$    K = nu*nv ! Common dimension of A and B
+!!$    LDA = M
+!!$    LDB = K
+!!$    LDC = M
+!!$    !$OMP BARRIER
+!!$    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,xToFourier,LDA,tempMatrix,LDB,BETA,inductance,LDC)
+!!$    !$OMP BARRIER
+!!$
+!!$    !$OMP PARALLEL
+!!$    !$OMP CRITICAL
+!!$    print *, "  Hello from thread ",omp_get_thread_num()
+!!$    !$OMP END CRITICAL
+!!$    !$OMP END PARALLEL
+!!$    print *,"DDD"
+!!$    deallocate(tempMatrix)
+    
     call system_clock(toc)
     print *,"  matmul:",real(toc-tic)/countrate,"sec."
 

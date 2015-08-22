@@ -78,7 +78,7 @@ fig.patch.set_facecolor('white')
 
 plt.plot(svd_s_inductance_middle,'.m',label='Inductance matrix between middle and outer surfaces')
 plt.plot(svd_s_inductance_plasma,'.r',label='Inductance matrix between plasma and outer surfaces')
-colors=['y','g','k','c','orange']
+colors=['k','g','orange','c']
 for i in range(n_pseudoinverse_thresholds):
     plt.plot(svd_s_transferMatrix[i,:],'.',color=colors[i],label='Transfer matrix, thresh='+str(pseudoinverse_thresholds[i]))
 plt.legend(fontsize='x-small',loc=3)

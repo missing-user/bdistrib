@@ -10,7 +10,7 @@ subroutine readInput
   integer, parameter :: uninitialized = -9999
 
   namelist / bdistrib / nu_plasma, nv_plasma, nu_middle, nv_middle, nu_outer, nv_outer, &
-       surface_option_plasma, surface_option_middle, surface_option_outer, &
+       geometry_option_plasma, geometry_option_middle, geometry_option_outer, &
        R0_plasma, R0_middle, R0_outer, a_plasma, a_middle, a_outer, &
        separation_middle, separation_outer, woutFilename, pseudoinverse_thresholds, &
        save_level, n_singular_vectors_to_save, nfp_imposed, &
@@ -57,5 +57,20 @@ subroutine readInput
         exit
      end if
   end do
+
+
+  print *,"Resolution parameters:"
+  print *,"  nu_plasma =",nu_plasma
+  print *,"  nu_middle =",nu_middle
+  print *,"  nu_outer  =",nu_outer
+  print *,"  nv_plasma =",nv_plasma
+  print *,"  nv_middle =",nv_middle
+  print *,"  nv_outer  =",nv_outer
+  print *,"  mpol_plasma =",mpol_plasma
+  print *,"  mpol_middle =",mpol_middle
+  print *,"  mpol_outer  =",mpol_outer
+  print *,"  ntor_plasma =",ntor_plasma
+  print *,"  ntor_middle =",ntor_middle
+  print *,"  ntor_outer  =",ntor_outer
 
 end subroutine readInput

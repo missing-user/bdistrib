@@ -13,7 +13,7 @@ subroutine initPlasma
   call system_clock(tic, countrate)
   print *,"Initializing plasma surface."
 
-  select case (surface_option_plasma)
+  select case (geometry_option_plasma)
   case (0,1)
      ! Plain circular torus
      print *,"  Building a plain circular torus."
@@ -39,12 +39,12 @@ subroutine initPlasma
      
   case (2)
      call read_wout_file(woutFilename, ierr, iopen)
-     if (iopen .ne. 0) stop 'error opening wout in bn_read_vmecf90'
-     if (ierr .ne. 0) stop 'error reading wout in bn_read_vmecf90'
+     if (iopen .ne. 0) stop 'error opening wout file'
+     if (ierr .ne. 0) stop 'error reading wout file'
      print *,"  Successfully read VMEC data from ",woutFilename
 
   case default
-     print *,"Error! Invalid setting for surface_option_plasma:",surface_option_plasma
+     print *,"Error! Invalid setting for geometry_option_plasma:",geometry_option_plasma
      stop
   end select
 

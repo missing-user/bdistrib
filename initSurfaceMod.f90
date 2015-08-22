@@ -9,7 +9,7 @@ module initSurfaceMod
 
     subroutine initSurface(nu, nv, nvl, u, v, vl, &
          r, drdu, drdv, normal, norm_normal, &
-         surface_option, R_specified, a, separation, du, dv)
+         geometry_option, R_specified, a, separation, du, dv)
 
       use read_wout_mod
       use stel_kinds
@@ -17,7 +17,7 @@ module initSurfaceMod
 
       implicit none
 
-      integer :: nu, nv, nvl, surface_option, iflag
+      integer :: nu, nv, nvl, geometry_option, iflag
       real(dp) :: R_specified, a, separation, du, dv
       real(dp), dimension(:), allocatable :: u, v, vl
       real(dp), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
@@ -65,13 +65,13 @@ module initSurfaceMod
       drdu = 0
       drdv = 0
 
-      select case (surface_option)
+      select case (geometry_option)
       case (0,1)
          ! Torus with circular cross-section
 
          print *,"  Building a plain circular torus."
 
-         if (surface_option==0) then
+         if (geometry_option==0) then
             R0_to_use = Rmajor
          else
             R0_to_use = R_specified
@@ -138,7 +138,7 @@ module initSurfaceMod
          end do
 
       case default
-         print *,"Invalid setting for surface_option: ",surface_option
+         print *,"Invalid setting for geometry_option: ",geometry_option
          stop
       end select
 

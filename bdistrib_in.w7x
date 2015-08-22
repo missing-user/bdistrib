@@ -2,30 +2,32 @@
 
 &bdistrib
   nu_plasma=17
-  nv_plasma=20
   nu_middle=16
-  nv_middle=15
   nu_outer =18
+
+  nv_plasma=20
+  nv_middle=15
   nv_outer =31
 
   mpol_plasma = 8
-  ntor_plasma = 5
   mpol_middle = 5
-  ntor_middle = 6
   mpol_outer  = 4
+
+  ntor_plasma = 5
+  ntor_middle = 6
   ntor_outer  = 8
 
-  surface_option_plasma = 2
+  geometry_option_plasma = 2
   R0_plasma = 4.0
   a_plasma = 1.0
   woutFilename='/global/homes/l/landrema/sfincs/equilibria/wout_w7x_standardConfig.nc'
 
-  surface_option_middle=0
+  geometry_option_middle=0
   R0_middle = 4.0
   a_middle = 2.0
   separation_middle = 0.35
 
-  surface_option_outer=0
+  geometry_option_outer=0
   R0_outer = 4.0
   a_outer = 3.0
   separation_outer = 0.7

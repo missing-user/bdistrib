@@ -12,9 +12,9 @@ subroutine writeOutput
   ! Prefix vn_ indicates the variable name used in the .nc file.
   character(len=*), parameter :: &
        vn_nfp = "nfp", &
-       vn_surface_option_plasma = "surface_option_plasma", &
-       vn_surface_option_middle = "surface_option_middle", &
-       vn_surface_option_outer = "surface_option_outer", &
+       vn_geometry_option_plasma = "geometry_option_plasma", &
+       vn_geometry_option_middle = "geometry_option_middle", &
+       vn_geometry_option_outer = "geometry_option_outer", &
        vn_nu_plasma = "nu_plasma", &
        vn_nv_plasma = "nv_plasma", &
        vn_nvl_plasma = "nvl_plasma", &
@@ -128,9 +128,9 @@ subroutine writeOutput
   ! Scalars
 
   call cdf_define(ncid, vn_nfp, nfp)
-  call cdf_define(ncid, vn_surface_option_plasma, surface_option_plasma)
-  call cdf_define(ncid, vn_surface_option_middle, surface_option_middle)
-  call cdf_define(ncid, vn_surface_option_outer, surface_option_outer)
+  call cdf_define(ncid, vn_geometry_option_plasma, geometry_option_plasma)
+  call cdf_define(ncid, vn_geometry_option_middle, geometry_option_middle)
+  call cdf_define(ncid, vn_geometry_option_outer, geometry_option_outer)
   call cdf_define(ncid, vn_nu_plasma, nu_plasma)
   call cdf_define(ncid, vn_nv_plasma, nv_plasma)
   call cdf_define(ncid, vn_nvl_plasma, nvl_plasma)
@@ -216,9 +216,9 @@ subroutine writeOutput
   ! Scalars
 
   call cdf_write(ncid, vn_nfp, nfp)
-  call cdf_write(ncid, vn_surface_option_plasma, surface_option_plasma)
-  call cdf_write(ncid, vn_surface_option_middle, surface_option_middle)
-  call cdf_write(ncid, vn_surface_option_outer, surface_option_outer)
+  call cdf_write(ncid, vn_geometry_option_plasma, geometry_option_plasma)
+  call cdf_write(ncid, vn_geometry_option_middle, geometry_option_middle)
+  call cdf_write(ncid, vn_geometry_option_outer, geometry_option_outer)
   call cdf_write(ncid, vn_nu_plasma, nu_plasma)
   call cdf_write(ncid, vn_nv_plasma, nv_plasma)
   call cdf_write(ncid, vn_nvl_plasma, nvl_plasma)

@@ -10,51 +10,58 @@ clear
 % Resolution parameters:
 % **********************************
 
-nu_plasma = 17;
-nv_plasma = 20;
+nu_plasma = 32;
+nv_plasma = 64;
 
-nu_middle = 16;
-nv_middle = 15;
+nu_middle = 32;
+nv_middle = 64;
 
-nu_outer = 18;
-nv_outer = 31;
+nu_outer = 32;
+nv_outer = 64;
 
-mpol_plasma = 8;
-ntor_plasma = 5;
+mpol_plasma = 4;
+ntor_plasma = 4;
 
-mpol_middle = 5;
-ntor_middle = 6;
+mpol_middle = 4;
+ntor_middle = 4;
 
 mpol_outer = 4;
-ntor_outer = 8;
+ntor_outer = 4;
 
 
 % Options for the shape of the plasma surface:
 % **********************************
-surface_option_plasma = 2;
+geometry_option_plasma = 0;
 woutFilename = 'C:\Users\landreman\Box Sync\MATLAB\20150601-01 Sfincs version 3\equilibria\wout_w7x_standardConfig.nc';
-R0_plasma = 4.0;
-a_plasma = 1.0;
+R0_plasma = 3.0;
+a_plasma = 1;
+nfp_imposed = 5;
 
 % Options for the shape of the middle surface:
 % **********************************
-surface_option_middle = 0;
-R0_middle = 4.0;
-a_middle = 2.0;
+geometry_option_middle = 0;
+R0_middle = 3.0;
+a_middle = 1.7;
 separation_middle = 0.35;
 
-% Options for the shape of the middle surface:
+% Options for the shape of the outer surface:
 % **********************************
-surface_option_outer = 0;
-R0_outer = 4.0;
-a_outer = 3.0;
-separation_outer = 0.7;
+geometry_option_outer = 1;
+R0_outer = 3.0;
+a_outer = 2.5;
+separation_outer = 0.7; 
 
 % Options for the SVDs and pseudo-inverse:
 % **********************************
-pseudoinverse_thresholds = [1e-1, 1e-2, 1e-10];
+pseudoinverse_thresholds = [1e-10];
 
 n_singular_vectors_to_save = 12;
+
+inverse_option = 3;
+% 0 = Pseudo-inverse with customizable threshold, analogous to the implementation in the fortran version.
+% 1 = Matlab "/"
+% 2 = Matlab inv()
+% 3 = Matlab pinv()
 
 % Plotting options:
 % **********************************
@@ -62,8 +69,8 @@ n_singular_vectors_to_save = 12;
 plot3DFigure = true;
 %plot3DFigure = false;
 
-plotGrids = true;
-%plotGrids = false;
+%plotGrids = true;
+plotGrids = false;
 
 %plotVectors = true;
 plotVectors = false;
@@ -134,9 +141,9 @@ compareVariableToFortran('nu_middle')
 compareVariableToFortran('nv_middle')
 compareVariableToFortran('nu_outer')
 compareVariableToFortran('nv_outer')
-compareVariableToFortran('surface_option_plasma')
-compareVariableToFortran('surface_option_middle')
-compareVariableToFortran('surface_option_outer')
+compareVariableToFortran('geometry_option_plasma')
+compareVariableToFortran('geometry_option_middle')
+compareVariableToFortran('geometry_option_outer')
 compareVariableToFortran('pseudoinverse_thresholds')
 
 % *********************************************
@@ -188,10 +195,10 @@ compareVariableToFortran('xn_outer')
 % Initialize the plasma surface:
 % *********************************************
 
-switch surface_option_plasma
+switch geometry_option_plasma
     case {0,1}
         % Plain axisymmetric circular torus
-        nfp = 1;
+        nfp = nfp_imposed;
         mnmax = 2;
         xm = [0,1];
         xn = [0,0];
@@ -222,7 +229,7 @@ switch surface_option_plasma
         zmns = zmns(:,whichSurface);
         
     otherwise
-        error('Invalid setting for surface_option_plasma')
+        error('Invalid setting for geometry_option_plasma')
 end
 
 nvl_plasma = nv_plasma * nfp;
@@ -305,7 +312,7 @@ compareVariableToFortran('normal_plasma')
 % Initialize the middle and outer surfaces:
 % *********************************************
 
-    function [u, v, vl, u_2D, vl_2D, r, drdu, drdv, normal] = initSurface(nu, nv, surface_option, R0, a, separation);
+    function [u, v, vl, u_2D, vl_2D, r, drdu, drdv, normal] = initSurface(nu, nv, geometry_option, R0, a, separation);
         nvl = nv*nfp;
         u = linspace(0,1,nu+1);
         u(end) = [];
@@ -315,9 +322,9 @@ compareVariableToFortran('normal_plasma')
         vl(end) = [];
         [vl_2D, u_2D] = meshgrid(vl, u);
 
-        switch(surface_option)
+        switch(geometry_option)
             case {0,1}
-                if surface_option == 0
+                if geometry_option == 0
                     R0_to_use = Rmajor_p;
                 else
                     R0_to_use = R0;
@@ -336,10 +343,10 @@ compareVariableToFortran('normal_plasma')
                 dzdv = zeros(size(u_2D));
                 
             case 2
-                error('surface_option = 2 is not yet implemented for middle and outer surfaces.')
+                error('geometry_option = 2 is not yet implemented for middle and outer surfaces.')
                 
             otherwise
-                error('Invalid surface_option')
+                error('Invalid geometry_option')
         end
         
         Nx = dydv .* dzdu - dzdv .* dydu;
@@ -369,13 +376,13 @@ compareVariableToFortran('normal_plasma')
 tic
 fprintf('Initializing middle surface.\n')
 [u_middle, v_middle, vl_middle, u_middle_2D, vl_middle_2D, r_middle, drdu_middle, drdv_middle, normal_middle] ...
-    = initSurface(nu_middle, nv_middle, surface_option_middle, R0_middle, a_middle, separation_middle);
+    = initSurface(nu_middle, nv_middle, geometry_option_middle, R0_middle, a_middle, separation_middle);
 fprintf('Done. Took %g seconds.\n',toc)
 
 tic
 fprintf('Initializing outer surface.\n')
 [u_outer, v_outer, vl_outer, u_outer_2D, vl_outer_2D, r_outer, drdu_outer, drdv_outer, normal_outer] ...
-    = initSurface(nu_outer, nv_outer, surface_option_outer, R0_outer, a_outer, separation_outer);
+    = initSurface(nu_outer, nv_outer, geometry_option_outer, R0_outer, a_outer, separation_outer);
 fprintf('Done. Took %g seconds.\n',toc)
 
 compareVariableToFortran('u_middle')
@@ -401,17 +408,28 @@ compareVariableToFortran('normal_outer')
 %r_plasma = ncread(fortranNcFilename,'r_plasma');
 
 if plot3DFigure
-    % Close surfaces for plotting:
     r_plasma_toplot = r_plasma;
+    r_middle_toplot = r_middle;
+    r_outer_toplot = r_outer;
+
+    % "Rotate" in theta so the seam in the plot is on the bottom
+    nshift = round(nu_plasma*0.25);
+    r_plasma_toplot = circshift(r_plasma_toplot, [nshift,0,0]);
+    nshift = round(nu_middle*0.25);
+    r_middle_toplot = circshift(r_middle_toplot, [nshift,0,0]);
+    nshift = round(nu_outer*0.25);
+    r_outer_toplot = circshift(r_outer_toplot, [nshift,0,0]);
+
+    % Close surfaces for plotting:
     r_plasma_toplot(:,end+1,:) = r_plasma_toplot(:,1,:);
     r_plasma_toplot(end+1,:,:) = r_plasma_toplot(1,:,:);
     
     % For middle and outer surfaces, close in u, but don't bother closing
     % in v:
-    r_middle_toplot = r_middle;
     r_middle_toplot(end+1,:,:) = r_middle_toplot(1,:,:);
-    r_outer_toplot = r_outer;
     r_outer_toplot(end+1,:,:) = r_outer_toplot(1,:,:);
+    
+    
     
     mask = vl_middle < 0.7*nfp;
     r_middle_toplot = r_middle_toplot(:,mask,:);
@@ -421,20 +439,22 @@ if plot3DFigure
 
     figure(1 + figureOffset)
     clf
-    surf(r_plasma_toplot(:,:,1),r_plasma_toplot(:,:,2),r_plasma_toplot(:,:,3),'EdgeColor','none')
+    set(gcf,'Color','w')
+    faceColor = [1,0,0];
+    surf(r_plasma_toplot(:,:,1),r_plasma_toplot(:,:,2),r_plasma_toplot(:,:,3),'FaceColor',faceColor,'EdgeColor','none')
     hold on
     if plotGrids
         plot3(r_plasma_toplot(:,:,1),r_plasma_toplot(:,:,2),r_plasma_toplot(:,:,3),'.r')
     end
     daspect([1,1,1])
-    shading interp
+    %shading interp
     axis vis3d
     hold on
     
-    faceColor = [0.5,0.5,0.5];
+    faceColor = [1,0,1];
     surf(r_middle_toplot(:,:,1),r_middle_toplot(:,:,2),r_middle_toplot(:,:,3),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
     
-    faceColor = [0.0,0.0,0.7];
+    faceColor = [0,0,1];
     surf(r_outer_toplot(:,:,1),r_outer_toplot(:,:,2),r_outer_toplot(:,:,3),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
     
     if plotGrids
@@ -446,6 +466,9 @@ if plot3DFigure
     light
     lighting gouraud
     zoom(1.6)
+    campos([  574.9370 -457.0244  424.3304])
+    camva(1.0271)
+    axis off
     
 end
 
@@ -551,7 +574,7 @@ clf
 semilogy(svd_s_inductance_middle,'.m','DisplayName','Inductance matrix between middle and outer surfaces')
 hold on
 semilogy(svd_s_inductance_plasma,'.r','DisplayName','Inductance matrix between plasma and outer surfaces')
-set(gca,'xGrid','on','yGrid','on')
+%set(gca,'xGrid','on','yGrid','on')
 title('Singular values')
 
 compareVariableToFortran('svd_s_inductance_plasma')
@@ -577,7 +600,10 @@ colors = [0.9,0.6,0;
         0,0,1;
         0,0,0;];
 
-Mpo_V = inductance_plasma * svd_v_inductance_middle;
+if inverse_option==0
+    Mpo_V = inductance_plasma * svd_v_inductance_middle;
+end
+
 for i = 1:n_pseudoinverse_thresholds    
     % Decide how many singular values to keep:
     threshold = pseudoinverse_thresholds(i);
@@ -585,15 +611,30 @@ for i = 1:n_pseudoinverse_thresholds
     n_singular_values_retained(i) = sum(keepMask);
     fprintf('Forming transfer matrix for pinv threshold %g: retaining %d singular values.\n',threshold, n_singular_values_retained(i))
     tic
-    
-    % Build the rectangular matrix of inverse singular values:
-    inverseSingularValues = 1./svd_s_inductance_middle;
-    inverseSingularValues(~keepMask) = 0;
-    inverseSingularValues = inverseSingularValues(:);
-    diagonalPart = spdiags(inverseSingularValues, 0, svd_s_inductance_middle_size(2), svd_s_inductance_middle_size(1));
-    
-    % Put the pieces together:
-    transferMatrix = Mpo_V * diagonalPart * (svd_u_inductance_middle');
+
+    switch inverse_option
+        case 0
+            fprintf('Using customizable pseudo-inverse to invert M_mo.\n')
+            % Build the rectangular matrix of inverse singular values:
+            inverseSingularValues = 1./svd_s_inductance_middle;
+            inverseSingularValues(~keepMask) = 0;
+            inverseSingularValues = inverseSingularValues(:);
+            diagonalPart = spdiags(inverseSingularValues, 0, svd_s_inductance_middle_size(2), svd_s_inductance_middle_size(1));
+            
+            % Put the pieces together:
+            transferMatrix = Mpo_V * diagonalPart * (svd_u_inductance_middle');
+        case 1
+            fprintf('Using Matlab''s "/" to invert M_mo.\n')
+            transferMatrix = inductance_plasma / inductance_middle;
+        case 2
+            fprintf('Using Matlab''s "inv()" to invert M_mo.\n')
+            transferMatrix = inductance_plasma * inv(inductance_middle);
+        case 3
+            fprintf('Using Matlab''s "pinv()" to invert M_mo.\n')
+            transferMatrix = inductance_plasma * pinv(inductance_middle);
+        otherwise
+            error('Invalid option for inverse_option')
+    end
     fprintf('  Assembled transfer matrix. Took %g seconds.\n',toc)
     
     % Carry out SVD
@@ -647,7 +688,7 @@ for whichThreshold = 1:n_pseudoinverse_thresholds
         colorbar
         xlabel('v')
         ylabel('u')
-        title(['Singular vector u ',num2str(whichPlot)])
+        title({['Singular vector u ',num2str(whichPlot)],['s=',num2str(svd_s_transferMatrix(whichPlot,whichThreshold))]})
     end
     stringForTop = ['Efficiency-ordered B_n distributions on plasma surface (threshold=',num2str(pseudoinverse_thresholds(whichThreshold)),')'];
     annotation('textbox',[0 0.96 1 .04],'HorizontalAlignment','center',...
