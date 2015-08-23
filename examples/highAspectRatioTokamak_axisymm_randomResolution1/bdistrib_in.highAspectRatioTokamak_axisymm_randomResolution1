@@ -2,15 +2,15 @@
 
 &bdistrib
   nu_plasma=64
-  nu_middle=64
-  nu_outer =64
+  nu_middle=65
+  nu_outer =66
 
-  nv_plasma=256
-  nv_middle=256
-  nv_outer =256
+  nv_plasma=253
+  nv_middle=254
+  nv_outer =255
 
-  mpol_plasma = 16
-  mpol_middle = 16
+  mpol_plasma = 14
+  mpol_middle = 15
   mpol_outer  = 16
 
   ntor_plasma = 0

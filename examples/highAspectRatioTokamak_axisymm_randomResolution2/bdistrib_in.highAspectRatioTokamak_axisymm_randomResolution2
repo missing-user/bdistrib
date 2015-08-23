@@ -1,17 +1,17 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
-  nu_plasma=64
-  nu_middle=64
-  nu_outer =64
+  nu_plasma=67
+  nu_middle=66
+  nu_outer =65
 
-  nv_plasma=256
-  nv_middle=256
-  nv_outer =256
+  nv_plasma=250
+  nv_middle=249
+  nv_outer =248
 
-  mpol_plasma = 16
-  mpol_middle = 16
-  mpol_outer  = 16
+  mpol_plasma = 19
+  mpol_middle = 18
+  mpol_outer  = 17
 
   ntor_plasma = 0
   ntor_middle = 0

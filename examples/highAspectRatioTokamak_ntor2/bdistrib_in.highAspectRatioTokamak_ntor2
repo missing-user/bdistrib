@@ -9,13 +9,13 @@
   nv_middle=256
   nv_outer =256
 
-  mpol_plasma = 16
-  mpol_middle = 16
-  mpol_outer  = 16
+  mpol_plasma = 8
+  mpol_middle = 8
+  mpol_outer  = 8
 
-  ntor_plasma = 0
-  ntor_middle = 0
-  ntor_outer  = 0
+  ntor_plasma = 2
+  ntor_middle = 2
+  ntor_outer  = 2
 
   geometry_option_plasma = 0
   R0_plasma = 10.0

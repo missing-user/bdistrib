@@ -19,7 +19,7 @@
 
   geometry_option_plasma = 0
   R0_plasma = 10.0
-  a_plasma = 0.5
+  a_plasma = 0.33333333333333
   nfp_imposed = 1
 
   geometry_option_middle=0
