@@ -25,7 +25,7 @@ contains
     real(dp) :: x, y, z, dx, dy, dz, dr2, dr32, du, dv
     integer :: imn, imn_outer, index, index_outer
     real(dp), dimension(:,:), allocatable :: inductance_xbasis, xToFourier, xToFourier_outer
-    integer :: tic, toc, countrate, omp_num_threads
+    integer :: tic, toc, countrate
 
     ! Variables needed by BLAS DGEMM:
     character :: TRANSA='N', TRANSB='N'
@@ -75,11 +75,9 @@ contains
 
     !$OMP PARALLEL
 
-    !$OMP CRITICAL
-    !omp_num_threads = omp_get_thread_num()
-    write (*,*) "  Hello from thread ",omp_get_thread_num()
-    !write (*,*) "  Hello from thread ",omp_num_threads
-    !$OMP END CRITICAL
+    !$OMP MASTER
+    print *,"  Number of OpenMP threads:",omp_get_num_threads()
+    !$OMP END MASTER
 
     !$OMP DO PRIVATE(index_outer,index,x,y,z,ivl_outer,dx,dy,dz,dr2,dr32)
     do iv_outer = 1, nv_outer

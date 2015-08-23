@@ -27,3 +27,9 @@ $(TARGET): $(OBJ_FILES)
 
 clean:
 	rm -f *.o *.mod *.MOD *~ $(TARGET)
+
+test: $(TARGET)
+	@echo "Beginning functional tests." && cd examples && export BDISTRIB_RETEST=no && ./runExamples.py
+
+retest: $(TARGET)
+	@echo "Testing existing output files for examples without re-running then." && cd examples && export BDISTRIB_RETEST=yes && ./runExamples.py
