@@ -3,7 +3,7 @@ subroutine svdInductanceMatrices()
   ! This subroutine finds the singular values of the two inductance matrices
 
   use globalVariables, only: inductance_plasma, inductance_middle, &
-       mnmax_plasma, mnmax_middle, mnmax_outer, &
+       num_basis_functions_plasma, num_basis_functions_middle, num_basis_functions_outer, &
        n_singular_values_inductance_plasma, n_singular_values_inductance_middle, &
        svd_s_inductance_plasma, svd_s_inductance_middle, &
        svd_uT_inductance_middle, svd_v_inductance_middle, allSVDsSucceeded
@@ -28,8 +28,8 @@ subroutine svdInductanceMatrices()
   call system_clock(tic,countrate)
   
   JOBZ='N'  ! For now compute none of the singular vectors. We could change this.
-  M = mnmax_plasma
-  N = mnmax_outer
+  M = num_basis_functions_plasma
+  N = num_basis_functions_outer
   LDA = M
   LDU = M
   LDVT = N
@@ -93,8 +93,8 @@ subroutine svdInductanceMatrices()
   call system_clock(tic,countrate)
   
   JOBZ='A'  ! For the middle-outer inductance matrix, we need all the singular vectors.
-  M = mnmax_middle
-  N = mnmax_outer
+  M = num_basis_functions_middle
+  N = num_basis_functions_outer
   LDA = M
   LDU = M
   LDVT = N

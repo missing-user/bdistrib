@@ -51,18 +51,22 @@ subroutine writeOutput
        vn_mpol_plasma = "mpol_plasma", &
        vn_ntor_plasma = "ntor_plasma", &
        vn_mnmax_plasma = "mnmax_plasma", &
+       vn_num_basis_functions_plasma = "num_basis_functions_plasma", &
        vn_xm_plasma = "xm_plasma", &
        vn_xn_plasma = "xn_plasma", &
        vn_mpol_middle = "mpol_middle", &
        vn_ntor_middle = "ntor_middle", &
        vn_mnmax_middle = "mnmax_middle", &
+       vn_num_basis_functions_middle = "num_basis_functions_middle", &
        vn_xm_middle = "xm_middle", &
        vn_xn_middle = "xn_middle", &
        vn_mpol_outer = "mpol_outer", &
        vn_ntor_outer = "ntor_outer", &
        vn_mnmax_outer = "mnmax_outer", &
+       vn_num_basis_functions_outer = "num_basis_functions_outer", &
        vn_xm_outer = "xm_outer", &
        vn_xn_outer = "xn_outer", &
+       vn_basis_set_option = "basis_set_option", &
        vn_inductance_plasma = "inductance_plasma", &
        vn_inductance_middle = "inductance_middle", &
        vn_n_singular_values_inductance_plasma = "n_singular_values_inductance_plasma", &
@@ -74,9 +78,12 @@ subroutine writeOutput
        vn_n_pseudoinverse_thresholds = "n_pseudoinverse_thresholds", &
        vn_n_singular_values_retained = "n_singular_values_retained", &
        vn_svd_s_transferMatrix = "svd_s_transferMatrix", &
-       vn_svd_u_transferMatrix = "svd_u_transferMatrix", &
-       vn_svd_v_transferMatrix = "svd_v_transferMatrix", &
-       vn_n_singular_vectors_to_save = "n_singular_vectors_to_save"
+       vn_svd_u_transferMatrix_sin = "svd_u_transferMatrix_sin", &
+       vn_svd_u_transferMatrix_cos = "svd_u_transferMatrix_cos", &
+       vn_svd_v_transferMatrix_sin = "svd_v_transferMatrix_sin", &
+       vn_svd_v_transferMatrix_cos = "svd_v_transferMatrix_cos", &
+       vn_n_singular_vectors_to_save = "n_singular_vectors_to_save", &
+       vn_totalTime = "totalTime"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -101,8 +108,8 @@ subroutine writeOutput
        u_vl_plasma_dim = (/'nu_plasma','nvl_plasma'/), &
        u_vl_middle_dim = (/'nu_middle','nvl_middle'/), &
        u_vl_outer_dim = (/'nu_outer','nvl_outer'/), &
-       mnmax_plasma_outer_dim = (/'mnmax_plasma','mnmax_outer'/), &
-       mnmax_middle_outer_dim = (/'mnmax_middle','mnmax_outer'/), &
+       basis_plasma_outer_dim = (/'num_basis_functions_plasma','num_basis_functions_outer'/), &
+       basis_middle_outer_dim = (/'num_basis_functions_middle','num_basis_functions_outer'/), &
        n_singular_values_thresholds_dim = &
             (/'n_singular_values_transferMatrix','n_pseudoinverse_thresholds'/)
 !       uvl_plasma_dim = (/'nvl_plasma','nu_plasma'/)
@@ -116,8 +123,7 @@ subroutine writeOutput
        u_vl_xyz_outer_dim = (/'nu_outer','nvl_outer','xyz'/), &
        mnmax_plasma_nsave_thresholds_dim = (/'mnmax_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
        mnmax_middle_nsave_thresholds_dim = (/'mnmax_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/)
-!       u_v_plasma_nsave_thresholds_dim = (/'nu_nv_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
-!       u_v_middle_nsave_thresholds_dim = (/'nu_nv_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/)
+
 
   call cdf_open(ncid,outputFilename,'w',ierr)
   IF (ierr .ne. 0) then
@@ -143,16 +149,21 @@ subroutine writeOutput
   call cdf_define(ncid, vn_mpol_plasma, mpol_plasma)
   call cdf_define(ncid, vn_ntor_plasma, ntor_plasma)
   call cdf_define(ncid, vn_mnmax_plasma, mnmax_plasma)
+  call cdf_define(ncid, vn_num_basis_functions_plasma, num_basis_functions_plasma)
   call cdf_define(ncid, vn_mpol_middle, mpol_middle)
   call cdf_define(ncid, vn_ntor_middle, ntor_middle)
   call cdf_define(ncid, vn_mnmax_middle, mnmax_middle)
+  call cdf_define(ncid, vn_num_basis_functions_middle, num_basis_functions_middle)
   call cdf_define(ncid, vn_mpol_outer, mpol_outer)
   call cdf_define(ncid, vn_ntor_outer, ntor_outer)
   call cdf_define(ncid, vn_mnmax_outer, mnmax_outer)
+  call cdf_define(ncid, vn_num_basis_functions_outer, num_basis_functions_outer)
+  call cdf_define(ncid, vn_basis_set_option, basis_set_option)
   call cdf_define(ncid, vn_n_singular_values_inductance_plasma, n_singular_values_inductance_plasma)
   call cdf_define(ncid, vn_n_singular_values_inductance_middle, n_singular_values_inductance_middle)
   call cdf_define(ncid, vn_n_pseudoinverse_thresholds, n_pseudoinverse_thresholds)
   call cdf_define(ncid, vn_n_singular_vectors_to_save, n_singular_vectors_to_save)
+  call cdf_define(ncid, vn_totalTime, totalTime)
 
   ! Arrays with dimension 1
 
@@ -183,8 +194,8 @@ subroutine writeOutput
   call cdf_define(ncid, vn_norm_normal_middle,  norm_normal_middle,  dimname=u_vl_middle_dim)
   call cdf_define(ncid, vn_norm_normal_outer,  norm_normal_outer,  dimname=u_vl_outer_dim)
   if (save_level<1) then
-     call cdf_define(ncid, vn_inductance_plasma, inductance_plasma, dimname=mnmax_plasma_outer_dim)
-     call cdf_define(ncid, vn_inductance_middle, inductance_middle, dimname=mnmax_middle_outer_dim)
+     call cdf_define(ncid, vn_inductance_plasma, inductance_plasma, dimname=basis_plasma_outer_dim)
+     call cdf_define(ncid, vn_inductance_middle, inductance_middle, dimname=basis_middle_outer_dim)
   end if
   call cdf_define(ncid, vn_svd_s_transferMatrix, svd_s_transferMatrix, dimname=n_singular_values_thresholds_dim)
 
@@ -205,9 +216,10 @@ subroutine writeOutput
   call cdf_define(ncid, vn_normal_plasma,  normal_plasma,  dimname=u_vl_xyz_plasma_dim)
   call cdf_define(ncid, vn_normal_middle,  normal_middle,  dimname=u_vl_xyz_middle_dim)
   call cdf_define(ncid, vn_normal_outer, normal_outer, dimname=u_vl_xyz_outer_dim)
-
-  call cdf_define(ncid, vn_svd_u_transferMatrix, svd_u_transferMatrix, dimname=mnmax_plasma_nsave_thresholds_dim)
-  call cdf_define(ncid, vn_svd_v_transferMatrix, svd_v_transferMatrix, dimname=mnmax_middle_nsave_thresholds_dim)
+  call cdf_define(ncid, vn_svd_u_transferMatrix_sin, svd_u_transferMatrix_sin, dimname=mnmax_plasma_nsave_thresholds_dim)
+  call cdf_define(ncid, vn_svd_u_transferMatrix_cos, svd_u_transferMatrix_cos, dimname=mnmax_plasma_nsave_thresholds_dim)
+  call cdf_define(ncid, vn_svd_v_transferMatrix_sin, svd_v_transferMatrix_sin, dimname=mnmax_middle_nsave_thresholds_dim)
+  call cdf_define(ncid, vn_svd_v_transferMatrix_cos, svd_v_transferMatrix_cos, dimname=mnmax_middle_nsave_thresholds_dim)
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
   ! Done with cdf_define calls. Now write the data.
@@ -231,16 +243,21 @@ subroutine writeOutput
   call cdf_write(ncid, vn_mpol_plasma, mpol_plasma)
   call cdf_write(ncid, vn_ntor_plasma, ntor_plasma)
   call cdf_write(ncid, vn_mnmax_plasma, mnmax_plasma)
+  call cdf_write(ncid, vn_num_basis_functions_plasma, num_basis_functions_plasma)
   call cdf_write(ncid, vn_mpol_middle, mpol_middle)
   call cdf_write(ncid, vn_ntor_middle, ntor_middle)
   call cdf_write(ncid, vn_mnmax_middle, mnmax_middle)
+  call cdf_write(ncid, vn_num_basis_functions_middle, num_basis_functions_middle)
   call cdf_write(ncid, vn_mpol_outer, mpol_outer)
   call cdf_write(ncid, vn_ntor_outer, ntor_outer)
   call cdf_write(ncid, vn_mnmax_outer, mnmax_outer)
+  call cdf_write(ncid, vn_num_basis_functions_outer, num_basis_functions_outer)
+  call cdf_write(ncid, vn_basis_set_option, basis_set_option)
   call cdf_write(ncid, vn_n_singular_values_inductance_plasma, n_singular_values_inductance_plasma)
   call cdf_write(ncid, vn_n_singular_values_inductance_middle, n_singular_values_inductance_middle)
   call cdf_write(ncid, vn_n_pseudoinverse_thresholds, n_pseudoinverse_thresholds)
   call cdf_write(ncid, vn_n_singular_vectors_to_save, n_singular_vectors_to_save)
+  call cdf_write(ncid, vn_totalTime, totalTime)
 
   ! Arrays with dimension 1
 
@@ -278,24 +295,26 @@ subroutine writeOutput
 
   ! Arrays with dimension 3
 
-  call cdf_write(ncid, vn_r_plasma,  r_plasma)
-  call cdf_write(ncid, vn_r_middle,  r_middle)
-  call cdf_write(ncid, vn_r_outer, r_outer)
+  call cdf_write(ncid, vn_r_plasma, r_plasma)
+  call cdf_write(ncid, vn_r_middle, r_middle)
+  call cdf_write(ncid, vn_r_outer,  r_outer)
 
-  call cdf_write(ncid, vn_drdu_plasma,  drdu_plasma)
-  call cdf_write(ncid, vn_drdu_middle,  drdu_middle)
-  call cdf_write(ncid, vn_drdu_outer, drdu_outer)
+  call cdf_write(ncid, vn_drdu_plasma, drdu_plasma)
+  call cdf_write(ncid, vn_drdu_middle, drdu_middle)
+  call cdf_write(ncid, vn_drdu_outer,  drdu_outer)
 
-  call cdf_write(ncid, vn_drdv_plasma,  drdv_plasma)
-  call cdf_write(ncid, vn_drdv_middle,  drdv_middle)
-  call cdf_write(ncid, vn_drdv_outer, drdv_outer)
+  call cdf_write(ncid, vn_drdv_plasma, drdv_plasma)
+  call cdf_write(ncid, vn_drdv_middle, drdv_middle)
+  call cdf_write(ncid, vn_drdv_outer,  drdv_outer)
 
-  call cdf_write(ncid, vn_normal_plasma,  normal_plasma)
-  call cdf_write(ncid, vn_normal_middle,  normal_middle)
-  call cdf_write(ncid, vn_normal_outer, normal_outer)
+  call cdf_write(ncid, vn_normal_plasma, normal_plasma)
+  call cdf_write(ncid, vn_normal_middle, normal_middle)
+  call cdf_write(ncid, vn_normal_outer,  normal_outer)
 
-  call cdf_write(ncid, vn_svd_u_transferMatrix, svd_u_transferMatrix)
-  call cdf_write(ncid, vn_svd_v_transferMatrix, svd_v_transferMatrix)
+  call cdf_write(ncid, vn_svd_u_transferMatrix_sin, svd_u_transferMatrix_sin)
+  call cdf_write(ncid, vn_svd_u_transferMatrix_cos, svd_u_transferMatrix_cos)
+  call cdf_write(ncid, vn_svd_v_transferMatrix_sin, svd_v_transferMatrix_sin)
+  call cdf_write(ncid, vn_svd_v_transferMatrix_cos, svd_v_transferMatrix_cos)
 
 
   ! Finish up:

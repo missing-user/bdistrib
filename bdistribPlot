@@ -52,8 +52,10 @@ mnmax_outer  = f.variables['mnmax_outer'][()]
 svd_s_inductance_plasma = f.variables['svd_s_inductance_plasma'][()]
 svd_s_inductance_middle = f.variables['svd_s_inductance_middle'][()]
 svd_s_transferMatrix = f.variables['svd_s_transferMatrix'][()]
-svd_u_transferMatrix = f.variables['svd_u_transferMatrix'][()]
-svd_v_transferMatrix = f.variables['svd_v_transferMatrix'][()]
+svd_u_transferMatrix_sin = f.variables['svd_u_transferMatrix_sin'][()]
+svd_u_transferMatrix_cos = f.variables['svd_u_transferMatrix_cos'][()]
+svd_v_transferMatrix_sin = f.variables['svd_v_transferMatrix_sin'][()]
+svd_v_transferMatrix_cos = f.variables['svd_v_transferMatrix_cos'][()]
 n_pseudoinverse_thresholds = f.variables['n_pseudoinverse_thresholds'][()]
 n_singular_vectors_to_save = f.variables['n_singular_vectors_to_save'][()]
 pseudoinverse_thresholds = f.variables['pseudoinverse_thresholds'][()]
@@ -62,7 +64,7 @@ print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
 print "r_plasma.shape: ",r_plasma.shape
 print "svd_s_transferMatrix.shape: ",svd_s_transferMatrix.shape
-print "svd_u_transferMatrix.shape: ",svd_u_transferMatrix.shape
+print "svd_u_transferMatrix_sin.shape: ",svd_u_transferMatrix_sin.shape
 
 f.close()
 
@@ -176,9 +178,11 @@ v_plot = np.linspace(0,1,num=nv_plot)
 v_plot_2D, u_plot_2D = np.meshgrid(v_plot, u_plot)
 v_plot_2D_column = np.reshape(v_plot_2D,[nu_plot*nv_plot],order='F')
 u_plot_2D_column = np.reshape(u_plot_2D,[nu_plot*nv_plot],order='F')
-FourierToX = np.zeros([nu_plot*nv_plot, mnmax_plasma])
+FourierToX_sin = np.zeros([nu_plot*nv_plot, mnmax_plasma])
+FourierToX_cos = np.zeros([nu_plot*nv_plot, mnmax_plasma])
 for imn in range(mnmax_plasma):
-    FourierToX[:,imn] = np.sin(2*np.pi*(xm_plasma[imn]*u_plot_2D_column+xn_plasma[imn]*v_plot_2D_column))
+    FourierToX_sin[:,imn] = np.sin(2*np.pi*(xm_plasma[imn]*u_plot_2D_column+xn_plasma[imn]*v_plot_2D_column))
+    FourierToX_cos[:,imn] = np.cos(2*np.pi*(xm_plasma[imn]*u_plot_2D_column+xn_plasma[imn]*v_plot_2D_column))
 
 for whichThreshold in range(n_pseudoinverse_thresholds):
     figureNum += 1
@@ -189,7 +193,8 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
 
     for whichPlot in range(n_singular_vectors_to_save):
         plt.subplot(numRows,numCols,whichPlot+1)
-        data = np.reshape(np.dot(FourierToX, svd_u_transferMatrix[whichThreshold,whichPlot,:]), [nu_plot,nv_plot],order='F')
+        data = np.reshape(np.dot(FourierToX_sin, svd_u_transferMatrix_sin[whichThreshold,whichPlot,:]) + \
+                          np.dot(FourierToX_cos, svd_u_transferMatrix_cos[whichThreshold,whichPlot,:]), [nu_plot,nv_plot],order='F')
         plt.contourf(v_plot, u_plot, data, numContours)
         #plt.colorbar()
         plt.xlabel('v',fontsize='x-small')
@@ -204,9 +209,11 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
 # Plot singular vectors on the middle surface
 ########################################################
 
-FourierToX = np.zeros([nu_plot*nv_plot, mnmax_middle])
+FourierToX_sin = np.zeros([nu_plot*nv_plot, mnmax_middle])
+FourierToX_cos = np.zeros([nu_plot*nv_plot, mnmax_middle])
 for imn in range(mnmax_middle):
-    FourierToX[:,imn] = np.sin(2*np.pi*(xm_middle[imn]*u_plot_2D_column+xn_middle[imn]*v_plot_2D_column))
+    FourierToX_sin[:,imn] = np.sin(2*np.pi*(xm_middle[imn]*u_plot_2D_column+xn_middle[imn]*v_plot_2D_column))
+    FourierToX_cos[:,imn] = np.cos(2*np.pi*(xm_middle[imn]*u_plot_2D_column+xn_middle[imn]*v_plot_2D_column))
 
 for whichThreshold in range(n_pseudoinverse_thresholds):
     figureNum += 1
@@ -217,7 +224,8 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
 
     for whichPlot in range(n_singular_vectors_to_save):
         plt.subplot(numRows,numCols,whichPlot+1)
-        data = np.reshape(np.dot(FourierToX, svd_v_transferMatrix[whichThreshold,whichPlot,:]), [nu_plot,nv_plot],order='F')
+        data = np.reshape(np.dot(FourierToX_sin, svd_v_transferMatrix_sin[whichThreshold,whichPlot,:]) + \
+                          np.dot(FourierToX_cos, svd_v_transferMatrix_cos[whichThreshold,whichPlot,:]), [nu_plot,nv_plot],order='F')
         plt.contourf(v_plot, u_plot, data, numContours)
         #plt.colorbar()
         plt.xlabel('v',fontsize='x-small')

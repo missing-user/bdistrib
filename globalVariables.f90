@@ -35,6 +35,7 @@ module globalVariables
   integer :: mpol_plasma=8, mpol_middle=8, mpol_outer=8
   integer :: ntor_plasma=8, ntor_middle=8, ntor_outer=8
   integer :: mnmax_plasma, mnmax_middle, mnmax_outer
+  integer :: num_basis_functions_plasma, num_basis_functions_middle, num_basis_functions_outer
   integer, dimension(:), allocatable :: xm_plasma, xm_middle, xm_outer
   integer, dimension(:), allocatable :: xn_plasma, xn_middle, xn_outer
 
@@ -53,10 +54,16 @@ module globalVariables
   integer :: n_singular_vectors_to_save = 5, n_singular_values_transferMatrix
   integer, dimension(:), allocatable :: n_singular_values_retained
   real(dp), dimension(:,:), allocatable :: svd_s_transferMatrix
-  real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix, svd_v_transferMatrix
+
+  ! EZCDF doesn't allow 4D arrays, so I can't include sin/cos as a 4th dimension.
+  real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix_sin, svd_v_transferMatrix_sin
+  real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix_cos, svd_v_transferMatrix_cos
 
   logical :: allSVDsSucceeded
   integer :: nfp_imposed = 1
+
+  integer :: basis_set_option = 1
+  real(dp) :: totalTime
 
 end module globalVariables
 

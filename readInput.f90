@@ -13,7 +13,7 @@ subroutine readInput
        geometry_option_plasma, geometry_option_middle, geometry_option_outer, &
        R0_plasma, R0_middle, R0_outer, a_plasma, a_middle, a_outer, &
        separation_middle, separation_outer, woutFilename, pseudoinverse_thresholds, &
-       save_level, n_singular_vectors_to_save, nfp_imposed, &
+       save_level, n_singular_vectors_to_save, nfp_imposed, basis_set_option, &
        mpol_plasma, ntor_plasma, mpol_middle, ntor_middle, mpol_outer, ntor_outer
 
   ! getcarg is in LIBSTELL
@@ -72,5 +72,17 @@ subroutine readInput
   print *,"  ntor_plasma =",ntor_plasma
   print *,"  ntor_middle =",ntor_middle
   print *,"  ntor_outer  =",ntor_outer
+
+  select case (basis_set_option)
+  case (1)
+     print *,"Set of basis functions: sin(2*pi*[n*u + m*v]) only"
+  case (2)
+     print *,"Set of basis functions: cos(2*pi*[n*u + m*v]) only"
+  case (3)
+     print *,"Set of basis functions: both sin(2*pi*[n*u + m*v]) and cos(2*pi*[n*u + m*v])"
+  case default
+     print *,"Error! Invalid setting for basis_set_option: ",basis_set_option
+     stop
+  end select
 
 end subroutine readInput

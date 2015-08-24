@@ -20,11 +20,11 @@ subroutine buildTransferMatrix
   integer, dimension(:), allocatable :: IWORK
 
 
-  allocate(Mpc_V(mnmax_plasma, mnmax_outer), stat=iflag)
+  allocate(Mpc_V(num_basis_functions_plasma, num_basis_functions_outer), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(tempMatrix(mnmax_outer, mnmax_middle), stat=iflag)
+  allocate(tempMatrix(num_basis_functions_outer, num_basis_functions_middle), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(transferMatrix(mnmax_plasma, mnmax_middle), stat=iflag)
+  allocate(transferMatrix(num_basis_functions_plasma, num_basis_functions_middle), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
   allocate(n_singular_values_retained(n_pseudoinverse_thresholds), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
@@ -39,8 +39,8 @@ subroutine buildTransferMatrix
   ! Before beginning the loop over thresholds, do the initialization that will be needed for the SVD.
 
   JOBZ='A'  ! Compute all the singular vectors.  Consider changing this if performance is an issue.
-  M = mnmax_plasma
-  N = mnmax_middle
+  M = num_basis_functions_plasma
+  N = num_basis_functions_middle
   LDA = M
   LDU = M
   LDVT = N
@@ -64,11 +64,19 @@ subroutine buildTransferMatrix
   if (iflag .ne. 0) stop 'Allocation error E!'
   allocate(VT(N,N),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error F!'
-  allocate(svd_u_transferMatrix(M,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
-  if (iflag .ne. 0) stop 'Allocation error G!'
-  allocate(svd_v_transferMatrix(N,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
-  if (iflag .ne. 0) stop 'Allocation error H!'
+  allocate(svd_u_transferMatrix_sin(mnmax_plasma,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error G1!'
+  allocate(svd_u_transferMatrix_cos(mnmax_plasma,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error G2!'
+  allocate(svd_v_transferMatrix_sin(mnmax_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error H1!'
+  allocate(svd_v_transferMatrix_cos(mnmax_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error H2!'
 
+  svd_u_transferMatrix_sin = 0
+  svd_u_transferMatrix_cos = 0
+  svd_v_transferMatrix_sin = 0
+  svd_v_transferMatrix_cos = 0
 
   ! Done with initialization. Now begin the loop over thresholds:
 
@@ -138,8 +146,25 @@ subroutine buildTransferMatrix
   
      svd_s_transferMatrix(:,whichThreshold) = svd_s_transferMatrix_single
      do i = 1,n_singular_vectors_to_save
-        svd_u_transferMatrix(:,i,whichThreshold) = U(:,i)
-        svd_v_transferMatrix(:,i,whichThreshold) = VT(i,:)
+        select case (basis_set_option)
+        case (1)
+           ! sine only
+           svd_u_transferMatrix_sin(:,i,whichThreshold) = U(:,i)
+           svd_v_transferMatrix_sin(:,i,whichThreshold) = VT(i,:)
+        case (2)
+           ! cosine only
+           svd_u_transferMatrix_cos(:,i,whichThreshold) = U(:,i)
+           svd_v_transferMatrix_cos(:,i,whichThreshold) = VT(i,:)
+        case (3)
+           ! Both sine and cosine
+           svd_u_transferMatrix_sin(:,i,whichThreshold) = U(1:mnmax_plasma,i)
+           svd_u_transferMatrix_cos(:,i,whichThreshold) = U(mnmax_plasma+1:num_basis_functions_plasma,i)
+           svd_v_transferMatrix_sin(:,i,whichThreshold) = VT(i,1:mnmax_middle)
+           svd_v_transferMatrix_cos(:,i,whichThreshold) = VT(i,mnmax_middle+1:num_basis_functions_middle)
+        case default
+           print *,"Error! Invalid value for basis_set_option: ",basis_set_option
+           stop
+        end select
      end do
 
   end do

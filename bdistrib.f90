@@ -31,6 +31,9 @@ program bdistrib
 
   call buildTransferMatrix()
 
+  call system_clock(toc)
+  totalTime = real(toc-tic)/countrate
+
   call writeOutput()
 
   if (allSVDsSucceeded) then
@@ -41,8 +44,7 @@ program bdistrib
      print *,"**************************"
   end if
 
-  call system_clock(toc)
-  print *,"BDISTRIB complete. Total time=",real(toc-tic)/countrate,"sec."
+  print *,"BDISTRIB complete. Total time=",totalTime,"sec."
   print *,"You can run bdistribPlot ",trim(outputFilename)," to plot results."
 
 end program bdistrib
