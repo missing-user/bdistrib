@@ -1,3 +1,9 @@
+# makefile for NERSC Edison
+
+# It is convenient to run
+#   module unload cray-libsci
+# to avoid warning messages about libsci during compiling.
+
 FC = ftn
 LIBSTELL_DIR = /global/homes/l/landrema/20150410-02-stellinstall_245_edison/LIBSTELL/Release
 EXTRA_COMPILE_FLAGS = -O3 -openmp -mkl

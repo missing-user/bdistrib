@@ -129,27 +129,27 @@ contains
           do iv = 1, nv
              do iu = 1, nu
                 index = (iv-1)*nu + iu
-                x = r(iu,iv,1)
-                y = r(iu,iv,2)
-                z = r(iu,iv,3)
+                x = r(1,iu,iv)
+                y = r(2,iu,iv)
+                z = r(3,iu,iv)
                 do l_outer = 0, (nfp-1)
                    ivl_outer = iv_outer + l_outer*nv_outer
-                   dx = x - r_outer(iu_outer,ivl_outer,1)
-                   dy = y - r_outer(iu_outer,ivl_outer,2)
-                   dz = z - r_outer(iu_outer,ivl_outer,3)
+                   dx = x - r_outer(1,iu_outer,ivl_outer)
+                   dy = y - r_outer(2,iu_outer,ivl_outer)
+                   dz = z - r_outer(3,iu_outer,ivl_outer)
 
                    dr2 = dx*dx + dy*dy + dz*dz
                    dr32 = dr2*sqrt(dr2)
 
                    inductance_xbasis(index,index_outer) = inductance_xbasis(index,index_outer) + &
-                        (normal(iu,iv,1)*normal_outer(iu_outer,ivl_outer,1) &
-                        +normal(iu,iv,2)*normal_outer(iu_outer,ivl_outer,2) &
-                        +normal(iu,iv,3)*normal_outer(iu_outer,ivl_outer,3) &
+                        (normal(1,iu,iv)*normal_outer(1,iu_outer,ivl_outer) &
+                        +normal(2,iu,iv)*normal_outer(2,iu_outer,ivl_outer) &
+                        +normal(3,iu,iv)*normal_outer(3,iu_outer,ivl_outer) &
                         - (3/dr2) * &
-                        (normal(iu,iv,1)*dx + normal(iu,iv,2)*dy + normal(iu,iv,3)*dz) * &
-                        (normal_outer(iu_outer,ivl_outer,1)*dx &
-                        +normal_outer(iu_outer,ivl_outer,2)*dy &
-                        +normal_outer(iu_outer,ivl_outer,3)*dz)) / dr32
+                        (normal(1,iu,iv)*dx + normal(2,iu,iv)*dy + normal(3,iu,iv)*dz) * &
+                        (normal_outer(1,iu_outer,ivl_outer)*dx &
+                        +normal_outer(2,iu_outer,ivl_outer)*dy &
+                        +normal_outer(3,iu_outer,ivl_outer)*dz)) / dr32
                 end do
              end do
           end do

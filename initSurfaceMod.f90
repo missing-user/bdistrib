@@ -51,14 +51,14 @@ module initSurfaceMod
       du = u(2)-u(1)
       dv = v(2)-v(1)
 
-      ! Last dimension is the Cartesian component x, y, or z.
-      allocate(r(nu,nvl,3),stat=iflag)
+      ! First dimension is the Cartesian component x, y, or z.
+      allocate(r(3,nu,nvl),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
-      allocate(drdu(nu,nvl,3),stat=iflag)
+      allocate(drdu(3,nu,nvl),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
-      allocate(drdv(nu,nvl,3),stat=iflag)
+      allocate(drdv(3,nu,nvl),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
-      allocate(normal(nu,nvl,3),stat=iflag)
+      allocate(normal(3,nu,nvl),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
 
       r = 0
@@ -90,17 +90,17 @@ module initSurfaceMod
                dsinangle2dv = cosangle2*twopi/nfp
                dcosangle2dv = -sinangle2*twopi/nfp
 
-               r(iu,iv,1) = (R0_to_use + a * cosangle) * cosangle2
-               r(iu,iv,2) = (R0_to_use + a * cosangle) * sinangle2
-               r(iu,iv,3) = a * sinangle
+               r(1,iu,iv) = (R0_to_use + a * cosangle) * cosangle2
+               r(2,iu,iv) = (R0_to_use + a * cosangle) * sinangle2
+               r(3,iu,iv) = a * sinangle
 
-               drdu(iu,iv,1) = (a * dcosangledu) * cosangle2
-               drdu(iu,iv,2) = (a * dcosangledu) * sinangle2
-               drdu(iu,iv,3) = a * dsinangledu
+               drdu(1,iu,iv) = (a * dcosangledu) * cosangle2
+               drdu(2,iu,iv) = (a * dcosangledu) * sinangle2
+               drdu(3,iu,iv) = a * dsinangledu
 
-               drdv(iu,iv,1) = (R0_to_use + a * cosangle) * dcosangle2dv
-               drdv(iu,iv,2) = (R0_to_use + a * cosangle) * dsinangle2dv
-               !drdv(iu,iv,3) = 0, so no equation needed for it here.
+               drdv(1,iu,iv) = (R0_to_use + a * cosangle) * dcosangle2dv
+               drdv(2,iu,iv) = (R0_to_use + a * cosangle) * dsinangle2dv
+               !drdv(3,iu,iv) = 0, so no equation needed for it here.
             end do
          end do
 
@@ -129,9 +129,9 @@ module initSurfaceMod
                end if
 
                call expandPlasmaSurface(u_rootSolve, v_plasma_rootSolveSolution, separation, x_new, y_new, z_new)
-               r(iu,iv,1) = x_new
-               r(iu,iv,2) = y_new
-               r(iu,iv,3) = z_new
+               r(1,iu,iv) = x_new
+               r(2,iu,iv) = y_new
+               r(3,iu,iv) = z_new
 
             end do
 
@@ -143,13 +143,13 @@ module initSurfaceMod
       end select
 
       ! Evaluate cross product:
-      normal(:,:,1) = drdv(:,:,2) * drdu(:,:,3) - drdu(:,:,2) * drdv(:,:,3)
-      normal(:,:,2) = drdv(:,:,3) * drdu(:,:,1) - drdu(:,:,3) * drdv(:,:,1)
-      normal(:,:,3) = drdv(:,:,1) * drdu(:,:,2) - drdu(:,:,1) * drdv(:,:,2)
+      normal(1,:,:) = drdv(2,:,:) * drdu(3,:,:) - drdu(2,:,:) * drdv(3,:,:)
+      normal(2,:,:) = drdv(3,:,:) * drdu(1,:,:) - drdu(3,:,:) * drdv(1,:,:)
+      normal(3,:,:) = drdv(1,:,:) * drdu(2,:,:) - drdu(1,:,:) * drdv(2,:,:)
 
       allocate(norm_normal(nu, nvl),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
-      norm_normal = sqrt(normal(:,:,1)**2 + normal(:,:,2)**2 + normal(:,:,3)**2)
+      norm_normal = sqrt(normal(1,:,:)**2 + normal(2,:,:)**2 + normal(3,:,:)**2)
 
       contains
 

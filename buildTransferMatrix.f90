@@ -12,13 +12,17 @@ subroutine buildTransferMatrix
   real(dp) :: threshold
   integer :: max_singular_value_index, i
 
-  ! Stuff needed by LAPACK:
+  ! Variables needed by LAPACK:
   character :: JOBZ
   integer :: INFO, LDA, LDU, LDVT, LWORK, M, N
   real(dp), dimension(:,:), allocatable :: U, VT
   real(dp), dimension(:), allocatable :: WORK, svd_s_transferMatrix_single
   integer, dimension(:), allocatable :: IWORK
 
+  ! Variables needed by BLAS DGEMM:
+  character :: TRANSA='N', TRANSB='N'
+  integer :: M_DGEMM, N_DGEMM, K_DGEMM, LDA_DGEMM, LDB_DGEMM, LDC_DGEMM
+  real(dp) :: ALPHA=1, BETA=0
 
   allocate(Mpc_V(num_basis_functions_plasma, num_basis_functions_outer), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
@@ -31,7 +35,21 @@ subroutine buildTransferMatrix
 
   print *,"Forming matrix product M_po * V_mo"
   call system_clock(tic,countrate)
-  Mpc_V = matmul(inductance_plasma, svd_v_inductance_middle)
+  ! Slow but simpler method using "matmul":
+  !Mpc_V = matmul(inductance_plasma, svd_v_inductance_middle)
+
+  ! A = inductance_plasma
+  ! B = svd_v_inductance_middle
+  ! C = Mpc_V
+  M_DGEMM = size(inductance_plasma,1) ! # rows of A
+  N_DGEMM = size(svd_v_inductance_middle,2) ! # cols of B
+  K_DGEMM = size(inductance_plasma,2) ! Common dimension of A and B
+  LDA_DGEMM = M_DGEMM
+  LDB_DGEMM = K_DGEMM
+  LDC_DGEMM = M_DGEMM
+  call DGEMM(TRANSA,TRANSB,M_DGEMM,N_DGEMM,K_DGEMM,ALPHA,inductance_plasma,LDA_DGEMM,&
+       svd_v_inductance_middle,LDB_DGEMM,BETA,Mpc_V,LDC_DGEMM)
+
   call system_clock(toc)
   print *,"Done. Took",real(toc-tic)/countrate," sec."
 
@@ -108,7 +126,23 @@ subroutine buildTransferMatrix
 
      print *,"  Beginning final assembly of transfer matrix."
      call system_clock(tic)
-     transferMatrix = matmul(Mpc_V, tempMatrix)
+     
+     ! Transparent but slow method using "matmul":
+     !transferMatrix = matmul(Mpc_V, tempMatrix)
+
+     ! A = inductance_plasma
+     ! B = svd_v_inductance_middle
+     ! C = Mpc_V
+     M_DGEMM = size(Mpc_V,1) ! # rows of A
+     N_DGEMM = size(tempMatrix,2) ! # cols of B
+     K_DGEMM = size(Mpc_V,2) ! Common dimension of A and B
+     LDA_DGEMM = M_DGEMM
+     LDB_DGEMM = K_DGEMM
+     LDC_DGEMM = M_DGEMM
+     call DGEMM(TRANSA,TRANSB,M_DGEMM,N_DGEMM,K_DGEMM,ALPHA,Mpc_V,LDA_DGEMM, &
+          tempMatrix,LDB_DGEMM,BETA,transferMatrix,LDC_DGEMM)
+
+
      call system_clock(toc)
      print *,"  Done. Took",real(toc-tic)/countrate," sec."
 

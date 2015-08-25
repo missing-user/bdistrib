@@ -283,23 +283,23 @@ Nx = dydv .* dzdu - dzdv .* dydu;
 Ny = dzdv .* dxdu - dxdv .* dzdu;
 Nz = dxdv .* dydu - dydv .* dxdu;
 
-r_plasma = zeros(nu_plasma, nvl_plasma, 3);
-drdu_plasma = zeros(nu_plasma, nvl_plasma, 3);
-drdv_plasma = zeros(nu_plasma, nvl_plasma, 3);
-normal_plasma = zeros(nu_plasma, nvl_plasma, 3);
+r_plasma = zeros(3, nu_plasma, nvl_plasma);
+drdu_plasma = zeros(3, nu_plasma, nvl_plasma);
+drdv_plasma = zeros(3, nu_plasma, nvl_plasma);
+normal_plasma = zeros(3, nu_plasma, nvl_plasma);
 
-r_plasma(:,:,1) = x;
-r_plasma(:,:,2) = y;
-r_plasma(:,:,3) = z;
-drdu_plasma(:,:,1) = dxdu;
-drdu_plasma(:,:,2) = dydu;
-drdu_plasma(:,:,3) = dzdu;
-drdv_plasma(:,:,1) = dxdv;
-drdv_plasma(:,:,2) = dydv;
-drdv_plasma(:,:,3) = dzdv;
-normal_plasma(:,:,1) = Nx;
-normal_plasma(:,:,2) = Ny;
-normal_plasma(:,:,3) = Nz;
+r_plasma(1,:,:) = x;
+r_plasma(2,:,:) = y;
+r_plasma(3,:,:) = z;
+drdu_plasma(1,:,:) = dxdu;
+drdu_plasma(2,:,:) = dydu;
+drdu_plasma(3,:,:) = dzdu;
+drdv_plasma(1,:,:) = dxdv;
+drdv_plasma(2,:,:) = dydv;
+drdv_plasma(3,:,:) = dzdv;
+normal_plasma(1,:,:) = Nx;
+normal_plasma(2,:,:) = Ny;
+normal_plasma(3,:,:) = Nz;
 
 compareVariableToFortran('nfp')
 compareVariableToFortran('u_plasma')
@@ -357,23 +357,23 @@ compareVariableToFortran('normal_plasma')
         Ny = dzdv .* dxdu - dxdv .* dzdu;
         Nz = dxdv .* dydu - dydv .* dxdu;
         
-        r = zeros(nu, nvl, 3);
-        drdu = zeros(nu, nvl, 3);
-        drdv = zeros(nu, nvl, 3);
-        normal = zeros(nu, nvl, 3);
+        r = zeros(3, nu, nvl);
+        drdu = zeros(3, nu, nvl);
+        drdv = zeros(3, nu, nvl);
+        normal = zeros(3, nu, nvl);
         
-        r(:,:,1) = x;
-        r(:,:,2) = y;
-        r(:,:,3) = z;
-        drdu(:,:,1) = dxdu;
-        drdu(:,:,2) = dydu;
-        drdu(:,:,3) = dzdu;
-        drdv(:,:,1) = dxdv;
-        drdv(:,:,2) = dydv;
-        drdv(:,:,3) = dzdv;
-        normal(:,:,1) = Nx;
-        normal(:,:,2) = Ny;
-        normal(:,:,3) = Nz;
+        r(1,:,:) = x;
+        r(2,:,:) = y;
+        r(3,:,:) = z;
+        drdu(1,:,:) = dxdu;
+        drdu(2,:,:) = dydu;
+        drdu(3,:,:) = dzdu;
+        drdv(1,:,:) = dxdv;
+        drdv(2,:,:) = dydv;
+        drdv(3,:,:) = dzdv;
+        normal(1,:,:) = Nx;
+        normal(2,:,:) = Ny;
+        normal(3,:,:) = Nz;
 
     end
 
@@ -418,37 +418,37 @@ if plot3DFigure
 
     % "Rotate" in theta so the seam in the plot is on the bottom
     nshift = round(nu_plasma*0.25);
-    r_plasma_toplot = circshift(r_plasma_toplot, [nshift,0,0]);
+    r_plasma_toplot = circshift(r_plasma_toplot, [0,nshift,0]);
     nshift = round(nu_middle*0.25);
-    r_middle_toplot = circshift(r_middle_toplot, [nshift,0,0]);
+    r_middle_toplot = circshift(r_middle_toplot, [0,nshift,0]);
     nshift = round(nu_outer*0.25);
-    r_outer_toplot = circshift(r_outer_toplot, [nshift,0,0]);
+    r_outer_toplot = circshift(r_outer_toplot, [0,nshift,0]);
 
     % Close surfaces for plotting:
+    r_plasma_toplot(:,:,end+1) = r_plasma_toplot(:,:,1);
     r_plasma_toplot(:,end+1,:) = r_plasma_toplot(:,1,:);
-    r_plasma_toplot(end+1,:,:) = r_plasma_toplot(1,:,:);
     
     % For middle and outer surfaces, close in u, but don't bother closing
     % in v:
-    r_middle_toplot(end+1,:,:) = r_middle_toplot(1,:,:);
-    r_outer_toplot(end+1,:,:) = r_outer_toplot(1,:,:);
+    r_middle_toplot(:,end+1,:) = r_middle_toplot(:,1,:);
+    r_outer_toplot(:,end+1,:)  = r_outer_toplot(:,1,:);
     
     
     
     mask = vl_middle < 0.7*nfp;
-    r_middle_toplot = r_middle_toplot(:,mask,:);
+    r_middle_toplot = r_middle_toplot(:,:,mask);
     
     mask = (vl_outer > 0.15*nfp) & (vl_outer < 0.55*nfp);
-    r_outer_toplot = r_outer_toplot(:,mask,:);
+    r_outer_toplot = r_outer_toplot(:,:,mask);
 
     figure(1 + figureOffset)
     clf
     set(gcf,'Color','w')
     faceColor = [1,0,0];
-    surf(r_plasma_toplot(:,:,1),r_plasma_toplot(:,:,2),r_plasma_toplot(:,:,3),'FaceColor',faceColor,'EdgeColor','none')
+    surf(squeeze(r_plasma_toplot(1,:,:)),squeeze(r_plasma_toplot(2,:,:)),squeeze(r_plasma_toplot(3,:,:)),'FaceColor',faceColor,'EdgeColor','none')
     hold on
     if plotGrids
-        plot3(r_plasma_toplot(:,:,1),r_plasma_toplot(:,:,2),r_plasma_toplot(:,:,3),'.r')
+        plot3(squeeze(r_plasma_toplot(1,:,:)),squeeze(r_plasma_toplot(2,:,:)),squeeze(r_plasma_toplot(3,:,:)),'.r')
     end
     daspect([1,1,1])
     %shading interp
@@ -457,14 +457,14 @@ if plot3DFigure
     
     faceColor = [1,0,1];
     %faceColor = [0,1,0];
-    surf(r_middle_toplot(:,:,1),r_middle_toplot(:,:,2),r_middle_toplot(:,:,3),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
+    surf(squeeze(r_middle_toplot(1,:,:)),squeeze(r_middle_toplot(2,:,:)),squeeze(r_middle_toplot(3,:,:)),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
     
     faceColor = [0,0,1];
-    surf(r_outer_toplot(:,:,1),r_outer_toplot(:,:,2),r_outer_toplot(:,:,3),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
+    surf(squeeze(r_outer_toplot(1,:,:)),squeeze(r_outer_toplot(2,:,:)),squeeze(r_outer_toplot(3,:,:)),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
     
     if plotGrids
-        plot3(r_middle_toplot(:,:,1),r_middle_toplot(:,:,2),r_middle_toplot(:,:,3),'.m')
-        plot3(r_outer_toplot(:,:,1),r_outer_toplot(:,:,2),r_outer_toplot(:,:,3),'.b')
+        plot3(squeeze(r_middle_toplot(1,:,:)),squeeze(r_middle_toplot(2,:,:)),squeeze(r_middle_toplot(3,:,:)),'.m')
+        plot3(squeeze(r_outer_toplot(1,:,:)), squeeze(r_outer_toplot(2,:,:)), squeeze(r_outer_toplot(3,:,:)),'.b')
     end
     %surf(X_coil,Y_coil,Z_coil,'FaceColor',faceColor,'EdgeColor','none')
     %surf(X_coil,Y_coil,Z_coil,'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
@@ -505,8 +505,8 @@ switch basis_set_option
 end
 
     function inductanceMatrix = computeInductanceMatrix(r, normal, u, v, mnmax, xm, xn, num_basis_functions)
-        nu = size(r,1);
-        nv = size(r,2)/nfp;
+        nu = size(r,2);
+        nv = size(r,3)/nfp;
         if round(nv) ~= nv
             error('Something went wrong.')
         end
@@ -556,16 +556,16 @@ end
                 index_outer = (iv_outer-1)*nu_outer + iu_outer;
                 for l_outer = 0:(nfp-1)
                     ivl_outer = iv_outer + l_outer*nv_outer;
-                    dx = r(:,vIndices,1) - r_outer(iu_outer,ivl_outer,1);
-                    dy = r(:,vIndices,2) - r_outer(iu_outer,ivl_outer,2);
-                    dz = r(:,vIndices,3) - r_outer(iu_outer,ivl_outer,3);
+                    dx = r(1,:,vIndices) - r_outer(1,iu_outer,ivl_outer);
+                    dy = r(2,:,vIndices) - r_outer(2,iu_outer,ivl_outer);
+                    dz = r(3,:,vIndices) - r_outer(3,iu_outer,ivl_outer);
                     dr2 = dx.*dx + dy.*dy + dz.*dz;
                     denominator = dr2 .* sqrt(dr2);
-                    temp = (normal(:,vIndices,1)*normal_outer(iu_outer,ivl_outer,1) ...
-                        +   normal(:,vIndices,2)*normal_outer(iu_outer,ivl_outer,2) ...
-                        +   normal(:,vIndices,3)*normal_outer(iu_outer,ivl_outer,3) ...
-                        - (3./dr2) .* (dx .* normal(:,vIndices,1) + dy .* normal(:,vIndices,2) + dz .* normal(:,vIndices,3)) ...
-                        .* (dx * normal_outer(iu_outer,ivl_outer,1) + dy * normal_outer(iu_outer,ivl_outer,2) + dz * normal_outer(iu_outer,ivl_outer,3))) ./ denominator;
+                    temp = (normal(1,:,vIndices)*normal_outer(1,iu_outer,ivl_outer) ...
+                        +   normal(2,:,vIndices)*normal_outer(2,iu_outer,ivl_outer) ...
+                        +   normal(3,:,vIndices)*normal_outer(3,iu_outer,ivl_outer) ...
+                        - (3./dr2) .* (dx .* normal(1,:,vIndices) + dy .* normal(2,:,vIndices) + dz .* normal(3,:,vIndices)) ...
+                        .* (dx * normal_outer(1,iu_outer,ivl_outer) + dy * normal_outer(2,iu_outer,ivl_outer) + dz * normal_outer(3,iu_outer,ivl_outer))) ./ denominator;
                     inductanceMatrix_xBasis(:,index_outer) = inductanceMatrix_xBasis(:,index_outer) + ...
                         reshape(temp, [nu*nv,1]);
                 end

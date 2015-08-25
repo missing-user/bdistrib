@@ -124,9 +124,9 @@ subroutine writeOutput
 
   ! Arrays with dimension 3:
   character(len=*), parameter, dimension(3) :: &
-       u_vl_xyz_plasma_dim  = (/'nu_plasma' ,'nvl_plasma' ,'xyz'/), &
-       u_vl_xyz_middle_dim  = (/'nu_middle' ,'nvl_middle' ,'xyz'/), &
-       u_vl_xyz_outer_dim = (/'nu_outer','nvl_outer','xyz'/), &
+       xyz_u_vl_plasma_dim = (/'xyz','nu_plasma','nvl_plasma'/), &
+       xyz_u_vl_middle_dim = (/'xyz','nu_middle','nvl_middle'/), &
+       xyz_u_vl_outer_dim  = (/'xyz','nu_outer', 'nvl_outer'/), &
        mnmax_plasma_nsave_thresholds_dim = (/'mnmax_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
        mnmax_middle_nsave_thresholds_dim = (/'mnmax_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/)
 
@@ -213,21 +213,24 @@ subroutine writeOutput
 
   ! Arrays with dimension 3
 
-  call cdf_define(ncid, vn_r_plasma,  r_plasma,  dimname=u_vl_xyz_plasma_dim)
-  call cdf_define(ncid, vn_r_middle,  r_middle,  dimname=u_vl_xyz_middle_dim)
-  call cdf_define(ncid, vn_r_outer, r_outer, dimname=u_vl_xyz_outer_dim)
+  call cdf_define(ncid, vn_r_plasma,  r_plasma,  dimname=xyz_u_vl_plasma_dim)
+  call cdf_define(ncid, vn_r_middle,  r_middle,  dimname=xyz_u_vl_middle_dim)
+  call cdf_define(ncid, vn_r_outer, r_outer, dimname=xyz_u_vl_outer_dim)
 
-  call cdf_define(ncid, vn_drdu_plasma,  drdu_plasma,  dimname=u_vl_xyz_plasma_dim)
-  call cdf_define(ncid, vn_drdu_middle,  drdu_middle,  dimname=u_vl_xyz_middle_dim)
-  call cdf_define(ncid, vn_drdu_outer, drdu_outer, dimname=u_vl_xyz_outer_dim)
+  if (save_level < 2) then
+     call cdf_define(ncid, vn_drdu_plasma,  drdu_plasma,  dimname=xyz_u_vl_plasma_dim)
+     call cdf_define(ncid, vn_drdu_middle,  drdu_middle,  dimname=xyz_u_vl_middle_dim)
+     call cdf_define(ncid, vn_drdu_outer, drdu_outer, dimname=xyz_u_vl_outer_dim)
+     
+     call cdf_define(ncid, vn_drdv_plasma,  drdv_plasma,  dimname=xyz_u_vl_plasma_dim)
+     call cdf_define(ncid, vn_drdv_middle,  drdv_middle,  dimname=xyz_u_vl_middle_dim)
+     call cdf_define(ncid, vn_drdv_outer, drdv_outer, dimname=xyz_u_vl_outer_dim)
 
-  call cdf_define(ncid, vn_drdv_plasma,  drdv_plasma,  dimname=u_vl_xyz_plasma_dim)
-  call cdf_define(ncid, vn_drdv_middle,  drdv_middle,  dimname=u_vl_xyz_middle_dim)
-  call cdf_define(ncid, vn_drdv_outer, drdv_outer, dimname=u_vl_xyz_outer_dim)
+     call cdf_define(ncid, vn_normal_plasma,  normal_plasma,  dimname=xyz_u_vl_plasma_dim)
+     call cdf_define(ncid, vn_normal_middle,  normal_middle,  dimname=xyz_u_vl_middle_dim)
+     call cdf_define(ncid, vn_normal_outer, normal_outer, dimname=xyz_u_vl_outer_dim)
+  end if
 
-  call cdf_define(ncid, vn_normal_plasma,  normal_plasma,  dimname=u_vl_xyz_plasma_dim)
-  call cdf_define(ncid, vn_normal_middle,  normal_middle,  dimname=u_vl_xyz_middle_dim)
-  call cdf_define(ncid, vn_normal_outer, normal_outer, dimname=u_vl_xyz_outer_dim)
   call cdf_define(ncid, vn_svd_u_transferMatrix_sin, svd_u_transferMatrix_sin, dimname=mnmax_plasma_nsave_thresholds_dim)
   call cdf_define(ncid, vn_svd_u_transferMatrix_cos, svd_u_transferMatrix_cos, dimname=mnmax_plasma_nsave_thresholds_dim)
   call cdf_define(ncid, vn_svd_v_transferMatrix_sin, svd_v_transferMatrix_sin, dimname=mnmax_middle_nsave_thresholds_dim)
@@ -317,17 +320,19 @@ subroutine writeOutput
   call cdf_write(ncid, vn_r_middle, r_middle)
   call cdf_write(ncid, vn_r_outer,  r_outer)
 
-  call cdf_write(ncid, vn_drdu_plasma, drdu_plasma)
-  call cdf_write(ncid, vn_drdu_middle, drdu_middle)
-  call cdf_write(ncid, vn_drdu_outer,  drdu_outer)
+  if (save_level < 2) then
+     call cdf_write(ncid, vn_drdu_plasma, drdu_plasma)
+     call cdf_write(ncid, vn_drdu_middle, drdu_middle)
+     call cdf_write(ncid, vn_drdu_outer,  drdu_outer)
 
-  call cdf_write(ncid, vn_drdv_plasma, drdv_plasma)
-  call cdf_write(ncid, vn_drdv_middle, drdv_middle)
-  call cdf_write(ncid, vn_drdv_outer,  drdv_outer)
+     call cdf_write(ncid, vn_drdv_plasma, drdv_plasma)
+     call cdf_write(ncid, vn_drdv_middle, drdv_middle)
+     call cdf_write(ncid, vn_drdv_outer,  drdv_outer)
 
-  call cdf_write(ncid, vn_normal_plasma, normal_plasma)
-  call cdf_write(ncid, vn_normal_middle, normal_middle)
-  call cdf_write(ncid, vn_normal_outer,  normal_outer)
+     call cdf_write(ncid, vn_normal_plasma, normal_plasma)
+     call cdf_write(ncid, vn_normal_middle, normal_middle)
+     call cdf_write(ncid, vn_normal_outer,  normal_outer)
+  end if
 
   call cdf_write(ncid, vn_svd_u_transferMatrix_sin, svd_u_transferMatrix_sin)
   call cdf_write(ncid, vn_svd_u_transferMatrix_cos, svd_u_transferMatrix_cos)

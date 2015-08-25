@@ -33,7 +33,7 @@ subroutine readInput
 
   pseudoinverse_thresholds = uninitialized
   ! Default: a single threshold
-  pseudoinverse_thresholds(1) = 1e-10
+  pseudoinverse_thresholds(1) = 1e-12
 
   fileUnit=11
   open(unit=fileUnit, file=inputFilename, action="read", status="old", iostat=didFileAccessWork)

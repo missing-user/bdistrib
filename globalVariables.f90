@@ -8,12 +8,12 @@ module globalVariables
   integer :: nu_middle=64, nv_middle=64, nvl_middle
   integer :: nu_outer =64, nv_outer =64, nvl_outer
 
-  integer :: geometry_option_plasma = 2
+  integer :: geometry_option_plasma = 0
   integer :: geometry_option_middle = 0
   integer :: geometry_option_outer  = 0
 
-  real(dp) :: R0_plasma = 5.5, R0_middle = 5.5, R0_outer = 5.5
-  real(dp) :: a_plasma = 1.0, a_middle = 1.5, a_outer = 2.0
+  real(dp) :: R0_plasma = 10.0, R0_middle = 10.0, R0_outer = 10.0
+  real(dp) :: a_plasma = 0.5, a_middle = 1.0, a_outer = 1.5
   real(dp) :: separation_middle=0.3, separation_outer=0.6
 
   character(len=200) :: woutFilename=""
@@ -50,7 +50,7 @@ module globalVariables
   integer :: n_pseudoinverse_thresholds
   real(dp) :: pseudoinverse_thresholds(nmax_pseudoinverse_thresholds)
 
-  integer :: save_level = 1
+  integer :: save_level = 2
   integer :: n_singular_vectors_to_save = 5, n_singular_values_transferMatrix
   integer, dimension(:), allocatable :: n_singular_values_retained
   real(dp), dimension(:,:), allocatable :: svd_s_transferMatrix

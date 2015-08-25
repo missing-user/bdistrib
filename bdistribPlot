@@ -91,16 +91,16 @@ plt.yscale('log')
 # For 3D plotting, 'close' the arrays in u and v
 ########################################################
 
+r_plasma  = np.append(r_plasma,  r_plasma[[0],:,:], axis=0)
 r_plasma  = np.append(r_plasma,  r_plasma[:,[0],:], axis=1)
-r_plasma  = np.append(r_plasma,  r_plasma[:,:,[0]], axis=2)
 vl_plasma = np.append(vl_plasma,nfp)
 
+r_middle  = np.append(r_middle,  r_middle[[0],:,:], axis=0)
 r_middle  = np.append(r_middle,  r_middle[:,[0],:], axis=1)
-r_middle  = np.append(r_middle,  r_middle[:,:,[0]], axis=2)
 vl_middle = np.append(vl_middle,nfp)
 
+r_outer = np.append(r_outer, r_outer[[0],:,:], axis=0)
 r_outer = np.append(r_outer, r_outer[:,[0],:], axis=1)
-r_outer = np.append(r_outer, r_outer[:,:,[0]], axis=2)
 vl_outer = np.append(vl_outer,nfp)
 
 ########################################################
@@ -108,9 +108,9 @@ vl_outer = np.append(vl_outer,nfp)
 ########################################################
 
 def getCrossSection(rArray, vl_old, v_new):
-    x = rArray[0,:,:]
-    y = rArray[1,:,:]
-    z = rArray[2,:,:]
+    x = rArray[:,:,0]
+    y = rArray[:,:,1]
+    z = rArray[:,:,2]
     R = np.sqrt(x**2 + y**2)
 
     nu = z.shape[1]
@@ -244,14 +244,14 @@ figureNum += 1
 fig = plt.figure(figureNum)
 fig.patch.set_facecolor('white')
 ax = fig.gca(projection='3d')
-ax.plot_surface(r_plasma[0,:,:], r_plasma[1,:,:], r_plasma[2,:,:], rstride=1, cstride=1, color='r',linewidth=0)
+ax.plot_surface(r_plasma[:,:,0], r_plasma[:,:,1], r_plasma[:,:,2], rstride=1, cstride=1, color='r',linewidth=0)
 
 maxIndex = int(nvl_middle*0.7)
-ax.plot_surface(r_middle[0,:maxIndex,:], r_middle[1,:maxIndex,:], r_middle[2,:maxIndex,:], rstride=1, cstride=1, color='m',linewidth=0)
+ax.plot_surface(r_middle[:maxIndex,:,0], r_middle[:maxIndex,:,1], r_middle[:maxIndex,:,2], rstride=1, cstride=1, color='m',linewidth=0)
 
 maxIndex = int(nvl_outer*0.55)
 minIndex = int(nvl_outer*0.15)
-ax.plot_surface(r_outer[0,minIndex:maxIndex,:], r_outer[1,minIndex:maxIndex,:], r_outer[2,minIndex:maxIndex,:], rstride=1, cstride=1, color='b',linewidth=0)
+ax.plot_surface(r_outer[minIndex:maxIndex,:,0], r_outer[minIndex:maxIndex,:,1], r_outer[minIndex:maxIndex,:,2], rstride=1, cstride=1, color='b',linewidth=0)
 
 plotLMax = r_outer.max()
 ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])

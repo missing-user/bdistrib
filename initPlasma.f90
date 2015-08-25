@@ -71,14 +71,14 @@ subroutine initPlasma
      vl_plasma(i) = (i-1.0_dp)/nv_plasma
   end do
 
-  ! Last coordinate is the Cartesian component x, y, or z
-  allocate(r_plasma(nu_plasma,nvl_plasma,3),stat=iflag)
+  ! First coordinate is the Cartesian component x, y, or z
+  allocate(r_plasma(3,nu_plasma,nvl_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(drdu_plasma(nu_plasma,nvl_plasma,3),stat=iflag)
+  allocate(drdu_plasma(3,nu_plasma,nvl_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(drdv_plasma(nu_plasma,nvl_plasma,3),stat=iflag)
+  allocate(drdv_plasma(3,nu_plasma,nvl_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(normal_plasma(nu_plasma,nvl_plasma,3),stat=iflag)
+  allocate(normal_plasma(3,nu_plasma,nvl_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
 
   r_plasma=0
@@ -101,29 +101,29 @@ subroutine initPlasma
            dsinangledv = -cosangle*twopi*xn(imn)/nfp
            dcosangledv = sinangle*twopi*xn(imn)/nfp
 
-           r_plasma(iu,iv,1) = r_plasma(iu,iv,1) + rmnc(imn,ns) * cosangle * cosangle2
-           r_plasma(iu,iv,2) = r_plasma(iu,iv,2) + rmnc(imn,ns) * cosangle * sinangle2
-           r_plasma(iu,iv,3) = r_plasma(iu,iv,3) + zmns(imn,ns) * sinangle
+           r_plasma(1,iu,iv) = r_plasma(1,iu,iv) + rmnc(imn,ns) * cosangle * cosangle2
+           r_plasma(2,iu,iv) = r_plasma(2,iu,iv) + rmnc(imn,ns) * cosangle * sinangle2
+           r_plasma(3,iu,iv) = r_plasma(3,iu,iv) + zmns(imn,ns) * sinangle
 
-           drdu_plasma(iu,iv,1) = drdu_plasma(iu,iv,1) + rmnc(imn,ns) * dcosangledu * cosangle2
-           drdu_plasma(iu,iv,2) = drdu_plasma(iu,iv,2) + rmnc(imn,ns) * dcosangledu * sinangle2
-           drdu_plasma(iu,iv,3) = drdu_plasma(iu,iv,3) + zmns(imn,ns) * dsinangledu
+           drdu_plasma(1,iu,iv) = drdu_plasma(1,iu,iv) + rmnc(imn,ns) * dcosangledu * cosangle2
+           drdu_plasma(2,iu,iv) = drdu_plasma(2,iu,iv) + rmnc(imn,ns) * dcosangledu * sinangle2
+           drdu_plasma(3,iu,iv) = drdu_plasma(3,iu,iv) + zmns(imn,ns) * dsinangledu
 
-           drdv_plasma(iu,iv,1) = drdv_plasma(iu,iv,1) + rmnc(imn,ns) * (dcosangledv * cosangle2 + cosangle * dcosangle2dv)
-           drdv_plasma(iu,iv,2) = drdv_plasma(iu,iv,2) + rmnc(imn,ns) * (dcosangledv * sinangle2 + cosangle * dsinangle2dv)
-           drdv_plasma(iu,iv,3) = drdv_plasma(iu,iv,3) + zmns(imn,ns) * dsinangledv
+           drdv_plasma(1,iu,iv) = drdv_plasma(1,iu,iv) + rmnc(imn,ns) * (dcosangledv * cosangle2 + cosangle * dcosangle2dv)
+           drdv_plasma(2,iu,iv) = drdv_plasma(2,iu,iv) + rmnc(imn,ns) * (dcosangledv * sinangle2 + cosangle * dsinangle2dv)
+           drdv_plasma(3,iu,iv) = drdv_plasma(3,iu,iv) + zmns(imn,ns) * dsinangledv
         end do
      end do
   end do
 
   ! Evaluate cross product
-  normal_plasma(:,:,1) = drdv_plasma(:,:,2) * drdu_plasma(:,:,3) - drdu_plasma(:,:,2) * drdv_plasma(:,:,3)
-  normal_plasma(:,:,2) = drdv_plasma(:,:,3) * drdu_plasma(:,:,1) - drdu_plasma(:,:,3) * drdv_plasma(:,:,1)
-  normal_plasma(:,:,3) = drdv_plasma(:,:,1) * drdu_plasma(:,:,2) - drdu_plasma(:,:,1) * drdv_plasma(:,:,2)
+  normal_plasma(1,:,:) = drdv_plasma(2,:,:) * drdu_plasma(3,:,:) - drdu_plasma(2,:,:) * drdv_plasma(3,:,:)
+  normal_plasma(2,:,:) = drdv_plasma(3,:,:) * drdu_plasma(1,:,:) - drdu_plasma(3,:,:) * drdv_plasma(1,:,:)
+  normal_plasma(3,:,:) = drdv_plasma(1,:,:) * drdu_plasma(2,:,:) - drdu_plasma(1,:,:) * drdv_plasma(2,:,:)
 
   allocate(norm_normal_plasma(nu_plasma, nvl_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  norm_normal_plasma = sqrt(normal_plasma(:,:,1)**2 + normal_plasma(:,:,2)**2 + normal_plasma(:,:,3)**2)
+  norm_normal_plasma = sqrt(normal_plasma(1,:,:)**2 + normal_plasma(2,:,:)**2 + normal_plasma(3,:,:)**2)
 
   du_plasma = u_plasma(2)-u_plasma(1)
   dv_plasma = v_plasma(2)-v_plasma(1)
