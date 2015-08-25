@@ -77,6 +77,63 @@ It is resonable and common but not mandatory to use the same value for \parlink{
 A value of 64 is often good when the number of field periods is more than 1. A higher value like 256 may be needed when the number of field periods is 1.
 It is resonable and common but not mandatory to use the same value for \parlink{nv\_plasma}, \parlink{nv\_middle}, and nv\_outer.}
 
+\myhrule
+
+\param{mpol\_plasma}
+{integer}
+{8}
+{Always}
+{Maximum poloidal mode number to include for the Fourier basis functions on the plasma surface. The value can be positive or zero.
+It is resonable and common but not mandatory to use the same value for {\ttfamily mpol\_plasma}, \parlink{mpol\_middle}, and \parlink{mpol\_outer}.}
+
+\myhrule
+
+\param{mpol\_middle}
+{integer}
+{8}
+{Always}
+{Maximum poloidal mode number to include for the Fourier basis functions on the middle surface. The value can be positive or zero.
+It is resonable and common but not mandatory to use the same value for \parlink{mpol\_plasma}, {\ttfamily mpol\_middle}, and \parlink{mpol\_outer}.}
+
+\myhrule
+
+\param{mpol\_outer}
+{integer}
+{8}
+{Always}
+{Maximum poloidal mode number to include for the Fourier basis functions on the outer surface. The value can be positive or zero.
+It is resonable and common but not mandatory to use the same value for \parlink{mpol\_plasma}, \parlink{mpol\_middle}, and {\ttfamily mpol\_outer}.}
+
+\myhrule
+
+\param{ntor\_plasma}
+{integer}
+{8}
+{Always}
+{Maximum toroidal mode number to include for the Fourier basis functions on the plasma surface. The value can be positive or zero.
+It is resonable and common but not mandatory to use the same value for {\ttfamily ntor\_plasma}, \parlink{ntor\_middle}, and \parlink{ntor\_outer}.
+You can set the three {\ttfamily ntor} parameters to zero to examine only axisymmetric modes.}
+
+\myhrule
+
+\param{ntor\_middle}
+{integer}
+{8}
+{Always}
+{Maximum toroidal mode number to include for the Fourier basis functions on the middle surface. The value can be positive or zero.
+It is resonable and common but not mandatory to use the same value for \parlink{ntor\_plasma}, {\ttfamily ntor\_middle}, and \parlink{ntor\_outer}.
+You can set the three {\ttfamily ntor} parameters to zero to examine only axisymmetric modes.}
+
+\myhrule
+
+\param{ntor\_outer}
+{integer}
+{8}
+{Always}
+{Maximum toroidal mode number to include for the Fourier basis functions on the outer surface. The value can be positive or zero.
+It is resonable and common but not mandatory to use the same value for \parlink{ntor\_plasma}, \parlink{ntor\_middle}, and {\ttfamily ntor\_outer}.
+You can set the three {\ttfamily ntor} parameters to zero to examine only axisymmetric modes.}
+
 \section{Geometry parameters for the plasma surface}
 
 \param{geometry\_option\_plasma}
@@ -105,7 +162,7 @@ It is resonable and common but not mandatory to use the same value for \parlink{
 
 \param{a\_plasma}
 {real}
-{1.0}
+{0.5}
 {Only when \parlink{geometry\_option\_plasma} is 0 or 1.}
 {Minor radius of the plasma surface, when this surface is a plain circular torus.}
 
@@ -118,6 +175,15 @@ It is resonable and common but not mandatory to use the same value for \parlink{
 {When the plasma surface is a plain circular torus, only toroidal mode numbers that are a multiple of this parameter will be considered.
 This parameter thus plays a role like \vmec's {\ttfamily nfp} (number of field periods),
 and is used when {\ttfamily nfp} is not already loaded from a \vmec~file.}
+
+\myhrule
+
+\param{woutFilename}
+{string}
+{`'}
+{Only when \parlink{geometry\_option\_plasma} is 2.}
+{Name of the \vmec~{\ttfamily wout} output file which will be used for the plasma surface.
+You can use either a \netCDF~or {\ttfamily ASCII} format file.}
 
 \section{Geometry parameters for the middle surface}
 
@@ -168,7 +234,7 @@ if  \parlink{geometry\_option\_plasma} is 2.
 
 {\ttfamily geometry\_option\_outer} = 1: Identical to option 0.\\
 
-{\ttfamily geometry\_option\_outer} = 2: The outer surface will be the last surface in the \vmec~file specified by \parlink{woutFilename}.
+{\ttfamily geometry\_option\_outer} = 2: The outer surface will computing by expanding the plasma surface uniformly by a distance \parlink{separation\_outer}.
 }
 
 \myhrule
@@ -183,7 +249,7 @@ if  \parlink{geometry\_option\_plasma} is 2.
 
 \param{a\_outer}
 {real}
-{1.0}
+{1.5}
 {Only when \parlink{geometry\_option\_outer} is 0 or 1.}
 {Minor radius of the outer surface, when this surface is a plain circular torus.}
 
@@ -206,14 +272,37 @@ if  \parlink{geometry\_option\_plasma} is 2.
 
 \myhrule
 
+\param{pseudoinverse\_thresholds}
+{real array}
+{1e-12}
+{Always}
+{To form the pseudoinverse of the outer-to-middle inductance matrix, singular values larger than this threshold
+will be replaced by their inverse, whereas singular values smaller than this threshold will be replaced by zero.
+You can supply more than one threshold value in order to compare results for different choices.
+Good threshold values are in the range 1e-6 to 1e-13, i.e. small compared to 1 but larger than machine precision.}
+
+\myhrule
+
+\param{n\_singular\_vectors\_to\_save}
+{integer}
+{12}
+{Always}
+{Number of columns of $U$ and $V$ to save in the output file, where $U$ and $V$ are the matrices of left and right singular vectors of the transfer matrix,
+$T = U\Sigma V^{T}$.
+Regardless of this parameter, all singular \emph{values} will be saved in the output file.}
+
+\myhrule
+
 \param{save\_level}
 {integer}
-{1}
+{2}
 {Always}
 {Option related determining how many variables are saved in the \netCDF~output file.  The larger the value, the smaller the output file.\\
 
 {\ttfamily save\_level} = 0: Save everything.\\
 
-{\ttfamily save\_level} = 1: Save everything except the inductance matrices.
+{\ttfamily save\_level} = 1: Save everything except the inductance matrices.\\
+
+{\ttfamily save\_level} = 2: Save everything except the inductance matrices and the {\ttfamily drdu}, {\ttfamily drdv}, and {\ttfamily normal} arrays.
 }
 
