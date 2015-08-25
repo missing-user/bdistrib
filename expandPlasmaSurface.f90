@@ -34,13 +34,13 @@ subroutine expandPlasmaSurface(u, v, separation, x,y,z)
   dcosphidv = -sinphi*twopi/nfp
 
   do imn = 1,mnmax
-     angle = twopi*(xm(imn)*u + xn(imn)*v/nfp)
+     angle = twopi*(xm(imn)*u - xn(imn)*v/nfp)
      cosangle = cos(angle)
      sinangle = sin(angle)
      dsinangledu = cosangle*twopi*xm(imn)
      dcosangledu = -sinangle*twopi*xm(imn)
-     dsinangledv = cosangle*twopi*xn(imn)/nfp
-     dcosangledv = -sinangle*twopi*xn(imn)/nfp
+     dsinangledv = -cosangle*twopi*xn(imn)/nfp
+     dcosangledv = sinangle*twopi*xn(imn)/nfp
 
      x = x + rmnc(imn,ns) * cosangle * cosphi
      y = y + rmnc(imn,ns) * cosangle * sinphi

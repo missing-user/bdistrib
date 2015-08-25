@@ -14,9 +14,11 @@ module globalVariables
 
   real(dp) :: R0_plasma = 10.0, R0_middle = 10.0, R0_outer = 10.0
   real(dp) :: a_plasma = 0.5, a_middle = 1.0, a_outer = 1.5
-  real(dp) :: separation_middle=0.3, separation_outer=0.6
+  real(dp) :: separation_middle=0.2, separation_outer=0.4
 
   character(len=200) :: woutFilename=""
+  character(len=200) :: nescin_filename_middle=""
+  character(len=200) :: nescin_filename_outer=""
   character(len=200) :: outputFilename
 
   real(dp), dimension(:), allocatable :: u_plasma, v_plasma, vl_plasma

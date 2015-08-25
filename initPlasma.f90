@@ -41,7 +41,7 @@ subroutine initPlasma
      call read_wout_file(woutFilename, ierr, iopen)
      if (iopen .ne. 0) stop 'error opening wout file'
      if (ierr .ne. 0) stop 'error reading wout file'
-     print *,"  Successfully read VMEC data from ",woutFilename
+     print *,"  Successfully read VMEC data from ",trim(woutFilename)
 
   case default
      print *,"Error! Invalid setting for geometry_option_plasma:",geometry_option_plasma

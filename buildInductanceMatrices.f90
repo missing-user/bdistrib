@@ -21,6 +21,13 @@ subroutine buildInductanceMatrices()
      stop
   end select
 
+  print *,"Number of basis functions on plasma surface:",num_basis_functions_plasma
+  print *,"Number of basis functions on middle surface:",num_basis_functions_middle
+  print *,"Number of basis functions on outer surface: ",num_basis_functions_outer
+
+  n_singular_vectors_to_save = min(n_singular_vectors_to_save, &
+       num_basis_functions_plasma, num_basis_functions_middle)
+
   call system_clock(tic,countrate)
   print *,"Building inductance matrix between plasma surface and outer surface."
   call buildInductanceMatrix(inductance_plasma, r_plasma, normal_plasma, nu_plasma, nv_plasma, &

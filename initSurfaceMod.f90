@@ -9,14 +9,16 @@ module initSurfaceMod
 
     subroutine initSurface(nu, nv, nvl, u, v, vl, &
          r, drdu, drdv, normal, norm_normal, &
-         geometry_option, R_specified, a, separation, du, dv)
+         geometry_option, R_specified, a, separation, du, dv, nescin_filename)
 
       use read_wout_mod
       use stel_kinds
       use stel_constants
+      use omp_lib
 
       implicit none
 
+      character(*) :: nescin_filename
       integer :: nu, nv, nvl, geometry_option, iflag
       real(dp) :: R_specified, a, separation, du, dv
       real(dp), dimension(:), allocatable :: u, v, vl
@@ -25,9 +27,8 @@ module initSurfaceMod
       real(dp) :: R0_to_use
       real(dp) :: angle, sinangle, cosangle, dsinangledu, dcosangledu
       real(dp) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
-      integer :: i, iu, iv, fzeroFlag
-      real(dp) :: u_rootSolve, rootSolve_abserr, rootSolve_relerr, v_rootSolve_min, v_rootSolve_max
-      real(dp) :: v_rootSolve_target, v_plasma_rootSolveSolution, x_new, y_new, z_new
+      integer :: i, iu, iv
+      real(dp) :: x_new, y_new, z_new, x_old, y_old, z_old, delta_u, delta_v, temp
 
       allocate(u(nu),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
@@ -108,34 +109,58 @@ module initSurfaceMod
 
          print *,"  Constructing a surface offset from the plasma by ",separation
 
-         !rootSolve_abserr = 0
-         !rootSolve_relerr = 0
-         rootSolve_abserr = 1.0e-10_dp
-         rootSolve_relerr = 1.0e-10_dp
-         do iu = 1,nu
-            u_rootSolve = u(iu)
-            do iv = 1,nvl
-               v_rootSolve_target = vl(iv)
-               v_rootSolve_min = v_rootSolve_target - 0.3
-               v_rootSolve_max = v_rootSolve_target + 0.3
-               call fzero(fzero_residual, v_rootSolve_min, v_rootSolve_max, v_rootSolve_target, &
-                    rootSolve_relerr, rootSolve_abserr, fzeroFlag)
-               ! Note: fzero returns its answer in v_rootSolve_min
-               v_plasma_rootSolveSolution = v_rootSolve_min
-               if (fzeroFlag == 4) then
-                  stop "ERROR: fzero returned error 4: no sign change in residual"
-               else if (fzeroFlag > 2) then
-                  print *,"WARNING: fzero returned an error code:",fzeroFlag
-               end if
+         ! Finite differences to use:
+         ! (Numerical Recipes suggests (machine epsilon)^(1/3)
+         delta_u = 1e-10;
+         delta_v = 1e-10;
+         ! Trick from Numerical Recipes for improved accuracy:
+         temp = 1.0_dp + delta_u
+         delta_u = temp - 1.0_dp
+         temp = 1.0_dp + delta_v
+         delta_v = temp - 1.0_dp
+ 
 
-               call expandPlasmaSurface(u_rootSolve, v_plasma_rootSolveSolution, separation, x_new, y_new, z_new)
+         !$OMP PARALLEL
+
+         !$OMP MASTER
+         print *,"  Number of OpenMP threads:",omp_get_num_threads()
+         !$OMP END MASTER
+
+         !$OMP DO PRIVATE(x_new,y_new,z_new,x_old,y_old,z_old)
+         do iu = 1,nu
+            do iv = 1,nvl
+
+               ! Compute r:
+               call compute_offset_surface_xyz_of_uv(u(iu),vl(iv),x_new,y_new,z_new,separation)
                r(1,iu,iv) = x_new
                r(2,iu,iv) = y_new
                r(3,iu,iv) = z_new
 
+               ! Compute dr/du:
+               call compute_offset_surface_xyz_of_uv(u(iu)-delta_u,vl(iv),x_old,y_old,z_old,separation)
+               call compute_offset_surface_xyz_of_uv(u(iu)+delta_u,vl(iv),x_new,y_new,z_new,separation)
+               drdu(1,iu,iv) = (x_new-x_old)/(2*delta_u)
+               drdu(2,iu,iv) = (y_new-y_old)/(2*delta_u)
+               drdu(3,iu,iv) = (z_new-z_old)/(2*delta_u)
+
+               ! Compute dr/dv:
+               call compute_offset_surface_xyz_of_uv(u(iu),vl(iv)-delta_v,x_old,y_old,z_old,separation)
+               call compute_offset_surface_xyz_of_uv(u(iu),vl(iv)+delta_v,x_new,y_new,z_new,separation)
+               drdv(1,iu,iv) = (x_new-x_old)/(2*delta_v)
+               drdv(2,iu,iv) = (y_new-y_old)/(2*delta_v)
+               drdv(3,iu,iv) = (z_new-z_old)/(2*delta_v)
+
             end do
 
          end do
+         !$OMP END DO
+         !$OMP END PARALLEL
+
+      case (3)
+
+         print *,"  Reading coil surface from nescin file ",trim(nescin_filename)
+
+         call read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
 
       case default
          print *,"Invalid setting for geometry_option: ",geometry_option
@@ -151,29 +176,8 @@ module initSurfaceMod
       if (iflag .ne. 0) stop 'Allocation error!'
       norm_normal = sqrt(normal(1,:,:)**2 + normal(2,:,:)**2 + normal(3,:,:)**2)
 
-      contains
-
-        function fzero_residual(v_plasma_test)
-
-          implicit none
-
-          real(dp) :: v_plasma_test, fzero_residual
-          real(dp) :: x_outer, y_outer, z_outer, v_outer_new, v_error
-
-          call expandPlasmaSurface(u_rootSolve, v_plasma_test, separation, x_outer, y_outer, z_outer)
-          v_outer_new = atan2(y_outer,x_outer)*nfp/twopi
-          v_error = v_outer_new - v_rootSolve_target
-          if (v_error < -nfp/2.0_dp) then
-             v_error = v_error + nfp
-          end if
-          if (v_error > nfp/2.0_dp) then
-             v_error = v_error - nfp
-          end if
-          fzero_residual = v_error
-
-        end function fzero_residual
-
     end subroutine initSurface
 
   end module initSurfaceMod
   
+

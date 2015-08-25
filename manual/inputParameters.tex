@@ -200,7 +200,9 @@ if  \parlink{geometry\_option\_plasma} is 2.
 
 {\ttfamily geometry\_option\_middle} = 1: Identical to option 0, except the major radius of the middle surface will be set by \parlink{R0\_middle}.\\
 
-{\ttfamily geometry\_option\_middle} = 2: The middle surface will computing by expanding the plasma surface uniformly by a distance \parlink{separation\_middle}.
+{\ttfamily geometry\_option\_middle} = 2: The middle surface will computing by expanding the plasma surface uniformly by a distance \parlink{separation\_middle}.\\
+
+{\ttfamily geometry\_option\_middle} = 3: The middle surface will be the `coil' surface in the \nescoil~`nescin' input file specified by \parlink{nescin\_filename\_middle}.
 }
 
 \myhrule
@@ -220,6 +222,23 @@ if  \parlink{geometry\_option\_plasma} is 2.
 {Minor radius of the middle surface, when this surface is a plain circular torus.}
 
 
+\myhrule
+
+\param{separation\_middle}
+{real}
+{0.2}
+{Only when \parlink{geometry\_option\_middle} is 2.}
+{Amount by which the middle surface is offset from the plasma surface.}
+
+\myhrule
+
+\param{nescin\_filename\_middle}
+{string}
+{`'}
+{Only when \parlink{geometry\_option\_middle} is 3.}
+{Name of a \nescoil~{\ttfamily nescin} input file. The coil surface from
+this file will be used as the middle surface for \bdistrib.}
+
 
 \section{Geometry parameters for the outer surface}
 
@@ -234,7 +253,9 @@ if  \parlink{geometry\_option\_plasma} is 2.
 
 {\ttfamily geometry\_option\_outer} = 1: Identical to option 0.\\
 
-{\ttfamily geometry\_option\_outer} = 2: The outer surface will computing by expanding the plasma surface uniformly by a distance \parlink{separation\_outer}.
+{\ttfamily geometry\_option\_outer} = 2: The outer surface will computing by expanding the plasma surface uniformly by a distance \parlink{separation\_outer}.\\
+
+{\ttfamily geometry\_option\_outer} = 3: The outer surface will be the `coil' surface from the \nescoil~`nescin' input file specified by \parlink{nescin\_filename\_outer}.
 }
 
 \myhrule
@@ -252,6 +273,23 @@ if  \parlink{geometry\_option\_plasma} is 2.
 {1.5}
 {Only when \parlink{geometry\_option\_outer} is 0 or 1.}
 {Minor radius of the outer surface, when this surface is a plain circular torus.}
+
+\myhrule
+
+\param{separation\_outer}
+{real}
+{0.4}
+{Only when \parlink{geometry\_option\_outer} is 2.}
+{Amount by which the outer surface is offset from the plasma surface.  (Not the offset between the outer and \emph{middle} surfaces!).}
+
+\myhrule
+
+\param{nescin\_filename\_outer}
+{string}
+{`'}
+{Only when \parlink{geometry\_option\_outer} is 3.}
+{Name of a \nescoil~{\ttfamily nescin} input file. The coil surface from
+this file will be used as the outer surface for \bdistrib.}
 
 \section{Other parameters}
 

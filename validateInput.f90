@@ -66,12 +66,12 @@ subroutine validateInput
   end if
 
 
-  if (basis_set_option < 0) then
-     stop "Error! basis_set_option must be >= 0."
+  if (basis_set_option < 1) then
+     stop "Error! basis_set_option must be >= 1."
   end if
 
-  if (basis_set_option > 2) then
-     stop "Error! basis_set_option must be <= 2."
+  if (basis_set_option > 3) then
+     stop "Error! basis_set_option must be <= 3."
   end if
 
 
@@ -88,8 +88,8 @@ subroutine validateInput
      stop "Error! geometry_option_middle must be >= 0."
   end if
 
-  if (geometry_option_middle > 2) then
-     stop "Error! geometry_option_middle must be <= 2."
+  if (geometry_option_middle > 3) then
+     stop "Error! geometry_option_middle must be <= 3."
   end if
 
 
@@ -97,8 +97,21 @@ subroutine validateInput
      stop "Error! geometry_option_outer must be >= 0."
   end if
 
-  if (geometry_option_outer > 2) then
-     stop "Error! geometry_option_outer must be <= 2."
+  if (geometry_option_outer > 3) then
+     stop "Error! geometry_option_outer must be <= 3."
+  end if
+
+
+  if (separation_middle < 0) then
+     stop "Error! separation_middle must be >= 0."
+  end if
+
+  if (separation_outer <= 0) then
+     stop "Error! separation_outer must be > 0."
+  end if
+
+  if (separation_outer < separation_middle) then
+     stop "Error! separation_outer must be >= separation_middle."
   end if
 
 
