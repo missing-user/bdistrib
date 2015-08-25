@@ -20,10 +20,15 @@ The 'normal' quantities in the code and output file refer to the surface normal 
 
 \begin{itemize}
 
-\item LIBSTELL (for reading VMEC wout files)
-\item NetCDF (for writing the output file)
-\item LAPACK (for the SVD subroutine)
+\item {\ttfamily LIBSTELL} (for reading \vmec~{\ttfamily wout} files, and for the {\ttfamily ezcdf} subroutines)
+\item {\ttfamily NetCDF} (for writing the output file)
+\item {\ttfamily LAPACK} (for the SVD subroutine)
+
 \end{itemize}
+
+If OpenMP is available, calculations with the code are parallelized.  The plotting and testing functions use \python,
+{\ttfamily numpy}, and {\ttfamily scipy}.
+The plotting routine \bdistribPlot~uses {\ttfamily matplotlib}.
 
 \section{Questions, Bugs, and Feedback}
 

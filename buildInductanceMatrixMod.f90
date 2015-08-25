@@ -163,67 +163,43 @@ contains
 
     call system_clock(tic)
 
-    ! For some reason, the BLAS matrix-matrix multiplication function DGEMM is causing the
-    ! program to crash on Edison. So here I'll use a slower but reliable method:
-    inductance = matmul(xToFourier, matmul(inductance_xbasis, xToFourier_outer))
+    ! For some reason, the BLAS matrix-matrix multiplication function DGEMM sometimes causes the
+    ! program to crash on Edison. In this case, you can use the following method which is slower but reliable:
+!    inductance = matmul(xToFourier, matmul(inductance_xbasis, xToFourier_outer))
 
-!!$    !*******************************************************
-!!$    ! Call BLAS3 subroutine DGEMM for matrix multiplications:
-!!$    !*******************************************************
-!!$
-!!$
-!!$    ! tempMatrix = inductance_xbasis * xToFourier_outer
-!!$    ! A = inductance_xbasis
-!!$    ! B = xToFourier_outer
-!!$    ! C = tempMatrix
-!!$    M = nu*nv ! # rows of A
-!!$    N = mnmax_outer ! # cols of B
-!!$    K = nu_outer*nv_outer ! Common dimension of A and B
-!!$    LDA = M
-!!$    LDB = K
-!!$    LDC = M
-!!$    allocate(tempMatrix(M,N))
-!!$    print *,"AAA"
-!!$
-!!$    !$OMP PARALLEL
-!!$    !$OMP CRITICAL
-!!$    print *, "  Hello from thread ",omp_get_thread_num()
-!!$    !$OMP END CRITICAL
-!!$    !$OMP END PARALLEL
-!!$
-!!$    !$OMP BARRIER
-!!$    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,xToFourier_outer,LDB,BETA,tempMatrix,LDC)
-!!$
-!!$
-!!$    !$OMP PARALLEL
-!!$    !$OMP CRITICAL
-!!$    print *, "  Hello from thread ",omp_get_thread_num()
-!!$    !$OMP END CRITICAL
-!!$    !$OMP END PARALLEL
-!!$    
-!!$    print *,"BBB"
-!!$!    !$OMP END PARALLEL
-!!$    ! inductance = xToFourier * tempMatrix
-!!$    ! A = inductance_xbasis
-!!$    ! B = xToFourier_outer
-!!$    ! C = tempMatrix
-!!$    M = mnmax ! # rows of A
-!!$    N = mnmax_outer ! # cols of B
-!!$    K = nu*nv ! Common dimension of A and B
-!!$    LDA = M
-!!$    LDB = K
-!!$    LDC = M
-!!$    !$OMP BARRIER
-!!$    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,xToFourier,LDA,tempMatrix,LDB,BETA,inductance,LDC)
-!!$    !$OMP BARRIER
-!!$
-!!$    !$OMP PARALLEL
-!!$    !$OMP CRITICAL
-!!$    print *, "  Hello from thread ",omp_get_thread_num()
-!!$    !$OMP END CRITICAL
-!!$    !$OMP END PARALLEL
-!!$    print *,"DDD"
-!!$    deallocate(tempMatrix)
+    !*******************************************************
+    ! Call BLAS3 subroutine DGEMM for matrix multiplications:
+    !*******************************************************
+
+    ! Here we carry out tempMatrix = inductance_xbasis * xToFourier_outer
+    ! A = inductance_xbasis
+    ! B = xToFourier_outer
+    ! C = tempMatrix
+    M = nu*nv ! # rows of A
+    N = num_basis_functions_outer ! # cols of B
+    K = nu_outer*nv_outer ! Common dimension of A and B
+    LDA = M
+    LDB = K
+    LDC = M
+    allocate(tempMatrix(M,N),stat=iflag)
+    if (iflag .ne. 0) stop 'Allocation error!'
+    tempMatrix = 0
+
+    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,xToFourier_outer,LDB,BETA,tempMatrix,LDC)
+
+    ! Here we carry out inductance = xToFourier * tempMatrix
+    ! A = inductance_xbasis
+    ! B = xToFourier_outer
+    ! C = tempMatrix
+    M = num_basis_functions ! # rows of A
+    N = num_basis_functions_outer ! # cols of B
+    K = nu*nv ! Common dimension of A and B
+    LDA = M
+    LDB = K
+    LDC = M
+    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,xToFourier,LDA,tempMatrix,LDB,BETA,inductance,LDC)
+
+    deallocate(tempMatrix)
     
     call system_clock(toc)
     print *,"  matmul:",real(toc-tic)/countrate,"sec."

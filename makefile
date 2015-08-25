@@ -1,8 +1,8 @@
 FC = ftn
 LIBSTELL_DIR = /global/homes/l/landrema/20150410-02-stellinstall_245_edison/LIBSTELL/Release
-EXTRA_COMPILE_FLAGS = -O3 -openmp
+EXTRA_COMPILE_FLAGS = -O3 -openmp -mkl
 #EXTRA_COMPILE_FLAGS = -O0 -g -openmp
-EXTRA_LINK_FLAGS =  -openmp -Wl,-ydgemm_
+EXTRA_LINK_FLAGS =  -openmp -mkl -Wl,-ydgemm_
 
 # Above, the link flag "-Wl,-ydgemm_" causes the linker to report which version of DGEMM (the BLAS3 matrix-matrix-multiplication subroutine) is used.
 

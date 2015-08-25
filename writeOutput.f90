@@ -36,6 +36,12 @@ subroutine writeOutput
        vn_r_plasma  = "r_plasma", &
        vn_r_middle  = "r_middle", &
        vn_r_outer = "r_outer", &
+       vn_a_plasma  = "a_plasma", &
+       vn_a_middle  = "a_middle", &
+       vn_a_outer = "a_outer", &
+       vn_R0_plasma  = "R0_plasma", &
+       vn_R0_middle  = "R0_middle", &
+       vn_R0_outer = "R0_outer", &
        vn_drdu_plasma  = "drdu_plasma", &
        vn_drdu_middle  = "drdu_middle", &
        vn_drdu_outer = "drdu_outer", &
@@ -137,6 +143,12 @@ subroutine writeOutput
   call cdf_define(ncid, vn_geometry_option_plasma, geometry_option_plasma)
   call cdf_define(ncid, vn_geometry_option_middle, geometry_option_middle)
   call cdf_define(ncid, vn_geometry_option_outer, geometry_option_outer)
+  call cdf_define(ncid, vn_a_plasma, a_plasma)
+  call cdf_define(ncid, vn_a_middle, a_middle)
+  call cdf_define(ncid, vn_a_outer,  a_outer)
+  call cdf_define(ncid, vn_R0_plasma, R0_plasma)
+  call cdf_define(ncid, vn_R0_middle, R0_middle)
+  call cdf_define(ncid, vn_R0_outer,  R0_outer)
   call cdf_define(ncid, vn_nu_plasma, nu_plasma)
   call cdf_define(ncid, vn_nv_plasma, nv_plasma)
   call cdf_define(ncid, vn_nvl_plasma, nvl_plasma)
@@ -231,6 +243,12 @@ subroutine writeOutput
   call cdf_write(ncid, vn_geometry_option_plasma, geometry_option_plasma)
   call cdf_write(ncid, vn_geometry_option_middle, geometry_option_middle)
   call cdf_write(ncid, vn_geometry_option_outer, geometry_option_outer)
+  call cdf_write(ncid, vn_a_plasma, a_plasma)
+  call cdf_write(ncid, vn_a_middle, a_middle)
+  call cdf_write(ncid, vn_a_outer,  a_outer)
+  call cdf_write(ncid, vn_R0_plasma, R0_plasma)
+  call cdf_write(ncid, vn_R0_middle, R0_middle)
+  call cdf_write(ncid, vn_R0_outer,  R0_outer)
   call cdf_write(ncid, vn_nu_plasma, nu_plasma)
   call cdf_write(ncid, vn_nv_plasma, nv_plasma)
   call cdf_write(ncid, vn_nvl_plasma, nvl_plasma)
