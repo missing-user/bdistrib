@@ -111,8 +111,8 @@ module initSurfaceMod
 
          ! Finite differences to use:
          ! (Numerical Recipes suggests (machine epsilon)^(1/3)
-         delta_u = 1e-10;
-         delta_v = 1e-10;
+         delta_u = 1e-5;
+         delta_v = 1e-5;
          ! Trick from Numerical Recipes for improved accuracy:
          temp = 1.0_dp + delta_u
          delta_u = temp - 1.0_dp

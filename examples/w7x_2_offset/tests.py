@@ -72,4 +72,5 @@ numFailures += arrayShouldBe(data[0,:], [ \
 #numFailures += arrayShouldBe(data[0,:], 0.500, desiredTolerance, requireSameLength=False)
 
 f.close()
+print "Number of failures:",numFailures
 exit(numFailures > 0)
