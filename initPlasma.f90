@@ -82,15 +82,16 @@ subroutine initPlasma
      
      xm = xm_vmec
      xn = xn_vmec
-     rmnc = rmnc_vmec(ns-1,:) * weight1 + rmnc_vmec(ns,:) * weight2
-     zmns = zmns_vmec(ns-1,:) * weight1 + zmns_vmec(ns,:) * weight2
+     print *,"size of rmnc_vmec:",size(rmnc_vmec,1),size(rmnc_vmec,2)
+     rmnc = rmnc_vmec(:,ns-1) * weight1 + rmnc_vmec(:,ns) * weight2
+     zmns = zmns_vmec(:,ns-1) * weight1 + zmns_vmec(:,ns) * weight2
      if (lasym) then
         allocate(rmns(mnmax),stat=iflag)
         if (iflag .ne. 0) stop 'Allocation error!'
         allocate(zmnc(mnmax),stat=iflag)
         if (iflag .ne. 0) stop 'Allocation error!'
-        rmns = rmns_vmec(ns-1,:) * weight1 + rmns_vmec(ns,:) * weight2
-        zmnc = zmnc_vmec(ns-1,:) * weight1 + zmnc_vmec(ns,:) * weight2
+        rmns = rmns_vmec(:,ns-1) * weight1 + rmns_vmec(:,ns) * weight2
+        zmnc = zmnc_vmec(:,ns-1) * weight1 + zmnc_vmec(:,ns) * weight2
      end if
 
   case (4)
@@ -112,8 +113,8 @@ subroutine initPlasma
      if (iflag .ne. 0) stop 'Allocation error!'
      allocate(zmns_vmecLast(mnmax),stat=iflag)
      if (iflag .ne. 0) stop 'Allocation error!'
-     rmnc_vmecLast = rmnc_vmec(ns-1,:) * weight1 + rmnc_vmec(ns,:) * weight2
-     zmns_vmecLast = zmns_vmec(ns-1,:) * weight1 + zmns_vmec(ns,:) * weight2
+     rmnc_vmecLast = rmnc_vmec(:,ns-1) * weight1 + rmnc_vmec(:,ns) * weight2
+     zmns_vmecLast = zmns_vmec(:,ns-1) * weight1 + zmns_vmec(:,ns) * weight2
 
      ! Beginning of coordinate transformation.
      ! Set up high-resolution grid in the "new" theta coordinate:
@@ -216,15 +217,15 @@ subroutine initPlasma
      
      xm = xm_vmec
      xn = xn_vmec
-     rmnc = rmnc_vmec(ns-1,:) * weight1 + rmnc_vmec(ns,:) * weight2
-     zmns = zmns_vmec(ns-1,:) * weight1 + zmns_vmec(ns,:) * weight2
+     rmnc = rmnc_vmec(:,ns-1) * weight1 + rmnc_vmec(:,ns) * weight2
+     zmns = zmns_vmec(:,ns-1) * weight1 + zmns_vmec(:,ns) * weight2
      if (lasym) then
         allocate(rmns(mnmax),stat=iflag)
         if (iflag .ne. 0) stop 'Allocation error!'
         allocate(zmnc(mnmax),stat=iflag)
         if (iflag .ne. 0) stop 'Allocation error!'
-        rmns = rmns_vmec(ns-1,:) * weight1 + rmns_vmec(ns,:) * weight2
-        zmnc = zmnc_vmec(ns-1,:) * weight1 + zmnc_vmec(ns,:) * weight2
+        rmns = rmns_vmec(:,ns-1) * weight1 + rmns_vmec(:,ns) * weight2
+        zmnc = zmnc_vmec(:,ns-1) * weight1 + zmnc_vmec(:,ns) * weight2
      end if
 
   case (5)
@@ -248,7 +249,7 @@ subroutine initPlasma
      call read_efit(efit_filename, efit_psiN, efit_num_modes, rmnc, zmns, rmns, zmnc)
 
      ! Set major radius equal to the zero-frequency component of R(theta)
-     R0_plasma = rmnc(1,1)
+     R0_plasma = rmnc(1)
 
      xn = 0
      do i=1,efit_num_modes

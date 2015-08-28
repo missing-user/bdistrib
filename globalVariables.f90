@@ -43,7 +43,7 @@ module globalVariables
   integer, dimension(:), allocatable :: xn_plasma, xn_middle, xn_outer
 
   real(dp), dimension(:), allocatable :: rmns, zmnc, rmnc, zmns
-  integer :: mnmax
+  integer :: mnmax, nfp
   integer, dimension(:), allocatable :: xm, xn
   logical :: lasym
   real(dp), dimension(:,:), allocatable :: inductance_plasma, inductance_middle
