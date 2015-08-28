@@ -19,6 +19,7 @@ module globalVariables
   character(len=200) :: woutFilename=""
   character(len=200) :: nescin_filename_middle=""
   character(len=200) :: nescin_filename_outer=""
+  character(len=200) :: efit_filename=""
   character(len=200) :: outputFilename
 
   real(dp), dimension(:), allocatable :: u_plasma, v_plasma, vl_plasma
@@ -66,6 +67,9 @@ module globalVariables
 
   integer :: basis_set_option = 1
   real(dp) :: totalTime
+
+  integer :: efit_num_modes = 10
+  real(dp) :: efit_psiN = 0.98
 
 end module globalVariables
 

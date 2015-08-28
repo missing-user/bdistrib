@@ -79,8 +79,8 @@ subroutine validateInput
      stop "Error! geometry_option_plasma must be >= 0."
   end if
 
-  if (geometry_option_plasma > 2) then
-     stop "Error! geometry_option_plasma must be <= 2."
+  if (geometry_option_plasma > 3) then
+     stop "Error! geometry_option_plasma must be <= 3."
   end if
 
 

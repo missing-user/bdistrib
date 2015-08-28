@@ -1,6 +1,6 @@
 subroutine expandPlasmaSurface(u, v, separation, x,y,z)
   
-  use read_wout_mod, only: nfp, ns, xm, xn, mnmax, rmnc, zmns
+  use read_wout_mod, only: nfp, ns, xm, xn, mnmax, rmnc, zmns, rmns, zmnc, lasym
   use stel_kinds
   use stel_constants
 
@@ -53,6 +53,20 @@ subroutine expandPlasmaSurface(u, v, separation, x,y,z)
      dxdv = dxdv + rmnc(imn,ns) * (dcosangledv * cosphi + cosangle * dcosphidv)
      dydv = dydv + rmnc(imn,ns) * (dcosangledv * sinphi + cosangle * dsinphidv)
      dzdv = dzdv + zmns(imn,ns) * dsinangledv
+
+     if (lasym) then
+        x = x + rmns(imn,ns) * sinangle * cosphi
+        y = y + rmns(imn,ns) * sinangle * sinphi
+        z = z + zmnc(imn,ns) * cosangle
+     
+        dxdu = dxdu + rmns(imn,ns) * dsinangledu * cosphi
+        dydu = dydu + rmns(imn,ns) * dsinangledu * sinphi
+        dzdu = dzdu + zmnc(imn,ns) * dcosangledu
+     
+        dxdv = dxdv + rmns(imn,ns) * (dsinangledv * cosphi + sinangle * dcosphidv)
+        dydv = dydv + rmns(imn,ns) * (dsinangledv * sinphi + sinangle * dsinphidv)
+        dzdv = dzdv + zmnc(imn,ns) * dcosangledv
+     end if
      
   end do
 

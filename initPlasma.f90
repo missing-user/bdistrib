@@ -1,7 +1,7 @@
 subroutine initPlasma
 
   use globalVariables
-  use read_wout_mod, only: nfp, xm, xn, rmnc, zmns, mnmax, ns, Rmajor, read_wout_file
+  use read_wout_mod, only: nfp, xm, xn, rmnc, zmns, rmns, zmnc, lasym, mnmax, ns, Rmajor, read_wout_file
   use stel_constants
 
   implicit none
@@ -37,11 +37,42 @@ subroutine initPlasma
      zmns(1,1) = 0
      zmns(2,1) = a_plasma
      
+     lasym = .false.
+
   case (2)
      call read_wout_file(woutFilename, ierr, iopen)
      if (iopen .ne. 0) stop 'error opening wout file'
      if (ierr .ne. 0) stop 'error reading wout file'
      print *,"  Successfully read VMEC data from ",trim(woutFilename)
+
+  case (3)
+     ! EFIT
+
+     lasym = .true.
+     nfp = nfp_imposed
+     mnmax = efit_num_modes
+     ns = 1
+     allocate(xm(efit_num_modes),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     allocate(xn(efit_num_modes),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     allocate(rmnc(efit_num_modes,1),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     allocate(zmns(efit_num_modes,1),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     allocate(rmns(efit_num_modes,1),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     allocate(zmnc(efit_num_modes,1),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error!'
+     call read_efit(efit_filename, efit_psiN, efit_num_modes, rmnc, zmns, rmns, zmnc)
+
+     ! Set major radius equal to the zero-frequency component of R(theta)
+     Rmajor = rmnc(1,1)
+
+     xn = 0
+     do i=1,efit_num_modes
+        xm(i) = i-1
+     end do
 
   case default
      print *,"Error! Invalid setting for geometry_option_plasma:",geometry_option_plasma
@@ -112,6 +143,20 @@ subroutine initPlasma
            drdv_plasma(1,iu,iv) = drdv_plasma(1,iu,iv) + rmnc(imn,ns) * (dcosangledv * cosangle2 + cosangle * dcosangle2dv)
            drdv_plasma(2,iu,iv) = drdv_plasma(2,iu,iv) + rmnc(imn,ns) * (dcosangledv * sinangle2 + cosangle * dsinangle2dv)
            drdv_plasma(3,iu,iv) = drdv_plasma(3,iu,iv) + zmns(imn,ns) * dsinangledv
+
+           if (lasym) then
+              r_plasma(1,iu,iv) = r_plasma(1,iu,iv) + rmns(imn,ns) * sinangle * cosangle2
+              r_plasma(2,iu,iv) = r_plasma(2,iu,iv) + rmns(imn,ns) * sinangle * sinangle2
+              r_plasma(3,iu,iv) = r_plasma(3,iu,iv) + zmnc(imn,ns) * cosangle
+
+              drdu_plasma(1,iu,iv) = drdu_plasma(1,iu,iv) + rmns(imn,ns) * dsinangledu * cosangle2
+              drdu_plasma(2,iu,iv) = drdu_plasma(2,iu,iv) + rmns(imn,ns) * dsinangledu * sinangle2
+              drdu_plasma(3,iu,iv) = drdu_plasma(3,iu,iv) + zmnc(imn,ns) * dcosangledu
+
+              drdv_plasma(1,iu,iv) = drdv_plasma(1,iu,iv) + rmns(imn,ns) * (dsinangledv * cosangle2 + sinangle * dcosangle2dv)
+              drdv_plasma(2,iu,iv) = drdv_plasma(2,iu,iv) + rmns(imn,ns) * (dsinangledv * sinangle2 + sinangle * dsinangle2dv)
+              drdv_plasma(3,iu,iv) = drdv_plasma(3,iu,iv) + zmnc(imn,ns) * dcosangledv
+           end if
         end do
      end do
   end do

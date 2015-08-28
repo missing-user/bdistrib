@@ -4,7 +4,7 @@ OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildInductanceMatrices.o buil
 	compute_offset_surface_xyz_of_uv.o \
 	expandPlasmaSurface.o fzero.o globalVariables.o \
 	initFourierModesMod.o initOuter2Surfaces.o initPlasma.o \
-	initSurfaceMod.o readInput.o read_nescin.o svdInductanceMatrices.o \
+	initSurfaceMod.o read_efit.o readInput.o read_nescin.o splines.o svdInductanceMatrices.o \
 	validateInput.o writeOutput.o
 
 # Dependencies:
@@ -20,8 +20,10 @@ globalVariables.o:
 initOuter2Surfaces.o: globalVariables.o initSurfaceMod.o
 initPlasma.o: globalVariables.o
 initSurfaceMod.o: 
+read_efit.o: splines.o
 readInput.o: globalVariables.o
 read_nescin.o: 
+splines.o:
 svdInductanceMatrices.o: globalVariables.o
 validateInput.o: globalVariables.o
 writeOutput.o: globalVariables.o
