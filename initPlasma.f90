@@ -3,20 +3,21 @@ subroutine initPlasma
   use globalVariables
   use read_wout_mod, only: nfp_vmec => nfp, xm_vmec => xm, xn_vmec => xn, &
        rmnc_vmec => rmnc, zmns_vmec => zmns, rmns_vmec => rmns, zmnc_vmec => zmnc, &
-       lasym_vmec => lasym, mnmax_vmec => mnmax, ns, Rmajor, read_wout_file, lmns
+       lasym_vmec => lasym, mnmax_vmec => mnmax, ns, Rmajor, read_wout_file, lmns, &
+       mpol_vmec => mpol, ntor_vmec => ntor
   use stel_constants
 
   implicit none
 
-  integer :: i, iu, iv, imn, tic, toc, countrate, iflag, ierr, iopen
+  integer :: i, iu, iv, imn, tic, toc, countrate, iflag, ierr, iopen, tic1, toc1
   real(dp) :: angle, sinangle, cosangle, dsinangledu, dsinangledv, dcosangledu, dcosangledv
   real(dp) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
-  real(dp) :: weight1, weight2, v, r_temp, z_temp
+  real(dp) :: weight1, weight2, u, v, r_temp, z_temp, dnorm, u_temp
   integer :: nu_coordTransform, nv_coordTransform
   real(dp), dimension(:,:), allocatable :: r_coordTransform, z_coordTransform
   real(dp), dimension(:), allocatable :: rmnc_vmecLast, zmns_vmecLast
   real(dp) :: rootSolve_abserr, rootSolve_relerr, u_rootSolve_min, u_rootSolve_max, u_rootSolve_target, u_rootSolve_soln
-  integer :: fzeroFlag
+  integer :: fzeroFlag, mpol, ntor, jm, jn, index
 
   call system_clock(tic, countrate)
   print *,"Initializing plasma surface."
@@ -101,25 +102,35 @@ subroutine initPlasma
      if (ierr .ne. 0) stop 'error reading wout file'
      print *,"  Successfully read VMEC data from ",trim(wout_filename)
 
+
      nfp = nfp_vmec
      lasym = lasym_vmec
+     if (lasym) then
+        stop "Error! geometry_option_plasma=4 is not yet implemented for lasym=true"
+     end if
      R0_plasma = Rmajor
 
      ! Average R and Z from the outermost 2 grid points in vmec's full mesh
      ! to get R and Z on the outermost point of vmec's half mesh:
      weight1 = 0.5_dp
      weight2 = 0.5_dp
-     allocate(rmnc_vmecLast(mnmax),stat=iflag)
+     allocate(rmnc_vmecLast(mnmax_vmec),stat=iflag)
      if (iflag .ne. 0) stop 'Allocation error!'
-     allocate(zmns_vmecLast(mnmax),stat=iflag)
+     allocate(zmns_vmecLast(mnmax_vmec),stat=iflag)
      if (iflag .ne. 0) stop 'Allocation error!'
      rmnc_vmecLast = rmnc_vmec(:,ns-1) * weight1 + rmnc_vmec(:,ns) * weight2
      zmns_vmecLast = zmns_vmec(:,ns-1) * weight1 + zmns_vmec(:,ns) * weight2
 
+     ! Since the "original" vmec poloidal angle is chosen to have a very condensed
+     ! Fourier spectrum, we probably need more Fourier modes to represent the surface using the
+     ! straight-field-line coordinate.
+     mpol = mpol_vmec*mpol_transform_refinement
+     ntor = ntor_vmec*ntor_transform_refinement
+
      ! Beginning of coordinate transformation.
      ! Set up high-resolution grid in the "new" theta coordinate:
-     nu_coordTransform = nu_plasma * 10
-     nv_coordTransform = nv_plasma * 5
+     nu_coordTransform = mpol * 2 
+     nv_coordTransform = ntor * 2
      allocate(r_coordTransform(nu_coordTransform, nv_coordTransform), stat=iflag)
      if (iflag .ne. 0) stop 'Allocation error!'
      allocate(z_coordTransform(nu_coordTransform, nv_coordTransform), stat=iflag)
@@ -127,6 +138,7 @@ subroutine initPlasma
      r_coordTransform = 0
      z_coordTransform = 0
 
+     call system_clock(tic1)
      rootSolve_abserr = 1.0e-10_dp
      rootSolve_relerr = 1.0e-10_dp
      do iv = 1,nv_coordTransform
@@ -146,66 +158,42 @@ subroutine initPlasma
            else if (fzeroFlag > 2) then
               print *,"WARNING: fzero returned an error code:",fzeroFlag
            end if
-
            ! Now that we have the old theta, evaluate r and z:
            r_temp = 0
            z_temp = 0
+           !u_temp = u_rootSolve_soln
            do imn = 1, mnmax_vmec
               r_temp = r_temp + rmnc_vmecLast(imn)*cos(twopi*(xm_vmec(imn)*u_rootSolve_soln - xn_vmec(imn)*v))
               z_temp = z_temp + zmns_vmecLast(imn)*sin(twopi*(xm_vmec(imn)*u_rootSolve_soln - xn_vmec(imn)*v))
+              !u_temp = u_temp + lmns(imn,ns)*sin(twopi*(xm_vmec(imn)*u_rootSolve_soln - xn_vmec(imn)*v))
            end do
+           !print *,"New u:",u_rootSolve_target,", Old u:",u_rootSolve_soln,", reconstructed new:",u_temp
            r_coordTransform(iu,iv) = r_temp
            z_coordTransform(iu,iv) = z_temp
         end do
      end do
+     call system_clock(toc1)
+     print *,"  Time for root solving:",real(toc1-tic1)/countrate
 
-     ! Next part is not done yet.
+!!$     print *,"r_coordTransform:"
+!!$     do iu = 1,nu_coordTransform
+!!$        print *,r_coordTransform(iu,:)
+!!$     end do
+!!$     print *," "
+!!$     print *,"z_coordTransform:"
+!!$     do iu = 1,nu_coordTransform
+!!$        print *,z_coordTransform(iu,:)
+!!$     end do
+!!$     print *," "
 
      ! Now that we have R and Z on a grid in the new coordinates, Fourier transform the results.
-     ! Since the "original" vmec poloidal angle is chosen to have a very condensed
-     ! Fourier spectrum, we probably need more Fourier modes to represent the surface using the
-     ! straight-field-line coordinate. There is almost no cost to increasing mnmax here, so increase it a lot:
-!!$     call initFourierModes(maxval(xm_vmec)*10, maxval(xn_vmec)*5, mnmax, xm, xn)
-!!$     mmax = maxval(xm)
-!!$     nmax = maxval(xn)
-!!$     mnmax_ws = 0
-!!$     rmnc_ws = zero;  zmns_ws = zero
-!!$     sep_tol = 1.e-3_dp*coil_separation
-!!$
-!!$     do imn = 1, mnmax
-!!$        dnorm = one/nuvb
-!!$        if (xm(imn).ne.0 .or. xn(imn).ne.0) dnorm = 2*dnorm
-!!$        rtemp = zero;  ztemp = zero
-!!$        do iu = 1, nu_coordTransform
-!!$           theta= alub*(ku-1)
-!!$           cosmu = cos(m*theta)*dnorm
-!!$           sinmu = sin(m*theta)*dnorm
-!!$           do iv = 1, nv_coordTransform
-!!$                  zeta = alvb*(kv-1)
-!!$                  cosnv = cos(n*zeta)
-!!$                  sinnv = sin(n*zeta)
-!!$                  cosmn1 = cosmu*cosnv - sinmu*sinnv          !cos(mu+nv) NESCOIL CONVENTION
-!!$                  sinmn1 = sinmu*cosnv + cosmu*sinnv          !sin(mu+nv)
-!!$                  rtemp  = rtemp  + rbn(i) * cosmn1
-!!$                  ztemp  = ztemp  + zbn(i) * sinmn1
-!!$                  rtemps = rtemps + rbn(i) * sinmn1
-!!$                  ztempc = ztempc + zbn(i) * cosmn1
-!!$               end do
-!!$            end do
-!!$            if (abs(rtemp).lt.sep_tol .and. abs(ztemp).lt.sep_tol)
-!!$     1      cycle nloop
-!!$            mnmax_ws = mnmax_ws+1
-!!$            rmnc_ws(mnmax_ws) = rtemp
-!!$            zmns_ws(mnmax_ws) = ztemp
-!!$            rmns_ws(mnmax_ws) = rtemps
-!!$            zmnc_ws(mnmax_ws) = ztempc
-!!$            ixm_ws(mnmax_ws) = m
-!!$            ixn_ws(mnmax_ws) = n
-!!$         end do nloop
-!!$      end do mloop
 
-
-
+     ! The next bit of code is much like initFourierModesMod, but with 1 difference: we need to keep the m=n=0 mode.
+     ! xm is nonnegative.
+     ! xn can be negative, zero, or positive.
+     ! When xm is 0, xn must be positive.
+     mnmax = mpol*(ntor*2+1) + ntor + 1
+    
      allocate(xm(mnmax),stat=iflag)
      if (iflag .ne. 0) stop 'Allocation error!'
      allocate(xn(mnmax),stat=iflag)
@@ -214,19 +202,56 @@ subroutine initPlasma
      if (iflag .ne. 0) stop 'Allocation error!'
      allocate(zmns(mnmax),stat=iflag)
      if (iflag .ne. 0) stop 'Allocation error!'
+    
+     ! Handle the xm=0 modes:
+     xm=0
+     do jn=0,ntor
+        xn(jn+1)=jn
+     end do
+    
+     ! Handle the xm>0 modes:
+     index = ntor + 1
+     do jm = 1,mpol
+        do jn = -ntor, ntor
+           index = index + 1
+           xn(index) = jn
+           xm(index) = jm
+        end do
+     end do
+     ! Initialization of xm and xn is now complete.
+
+!!$     print *,"xm:",xm
+!!$     print *," "
+!!$     print *,"xn:",xn
+!!$     print *," "
+
+     call system_clock(tic1)
+     do imn = 1, mnmax
+        dnorm = (1.0_dp)/(nu_coordTransform*nv_coordTransform)
+        if (xm(imn).ne.0 .or. xn(imn).ne.0) dnorm = 2*dnorm
+        r_temp = 0
+        z_temp = 0
+        do iv = 1, nv_coordTransform
+           v = (iv-1.0_dp)/nv_coordTransform
+           do iu = 1, nu_coordTransform
+              u = (iu-1.0_dp)/nu_coordTransform
+              angle = twopi*(xm(imn)*u-xn(imn)*v)
+              cosangle = cos(angle)
+              sinangle = sin(angle)
+              r_temp = r_temp + r_coordTransform(iu,iv) * cosangle
+              z_temp = z_temp + z_coordTransform(iu,iv) * sinangle
+           end do
+        end do
+        rmnc(imn) = r_temp*dnorm
+        zmns(imn) = z_temp*dnorm
+     end do
+     call system_clock(toc1)
+     print *,"  Time for slow Fourier transform:",real(toc1-tic1)/countrate
      
-     xm = xm_vmec
-     xn = xn_vmec
-     rmnc = rmnc_vmec(:,ns-1) * weight1 + rmnc_vmec(:,ns) * weight2
-     zmns = zmns_vmec(:,ns-1) * weight1 + zmns_vmec(:,ns) * weight2
-     if (lasym) then
-        allocate(rmns(mnmax),stat=iflag)
-        if (iflag .ne. 0) stop 'Allocation error!'
-        allocate(zmnc(mnmax),stat=iflag)
-        if (iflag .ne. 0) stop 'Allocation error!'
-        rmns = rmns_vmec(:,ns-1) * weight1 + rmns_vmec(:,ns) * weight2
-        zmnc = zmnc_vmec(:,ns-1) * weight1 + zmnc_vmec(:,ns) * weight2
-     end if
+!!$     print *,"rmnc:",rmnc
+!!$     print *," "
+!!$     print *,"zmns:",zmns
+!!$     print *," "
 
   case (5)
      ! EFIT
@@ -367,8 +392,8 @@ contains
     real(dp) :: u_old, fzero_residual
     integer :: imn
 
-    ! residual = u_new - u_new_target = (u_old + lambda) - u_new_target
-    fzero_residual = u_old - u_rootSolve_target
+    ! residual = twopi*(u_new - u_new_target) = (twopi*u_old + lambda) - u_new_target*twopi
+    fzero_residual = twopi*(u_old - u_rootSolve_target)
 
     do imn = 1, mnmax_vmec
        fzero_residual = fzero_residual + lmns(imn,ns)*sin(twopi*(xm_vmec(imn)*u_old - xn_vmec(imn)*v))

@@ -15,7 +15,8 @@ subroutine readInput
        separation_middle, separation_outer, wout_filename, pseudoinverse_thresholds, &
        save_level, n_singular_vectors_to_save, nfp_imposed, basis_set_option, &
        mpol_plasma, ntor_plasma, mpol_middle, ntor_middle, mpol_outer, ntor_outer, &
-       nescin_filename_middle, nescin_filename_outer, efit_filename, efit_psiN, efit_num_modes
+       nescin_filename_middle, nescin_filename_outer, efit_filename, efit_psiN, efit_num_modes, &
+       mpol_transform_refinement, ntor_transform_refinement
 
   ! getcarg is in LIBSTELL
   call getcarg(1, inputFilename, numargs)

@@ -134,6 +134,36 @@ You can set the three {\ttfamily ntor} parameters to zero to examine only axisym
 It is resonable and common but not mandatory to use the same value for \parlink{ntor\_plasma}, \parlink{ntor\_middle}, and {\ttfamily ntor\_outer}.
 You can set the three {\ttfamily ntor} parameters to zero to examine only axisymmetric modes.}
 
+\myhrule
+
+\param{mpol\_transform\_refinement}
+{real}
+{5.0}
+{Only when \parlink{geometry\_option\_plasma} is 4.}
+{The number of poloidal mode numbers in the \vmec~file will be multiplied by this value
+when transforming from the original poloidal angle to the straight-field-line angle.
+Since the original \vmec~angle is chosen to minimize the number of Fourier modes required,
+more modes are required in any other coordinate.
+This parameter does not affect the sets of basis functions,
+or the time required to assemble the inductance matrices or
+computed SVDs, but it does affect the time required to compute constant-offset surfaces.
+}
+
+\myhrule
+
+\param{ntor\_transform\_refinement}
+{real}
+{5.0}
+{Only when \parlink{geometry\_option\_plasma} is 4.}
+{The number of toroidal mode numbers in the \vmec~file will be multiplied by this value
+when transforming from the original poloidal angle to the straight-field-line angle.
+Since the original \vmec~angle is chosen to minimize the number of Fourier modes required,
+more modes are required in any other coordinate.
+This parameter does not affect the sets of basis functions,
+or the time required to assemble the inductance matrices or
+computed SVDs, but it does affect the time required to compute constant-offset surfaces.
+}
+
 \section{Geometry parameters for the plasma surface}
 
 \param{geometry\_option\_plasma}

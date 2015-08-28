@@ -75,5 +75,6 @@ module globalVariables
   integer :: efit_num_modes = 10
   real(dp) :: efit_psiN = 0.98
 
+  real(dp) :: mpol_transform_refinement=5, ntor_transform_refinement=5
 end module globalVariables
 
