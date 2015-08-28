@@ -11,7 +11,7 @@ module initSurfaceMod
          r, drdu, drdv, normal, norm_normal, &
          geometry_option, R_specified, a, separation, du, dv, nescin_filename)
 
-      use read_wout_mod
+      use globalVariables, only: R0_plasma, nfp
       use stel_kinds
       use stel_constants
       use omp_lib
@@ -73,7 +73,7 @@ module initSurfaceMod
          print *,"  Building a plain circular torus."
 
          if (geometry_option==0) then
-            R0_to_use = Rmajor
+            R0_to_use = R0_plasma
          else
             R0_to_use = R_specified
          end if

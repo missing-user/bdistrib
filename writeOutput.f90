@@ -1,7 +1,6 @@
 subroutine writeOutput
 
   use globalVariables
-  use read_wout_mod, only: nfp
   use ezcdf
 
   implicit none

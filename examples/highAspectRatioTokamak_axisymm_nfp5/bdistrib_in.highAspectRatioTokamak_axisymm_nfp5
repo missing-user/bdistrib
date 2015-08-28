@@ -20,7 +20,6 @@
   geometry_option_plasma = 0
   R0_plasma = 10.0
   a_plasma = 0.5
-  woutFilename='/global/homes/l/landrema/sfincs/equilibria/wout_w7x_standardConfig.nc'
   nfp_imposed = 5
 
   geometry_option_middle=0

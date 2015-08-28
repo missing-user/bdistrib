@@ -16,7 +16,7 @@ module globalVariables
   real(dp) :: a_plasma = 0.5, a_middle = 1.0, a_outer = 1.5
   real(dp) :: separation_middle=0.2, separation_outer=0.4
 
-  character(len=200) :: woutFilename=""
+  character(len=200) :: wout_filename=""
   character(len=200) :: nescin_filename_middle=""
   character(len=200) :: nescin_filename_outer=""
   character(len=200) :: efit_filename=""
@@ -42,6 +42,10 @@ module globalVariables
   integer, dimension(:), allocatable :: xm_plasma, xm_middle, xm_outer
   integer, dimension(:), allocatable :: xn_plasma, xn_middle, xn_outer
 
+  real(dp), dimension(:), allocatable :: rmns, zmnc, rmnc, zmns
+  integer :: mnmax
+  integer, dimension(:), allocatable :: xm, xn
+  logical :: lasym
   real(dp), dimension(:,:), allocatable :: inductance_plasma, inductance_middle
 
   integer :: n_singular_values_inductance_plasma, n_singular_values_inductance_middle

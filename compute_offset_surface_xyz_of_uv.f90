@@ -36,7 +36,7 @@ contains
   
   function fzero_residual(v_plasma_test)
     
-    use read_wout_mod, only: nfp
+    use globalVariables, only: nfp
     use stel_constants
     
     implicit none

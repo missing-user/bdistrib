@@ -1,6 +1,6 @@
 subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
 
-  use read_wout_mod, only: nfp
+  use globalVariables only: nfp
   use safe_open_mod
   use stel_constants
   use stel_kinds

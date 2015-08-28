@@ -7,8 +7,7 @@ contains
   subroutine buildInductanceMatrix(inductance, r, normal, nu, nv, mnmax, num_basis_functions, xm, xn, u, v)
 
     use globalVariables, only: r_outer, normal_outer, u_outer, v_outer, nu_outer, nv_outer, &
-         du_outer, dv_outer, mnmax_outer, num_basis_functions_outer, xn_outer, xm_outer, basis_set_option
-    use read_wout_mod, only: nfp
+         du_outer, dv_outer, mnmax_outer, num_basis_functions_outer, xn_outer, xm_outer, basis_set_option, nfp
     use stel_constants
     use stel_kinds
     use omp_lib

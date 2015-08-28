@@ -20,7 +20,7 @@
   geometry_option_plasma = 2
   R0_plasma = 10.0
   a_plasma = 0.5
-  woutFilename='../../equilibria/wout_w7x_standardConfig.nc'
+  wout_filename='../../equilibria/wout_w7x_standardConfig.nc'
   nfp_imposed = 1
 
   geometry_option_middle=0

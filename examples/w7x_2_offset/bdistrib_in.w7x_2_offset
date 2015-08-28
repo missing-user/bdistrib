@@ -18,7 +18,7 @@
   ntor_outer  = 8
 
   geometry_option_plasma = 2
-  woutFilename='../../equilibria/wout_w7x_standardConfig.nc'
+  wout_filename='../../equilibria/wout_w7x_standardConfig.nc'
 
   geometry_option_middle=2
   separation_middle = 0.3
