@@ -12,7 +12,7 @@ subroutine initPlasma
   integer :: i, iu, iv, imn, tic, toc, countrate, iflag, ierr, iopen, tic1, toc1
   real(dp) :: angle, sinangle, cosangle, dsinangledu, dsinangledv, dcosangledu, dcosangledv
   real(dp) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
-  real(dp) :: weight1, weight2, u, v, r_temp, z_temp, dnorm, u_temp
+  real(dp) :: weight1, weight2, u, v, r_temp, z_temp, dnorm
   integer :: nu_coordTransform, nv_coordTransform
   real(dp), dimension(:,:), allocatable :: r_coordTransform, z_coordTransform
   real(dp), dimension(:), allocatable :: rmnc_vmecLast, zmns_vmecLast
@@ -141,6 +141,8 @@ subroutine initPlasma
      call system_clock(tic1)
      rootSolve_abserr = 1.0e-10_dp
      rootSolve_relerr = 1.0e-10_dp
+     !open(unit=5,file="testStraightFieldLines",status='new',form='formatted')
+     !write (5,*) nu_coordTransform, nv_coordTransform
      do iv = 1,nv_coordTransform
         v = (iv-1.0_dp)/nv_coordTransform
         do iu = 1,nu_coordTransform
@@ -161,34 +163,26 @@ subroutine initPlasma
            ! Now that we have the old theta, evaluate r and z:
            r_temp = 0
            z_temp = 0
-           !u_temp = u_rootSolve_soln
            do imn = 1, mnmax_vmec
-              r_temp = r_temp + rmnc_vmecLast(imn)*cos(twopi*(xm_vmec(imn)*u_rootSolve_soln - xn_vmec(imn)*v))
-              z_temp = z_temp + zmns_vmecLast(imn)*sin(twopi*(xm_vmec(imn)*u_rootSolve_soln - xn_vmec(imn)*v))
-              !u_temp = u_temp + lmns(imn,ns)*sin(twopi*(xm_vmec(imn)*u_rootSolve_soln - xn_vmec(imn)*v))
+              angle = twopi*(xm_vmec(imn)*u_rootSolve_soln - xn_vmec(imn)*v/nfp)
+              r_temp = r_temp + rmnc_vmecLast(imn)*cos(angle)
+              z_temp = z_temp + zmns_vmecLast(imn)*sin(angle)
            end do
-           !print *,"New u:",u_rootSolve_target,", Old u:",u_rootSolve_soln,", reconstructed new:",u_temp
            r_coordTransform(iu,iv) = r_temp
            z_coordTransform(iu,iv) = z_temp
+           !write(5,*) u_rootSolve_soln
         end do
      end do
+     !close(unit=5)
      call system_clock(toc1)
      print *,"  Time for root solving:",real(toc1-tic1)/countrate
 
-!!$     print *,"r_coordTransform:"
-!!$     do iu = 1,nu_coordTransform
-!!$        print *,r_coordTransform(iu,:)
-!!$     end do
-!!$     print *," "
-!!$     print *,"z_coordTransform:"
-!!$     do iu = 1,nu_coordTransform
-!!$        print *,z_coordTransform(iu,:)
-!!$     end do
-!!$     print *," "
-
      ! Now that we have R and Z on a grid in the new coordinates, Fourier transform the results.
 
-     ! The next bit of code is much like initFourierModesMod, but with 1 difference: we need to keep the m=n=0 mode.
+     ! The next bit of code is much like initFourierModesMod, but with 2 differences: 
+     ! 1. We need to keep the m=n=0 mode.
+     ! 2. We follow VMEC convention that n includes the factor of nfp.
+
      ! xm is nonnegative.
      ! xn can be negative, zero, or positive.
      ! When xm is 0, xn must be positive.
@@ -206,7 +200,7 @@ subroutine initPlasma
      ! Handle the xm=0 modes:
      xm=0
      do jn=0,ntor
-        xn(jn+1)=jn
+        xn(jn+1)=jn*nfp
      end do
     
      ! Handle the xm>0 modes:
@@ -214,16 +208,11 @@ subroutine initPlasma
      do jm = 1,mpol
         do jn = -ntor, ntor
            index = index + 1
-           xn(index) = jn
+           xn(index) = jn*nfp
            xm(index) = jm
         end do
      end do
      ! Initialization of xm and xn is now complete.
-
-!!$     print *,"xm:",xm
-!!$     print *," "
-!!$     print *,"xn:",xn
-!!$     print *," "
 
      call system_clock(tic1)
      do imn = 1, mnmax
@@ -235,7 +224,7 @@ subroutine initPlasma
            v = (iv-1.0_dp)/nv_coordTransform
            do iu = 1, nu_coordTransform
               u = (iu-1.0_dp)/nu_coordTransform
-              angle = twopi*(xm(imn)*u-xn(imn)*v)
+              angle = twopi*(xm(imn)*u-xn(imn)*v/nfp)
               cosangle = cos(angle)
               sinangle = sin(angle)
               r_temp = r_temp + r_coordTransform(iu,iv) * cosangle
@@ -246,13 +235,8 @@ subroutine initPlasma
         zmns(imn) = z_temp*dnorm
      end do
      call system_clock(toc1)
-     print *,"  Time for slow Fourier transform:",real(toc1-tic1)/countrate
+     print *,"  Time for Fourier transform:",real(toc1-tic1)/countrate
      
-!!$     print *,"rmnc:",rmnc
-!!$     print *," "
-!!$     print *,"zmns:",zmns
-!!$     print *," "
-
   case (5)
      ! EFIT
 
@@ -396,7 +380,7 @@ contains
     fzero_residual = twopi*(u_old - u_rootSolve_target)
 
     do imn = 1, mnmax_vmec
-       fzero_residual = fzero_residual + lmns(imn,ns)*sin(twopi*(xm_vmec(imn)*u_old - xn_vmec(imn)*v))
+       fzero_residual = fzero_residual + lmns(imn,ns)*sin(twopi*(xm_vmec(imn)*u_old - xn_vmec(imn)/nfp*v))
     end do
 
   end function fzero_residual
