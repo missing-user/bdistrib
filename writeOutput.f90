@@ -88,7 +88,13 @@ subroutine writeOutput
        vn_svd_v_transferMatrix_sin = "svd_v_transferMatrix_sin", &
        vn_svd_v_transferMatrix_cos = "svd_v_transferMatrix_cos", &
        vn_n_singular_vectors_to_save = "n_singular_vectors_to_save", &
-       vn_totalTime = "totalTime"
+       vn_totalTime = "totalTime", &
+       vn_weight_option = "weight_option", &
+       vn_basis_to_Fourier_plasma = "basis_to_Fourier_plasma", &
+       vn_basis_to_Fourier_middle = "basis_to_Fourier_middle", &
+       vn_area_plasma = "area_plasma", &
+       vn_area_middle = "area_middle", &
+       vn_area_outer = "area_outer"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -116,7 +122,9 @@ subroutine writeOutput
        basis_plasma_outer_dim = (/'num_basis_functions_plasma','num_basis_functions_outer'/), &
        basis_middle_outer_dim = (/'num_basis_functions_middle','num_basis_functions_outer'/), &
        n_singular_values_thresholds_dim = &
-            (/'n_singular_values_transferMatrix','n_pseudoinverse_thresholds'/)
+            (/'n_singular_values_transferMatrix','n_pseudoinverse_thresholds'/), &
+       basis_basis_plasma_dim = (/'num_basis_functions_plasma','num_basis_functions_plasma'/), &
+       basis_basis_middle_dim = (/'num_basis_functions_middle','num_basis_functions_middle'/)
 !       uvl_plasma_dim = (/'nvl_plasma','nu_plasma'/)
 !       u_v_uprime_vprime_plasma_dim = (/'nu_nv_plasma','nu_nv_outer'/),&
 !       u_v_uprime_vprime_middle_dim = (/'nu_nv_middle','nu_nv_outer'/), &
@@ -175,6 +183,10 @@ subroutine writeOutput
   call cdf_define(ncid, vn_n_pseudoinverse_thresholds, n_pseudoinverse_thresholds)
   call cdf_define(ncid, vn_n_singular_vectors_to_save, n_singular_vectors_to_save)
   call cdf_define(ncid, vn_totalTime, totalTime)
+  call cdf_define(ncid, vn_weight_option, weight_option)
+  call cdf_define(ncid, vn_area_plasma, area_plasma)
+  call cdf_define(ncid, vn_area_middle, area_middle)
+  call cdf_define(ncid, vn_area_outer, area_outer)
 
   ! Arrays with dimension 1
 
@@ -209,6 +221,10 @@ subroutine writeOutput
      call cdf_define(ncid, vn_inductance_middle, inductance_middle, dimname=basis_middle_outer_dim)
   end if
   call cdf_define(ncid, vn_svd_s_transferMatrix, svd_s_transferMatrix, dimname=n_singular_values_thresholds_dim)
+  if (weight_option > 1) then
+     call cdf_define(ncid, vn_basis_to_Fourier_plasma, basis_to_Fourier_plasma, dimname=basis_basis_plasma_dim)
+     call cdf_define(ncid, vn_basis_to_Fourier_middle, basis_to_Fourier_middle, dimname=basis_basis_middle_dim)
+  end if
 
   ! Arrays with dimension 3
 
@@ -278,6 +294,10 @@ subroutine writeOutput
   call cdf_write(ncid, vn_n_pseudoinverse_thresholds, n_pseudoinverse_thresholds)
   call cdf_write(ncid, vn_n_singular_vectors_to_save, n_singular_vectors_to_save)
   call cdf_write(ncid, vn_totalTime, totalTime)
+  call cdf_write(ncid, vn_weight_option, weight_option)
+  call cdf_write(ncid, vn_area_plasma, area_plasma)
+  call cdf_write(ncid, vn_area_middle, area_middle)
+  call cdf_write(ncid, vn_area_outer, area_outer)
 
   ! Arrays with dimension 1
 
@@ -312,6 +332,10 @@ subroutine writeOutput
      call cdf_write(ncid, vn_inductance_middle, inductance_middle)
   end if
   call cdf_write(ncid, vn_svd_s_transferMatrix, svd_s_transferMatrix)
+  if (weight_option > 1) then
+     call cdf_write(ncid, vn_basis_to_Fourier_plasma, basis_to_Fourier_plasma)
+     call cdf_write(ncid, vn_basis_to_Fourier_middle, basis_to_Fourier_middle)
+  end if
 
   ! Arrays with dimension 3
 

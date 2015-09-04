@@ -377,6 +377,22 @@ this file will be used as the outer surface for \bdistrib.}
 
 \myhrule
 
+\param{weight\_option}
+{integer}
+{1}
+{Always}
+{Determines which weight $w$ is used to define orthogonality.\\
+
+{\ttfamily weight\_option} = 1: Use $w = 1 / (n_p |\vect{N}|)$, so the basis functions
+are $\sqrt{2} \sin(2\pi[mu+nv])$ and/or $\sqrt{2} \cos(2\pi[mu+nv])$ (
+as determined by \parlink{basis\_set\_option}).\\
+
+{\ttfamily weight\_option} = 2: Use a constant weight, $w = 1/$area. In this case the basis functions
+are linear combinations of the sines and cosines.
+}
+
+\myhrule
+
 \param{pseudoinverse\_thresholds}
 {real array}
 {1e-12}

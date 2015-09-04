@@ -62,6 +62,8 @@ module globalVariables
   integer, dimension(:), allocatable :: n_singular_values_retained
   real(dp), dimension(:,:), allocatable :: svd_s_transferMatrix
 
+  real(dp), dimension(:,:), allocatable :: basis_to_Fourier_plasma, basis_to_Fourier_middle
+
   ! EZCDF doesn't allow 4D arrays, so I can't include sin/cos as a 4th dimension.
   real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix_sin, svd_v_transferMatrix_sin
   real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix_cos, svd_v_transferMatrix_cos
@@ -69,12 +71,14 @@ module globalVariables
   logical :: allSVDsSucceeded
   integer :: nfp_imposed = 1
 
-  integer :: basis_set_option = 1
+  integer :: basis_set_option = 1, weight_option = 1
   real(dp) :: totalTime
 
   integer :: efit_num_modes = 10
   real(dp) :: efit_psiN = 0.98
 
   real(dp) :: mpol_transform_refinement=5, ntor_transform_refinement=1
+  real(dp) :: area_plasma, area_middle, area_outer
+
 end module globalVariables
 
