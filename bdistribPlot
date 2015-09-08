@@ -59,6 +59,10 @@ svd_v_transferMatrix_cos = f.variables['svd_v_transferMatrix_cos'][()]
 n_pseudoinverse_thresholds = f.variables['n_pseudoinverse_thresholds'][()]
 n_singular_vectors_to_save = f.variables['n_singular_vectors_to_save'][()]
 pseudoinverse_thresholds = f.variables['pseudoinverse_thresholds'][()]
+weight_option = f.variables['weight_option'][()]
+if weight_option>1:
+    basis_to_Fourier_plasma = f.variables['basis_to_Fourier_plasma'][()]
+    basis_to_Fourier_middle = f.variables['basis_to_Fourier_middle'][()]
 
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
@@ -164,6 +168,49 @@ plt.tight_layout()
 
 #plt.show()
 #exit(0)
+
+########################################################
+# Plot matrices related basis functions to Fourier modes
+########################################################
+
+if weight_option>1:
+    figureNum += 1
+    fig = plt.figure(figureNum)
+    fig.patch.set_facecolor('white')
+    numCols = 2
+    numRows = 2
+    titleFontSize = 12
+
+    plt.subplot(numRows,numCols,1)
+    data = np.abs(basis_to_Fourier_plasma.transpose())
+    plt.pcolormesh(data)
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('abs(basis_to_Fourier_plasma)',fontsize=titleFontSize)
+
+    plt.subplot(numRows,numCols,2)
+    data[data<1e-17] = 1e-17
+    plt.pcolormesh(np.log10(data))
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('log_10(abs(basis_to_Fourier_plasma))',fontsize=titleFontSize)
+
+    plt.subplot(numRows,numCols,3)
+    data = np.abs(basis_to_Fourier_middle.transpose())
+    plt.pcolormesh(data)
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('abs(basis_to_Fourier_middle)',fontsize=titleFontSize)
+
+    plt.subplot(numRows,numCols,4)
+    data[data<1e-17] = 1e-17
+    plt.pcolormesh(np.log10(data))
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('log_10(abs(basis_to_Fourier_middle))',fontsize=titleFontSize)
+
+    plt.tight_layout()
+    
 
 ########################################################
 # Plot singular vectors on the plasma surface

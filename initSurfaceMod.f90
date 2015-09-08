@@ -8,7 +8,7 @@ module initSurfaceMod
   contains
 
     subroutine initSurface(nu, nv, nvl, u, v, vl, &
-         r, drdu, drdv, normal, norm_normal, &
+         r, drdu, drdv, normal, norm_normal, area, &
          geometry_option, R_specified, a, separation, du, dv, nescin_filename)
 
       use globalVariables, only: R0_plasma, nfp
@@ -20,7 +20,7 @@ module initSurfaceMod
 
       character(*) :: nescin_filename
       integer :: nu, nv, nvl, geometry_option, iflag
-      real(dp) :: R_specified, a, separation, du, dv
+      real(dp) :: R_specified, a, separation, du, dv, area
       real(dp), dimension(:), allocatable :: u, v, vl
       real(dp), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
       real(dp), dimension(:,:), allocatable :: norm_normal
@@ -175,6 +175,8 @@ module initSurfaceMod
       allocate(norm_normal(nu, nvl),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
       norm_normal = sqrt(normal(1,:,:)**2 + normal(2,:,:)**2 + normal(3,:,:)**2)
+
+      area = du * dv * sum(norm_normal)
 
     end subroutine initSurface
 

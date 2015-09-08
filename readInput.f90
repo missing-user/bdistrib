@@ -16,7 +16,7 @@ subroutine readInput
        save_level, n_singular_vectors_to_save, nfp_imposed, basis_set_option, &
        mpol_plasma, ntor_plasma, mpol_middle, ntor_middle, mpol_outer, ntor_outer, &
        nescin_filename_middle, nescin_filename_outer, efit_filename, efit_psiN, efit_num_modes, &
-       mpol_transform_refinement, ntor_transform_refinement
+       mpol_transform_refinement, ntor_transform_refinement, weight_option
 
   ! getcarg is in LIBSTELL
   call getcarg(1, inputFilename, numargs)
@@ -84,6 +84,16 @@ subroutine readInput
      print *,"Set of basis functions: both sin(2*pi*[n*u + m*v]) and cos(2*pi*[n*u + m*v])"
   case default
      print *,"Error! Invalid setting for basis_set_option: ",basis_set_option
+     stop
+  end select
+
+  select case (weight_option)
+  case (1)
+     print *,"Weight w = 1 / (nfp * |N|), so the basis functions are Fourier functions."
+  case (2)
+     print *,"Weight w = 1 / area, so the basis functions are not Fourier functions."
+  case default
+     print *,"Error! Invalid setting for weight_option: ",weight_option
      stop
   end select
 

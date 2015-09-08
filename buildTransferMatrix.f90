@@ -11,6 +11,7 @@ subroutine buildTransferMatrix
   real(dp), dimension(:,:), allocatable :: Mpc_V, tempMatrix, transferMatrix
   real(dp) :: threshold
   integer :: max_singular_value_index, i
+  real(dp), dimension(:), allocatable :: svd_u_Fourier, svd_v_Fourier
 
   ! Variables needed by LAPACK:
   character :: JOBZ
@@ -31,6 +32,10 @@ subroutine buildTransferMatrix
   allocate(transferMatrix(num_basis_functions_plasma, num_basis_functions_middle), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
   allocate(n_singular_values_retained(n_pseudoinverse_thresholds), stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(svd_u_Fourier(num_basis_functions_plasma), stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(svd_v_Fourier(num_basis_functions_middle), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
 
   print *,"Forming matrix product M_po * V_mo"
@@ -180,21 +185,37 @@ subroutine buildTransferMatrix
   
      svd_s_transferMatrix(:,whichThreshold) = svd_s_transferMatrix_single
      do i = 1,n_singular_vectors_to_save
+        select case (weight_option)
+        case (1)
+           svd_u_Fourier = U(:,i)
+           svd_v_Fourier = VT(i,:)
+        case (2)
+           svd_u_Fourier = matmul(basis_to_Fourier_plasma,U(:,i))
+           svd_v_Fourier = matmul(basis_to_Fourier_middle,VT(i,:))
+        end select
+
         select case (basis_set_option)
         case (1)
            ! sine only
-           svd_u_transferMatrix_sin(:,i,whichThreshold) = U(:,i)
-           svd_v_transferMatrix_sin(:,i,whichThreshold) = VT(i,:)
+           svd_u_transferMatrix_sin(:,i,whichThreshold) = svd_u_Fourier
+           svd_v_transferMatrix_sin(:,i,whichThreshold) = svd_v_Fourier
         case (2)
            ! cosine only
-           svd_u_transferMatrix_cos(:,i,whichThreshold) = U(:,i)
-           svd_v_transferMatrix_cos(:,i,whichThreshold) = VT(i,:)
+           svd_u_transferMatrix_cos(:,i,whichThreshold) = svd_u_Fourier
+           svd_v_transferMatrix_cos(:,i,whichThreshold) = svd_v_Fourier
         case (3)
            ! Both sine and cosine
-           svd_u_transferMatrix_sin(:,i,whichThreshold) = U(1:mnmax_plasma,i)
-           svd_u_transferMatrix_cos(:,i,whichThreshold) = U(mnmax_plasma+1:num_basis_functions_plasma,i)
-           svd_v_transferMatrix_sin(:,i,whichThreshold) = VT(i,1:mnmax_middle)
-           svd_v_transferMatrix_cos(:,i,whichThreshold) = VT(i,mnmax_middle+1:num_basis_functions_middle)
+           svd_u_transferMatrix_sin(:,i,whichThreshold) &
+                = svd_u_Fourier(1:mnmax_plasma)
+
+           svd_u_transferMatrix_cos(:,i,whichThreshold) &
+                = svd_u_Fourier(mnmax_plasma+1:num_basis_functions_plasma)
+
+           svd_v_transferMatrix_sin(:,i,whichThreshold) &
+                = svd_v_Fourier(1:mnmax_middle)
+
+           svd_v_transferMatrix_cos(:,i,whichThreshold) &
+                = svd_v_Fourier(mnmax_middle+1:num_basis_functions_middle)
         case default
            print *,"Error! Invalid value for basis_set_option: ",basis_set_option
            stop

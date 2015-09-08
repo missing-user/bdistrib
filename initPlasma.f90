@@ -363,6 +363,8 @@ subroutine initPlasma
 
   du_plasma = u_plasma(2)-u_plasma(1)
   dv_plasma = v_plasma(2)-v_plasma(1)
+
+  area_plasma = du_plasma * dv_plasma * sum(norm_normal_plasma)
   
   call system_clock(toc)
   print *,"Done initializing plasma surface. Took ",real(toc-tic)/countrate," sec."
