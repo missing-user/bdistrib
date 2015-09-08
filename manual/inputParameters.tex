@@ -153,7 +153,7 @@ computed SVDs, but it does affect the time required to compute constant-offset s
 
 \param{ntor\_transform\_refinement}
 {real}
-{5.0}
+{1.0}
 {Only when \parlink{geometry\_option\_plasma} is 4.}
 {The number of toroidal mode numbers in the \vmec~file will be multiplied by this value
 when transforming from the original poloidal angle to the straight-field-line angle.
@@ -178,13 +178,16 @@ computed SVDs, but it does affect the time required to compute constant-offset s
 {\ttfamily geometry\_option\_plasma} = 1: Identical to option 0. (This option exists just for consistency with \parlink{geometry\_option\_middle} and \parlink{geometry\_option\_outer}.)\\
 
 {\ttfamily geometry\_option\_plasma} = 2: The plasma surface will be the last surface in the full radial grid of the \vmec~file specified by \parlink{wout\_ilename}.
-The poloidal angle used will be the normal \vmec~angle which is not a straight-field-line coordinate.\\
+The poloidal angle used will be the normal \vmec~angle which is not a straight-field-line coordinate.
+This is typically the best option to use for working with \vmec~equilibria.\\
 
 {\ttfamily geometry\_option\_plasma} = 3: The plasma surface will be the last surface in the half radial grid of the \vmec~file specified by \parlink{wout\_filename}.
-The poloidal angle used will be the normal \vmec~angle which is not a straight-field-line coordinate.\\
+The poloidal angle used will be the normal \vmec~angle which is not a straight-field-line coordinate.
+This option exists so that the same flux surface can be used when comparing with {\ttfamily geometry\_option\_plasma} = 4.\\
 
 {\ttfamily geometry\_option\_plasma} = 4: The plasma surface will be the last surface in the half radial grid of the \vmec~file specified by \parlink{wout\_filename}.
-The poloidal angle used will be the straight-field-line coordinate, obtained by shifting the normal \vmec~poloidal angle by \vmec's $\lambda$ quantity.\\
+The poloidal angle used will be the straight-field-line coordinate, obtained by shifting the normal \vmec~poloidal angle by \vmec's $\lambda$ quantity.
+This option exists in order to examine changes when using a different poloidal coordinate compared to {\ttfamily geometry\_option\_plasma} = 3.\\
 
 {\ttfamily geometry\_option\_plasma} = 5: The plasma surface will be the flux surface with normalized poloidal flux
 \parlink{efit\_psiN} taken from the {\ttfamily efit} file specified by \parlink{efit\_filename}.
