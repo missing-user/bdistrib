@@ -13,7 +13,7 @@ subroutine readInput
        geometry_option_plasma, geometry_option_middle, geometry_option_outer, &
        R0_plasma, R0_middle, R0_outer, a_plasma, a_middle, a_outer, &
        separation_middle, separation_outer, wout_filename, pseudoinverse_thresholds, &
-       save_level, n_singular_vectors_to_save, nfp_imposed, basis_set_option, &
+       save_level, n_singular_vectors_to_save, nfp_imposed, basis_set_option, mode_order, &
        mpol_plasma, ntor_plasma, mpol_middle, ntor_middle, mpol_outer, ntor_outer, &
        nescin_filename_middle, nescin_filename_outer, efit_filename, efit_psiN, efit_num_modes, &
        mpol_transform_refinement, ntor_transform_refinement, weight_option

@@ -15,8 +15,8 @@ buildTransferMatrix.o: globalVariables.o
 compute_offset_surface_xyz_of_uv.o: 
 expandPlasmaSurface.o:
 fzero.o: 
-initCurrentPotentialModes.o: globalVariables.o
 globalVariables.o: 
+initFourierModesMod.o: globalVariables.o
 initOuter2Surfaces.o: globalVariables.o initSurfaceMod.o
 initPlasma.o: globalVariables.o
 initSurfaceMod.o: 

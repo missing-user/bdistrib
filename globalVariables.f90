@@ -71,7 +71,7 @@ module globalVariables
   logical :: allSVDsSucceeded
   integer :: nfp_imposed = 1
 
-  integer :: basis_set_option = 1, weight_option = 1
+  integer :: basis_set_option = 1, weight_option = 1, mode_order = 1
   real(dp) :: totalTime
 
   integer :: efit_num_modes = 10

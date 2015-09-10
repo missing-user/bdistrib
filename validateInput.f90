@@ -75,6 +75,15 @@ subroutine validateInput
   end if
 
 
+  if (mode_order < 1) then
+     stop "Error! mode_order must be >= 1."
+  end if
+
+  if (mode_order > 2) then
+     stop "Error! mode_order must be <= 2."
+  end if
+
+
   if (geometry_option_plasma < 0) then
      stop "Error! geometry_option_plasma must be >= 0."
   end if
