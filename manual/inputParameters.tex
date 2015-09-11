@@ -380,21 +380,22 @@ this file will be used as the outer surface for \bdistrib.}
 
 \myhrule
 
-\param{basis\_option}
+\param{basis\_option\_plasma}
 {integer}
 {1}
 {Always}
-{Determines which weight $w$ is used to define orthogonality.\\
+{Determines which basis functions are used, as well as which weight $w$ is used to define orthogonality.
+This option controls only the plasma surface. Analogous options {\ttfamily basis\_option\_middle} and {\ttfamily basis\_option\_outer}
+exist for the other two surfaces.\\
 
-{\ttfamily basis\_option} = 1: Use $w = 1 / (n_p |\vect{N}|)$, so the basis functions
+{\ttfamily basis\_option\_plasma} = 1: Use $w = 1 / (n_p |\vect{N}|)$, so the basis functions
 are the Fourier functions $\sqrt{2} \sin(2\pi[mu+nv])$ and/or $\sqrt{2} \cos(2\pi[mu+nv])$ (
 as determined by \parlink{symmetry\_option}).\\
 
-{\ttfamily basis\_option} = 2: Use a constant weight, $w = 1/A$ where $A$ is the surface area. The basis functions
+{\ttfamily basis\_option\_plasma} = 2: Use a constant weight, $w = 1/A$ where $A$ is the surface area. The basis functions
 will be Fourier functions scaled by $\sqrt{2A/[n_p |\vect{N}|]}$.\\
-}
 
-{\ttfamily basis\_option} = 2: Use a constant weight, $w = 1/A$. The basis functions
+{\ttfamily basis\_option\_plasma} = 3: Use a constant weight, $w = 1/A$. The basis functions
 will be linear combinations of the Fourier functions, as constructed using the Cholesky method.
 }
 
@@ -408,6 +409,15 @@ will be linear combinations of the Fourier functions, as constructed using the C
 will be replaced by their inverse, whereas singular values smaller than this threshold will be replaced by zero.
 You can supply more than one threshold value in order to compare results for different choices.
 Good threshold values are in the range 1e-6 to 1e-13, i.e. small compared to 1 but larger than machine precision.}
+
+\myhrule
+
+\param{check\_orthogonality}
+{logical}
+{\false}
+{Always}
+{If this parameter is set to \true, the integrals $\int d^2a\; w f_i f_j$ will be computed for all $i$ and $j$,
+to be sure the result is $\delta_{i,j}$ to machine precision.}
 
 \myhrule
 

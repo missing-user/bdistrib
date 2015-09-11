@@ -1,4 +1,4 @@
-module globalVariables
+module global_variables
 
   use stel_kinds
 
@@ -92,5 +92,5 @@ module globalVariables
   real(dp) :: area_plasma, area_middle, area_outer
   logical :: check_orthogonality = .false.
 
-end module globalVariables
+end module global_variables
 

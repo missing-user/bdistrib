@@ -2,7 +2,7 @@
 
 subroutine transfer_matrix
 
-  use globalVariables
+  use global_variables
   use stel_kinds
 
   implicit none

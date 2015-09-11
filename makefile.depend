@@ -1,30 +1,30 @@
 # -*- mode: makefile -*-
 
-OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildInductanceMatrices.o \
+OBJ_FILES = bdistrib.o build_inductance_matrix_mod.o build_inductance_matrices.o \
 	compute_offset_surface_xyz_of_uv.o \
-	expandPlasmaSurface.o fzero.o globalVariables.o init_basis_functions_mod.o \
-	initFourierModesMod.o initOuter2Surfaces.o initPlasma.o \
-	initSurfaceMod.o read_efit.o readInput.o read_nescin.o splines.o svdInductanceMatrices.o \
-	transfer_matrix.o validateInput.o writeOutput.o
+	expand_plasma_surface.o fzero.o global_variables.o init_basis_functions_mod.o \
+	init_Fourier_modes_mod.o init_outer_2_surfaces.o init_plasma.o \
+	init_surface_mod.o read_efit.o read_input.o read_nescin.o splines.o svd_inductance_matrices.o \
+	transfer_matrix.o validate_input.o write_output.o
 
 # Dependencies:
-bdistrib.o: globalVariables.o init_basis_functions_mod.o
-buildInductanceMatrixMod.o: globalVariables.o
-buildInductanceMatrices.o: globalVariables.o buildInductanceMatrixMod.o
+bdistrib.o: global_variables.o init_basis_functions_mod.o
+build_inductance_matrix_mod.o: global_variables.o
+build_inductance_matrices.o: global_variables.o build_inductance_matrix_mod.o
 compute_offset_surface_xyz_of_uv.o: 
-expandPlasmaSurface.o:
+expand_plasma_surface.o:
 fzero.o: 
-globalVariables.o: 
-init_basis_functions_mod.o: globalVariables.o initFourierModesMod.o
-initFourierModesMod.o: globalVariables.o
-initOuter2Surfaces.o: globalVariables.o initSurfaceMod.o
-initPlasma.o: globalVariables.o
-initSurfaceMod.o: 
+global_variables.o: 
+init_basis_functions_mod.o: global_variables.o init_Fourier_modes_mod.o
+init_Fourier_modes_mod.o: global_variables.o
+init_outer_2_surfaces.o: global_variables.o init_surface_mod.o
+init_plasma.o: global_variables.o
+init_surface_mod.o: 
 read_efit.o: splines.o
-readInput.o: globalVariables.o
+read_input.o: global_variables.o
 read_nescin.o: 
 splines.o:
-svdInductanceMatrices.o: globalVariables.o
-transfer_matrix.o: globalVariables.o
-validateInput.o: globalVariables.o
-writeOutput.o: globalVariables.o
+svd_inductance_matrices.o: global_variables.o
+transfer_matrix.o: global_variables.o
+validate_input.o: global_variables.o
+write_output.o: global_variables.o

@@ -1,8 +1,8 @@
 ! Documentation of LAPACK's SVD subroutine DGESDD is copied at the end of this file for convenience.
-subroutine svdInductanceMatrices()
+subroutine svd_inductance_matrices()
   ! This subroutine finds the singular values of the two inductance matrices
 
-  use globalVariables, only: inductance_plasma_outer, inductance_middle_outer, inductance_plasma_middle, &
+  use global_variables, only: inductance_plasma_outer, inductance_middle_outer, inductance_plasma_middle, &
        num_basis_functions_plasma, num_basis_functions_middle, num_basis_functions_outer, &
        n_singular_values_inductance_plasma_outer,  svd_s_inductance_plasma_outer, &
        n_singular_values_inductance_middle_outer,  svd_s_inductance_middle_outer, &
@@ -247,7 +247,7 @@ subroutine svdInductanceMatrices()
   !*************************************************************************
   
   
-end subroutine svdInductanceMatrices
+end subroutine svd_inductance_matrices
 
 
 

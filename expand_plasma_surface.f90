@@ -1,6 +1,6 @@
-subroutine expandPlasmaSurface(u, v, separation, x,y,z)
+subroutine expand_plasma_surface(u, v, separation, x,y,z)
   
-  use globalVariables, only: nfp, xm, xn, mnmax, rmnc, zmns, rmns, zmnc, lasym
+  use global_variables, only: nfp, xm, xn, mnmax, rmnc, zmns, rmns, zmnc, lasym
   use stel_kinds
   use stel_constants
 
@@ -86,4 +86,4 @@ subroutine expandPlasmaSurface(u, v, separation, x,y,z)
   y = y + normal_y * separation
   z = z + normal_z * separation
 
-end subroutine expandPlasmaSurface
+end subroutine expand_plasma_surface

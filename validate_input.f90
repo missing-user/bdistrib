@@ -1,6 +1,6 @@
-subroutine validateInput
+subroutine validate_input
 
-  use globalVariables
+  use global_variables
 
   implicit none
 
@@ -150,4 +150,4 @@ subroutine validateInput
 
 
 
-end subroutine validateInput
+end subroutine validate_input

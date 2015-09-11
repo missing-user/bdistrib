@@ -1,6 +1,6 @@
-subroutine readInput
+subroutine read_input
 
-  use globalVariables
+  use global_variables
 
   implicit none
 
@@ -88,4 +88,4 @@ subroutine readInput
      stop
   end select
 
-end subroutine readInput
+end subroutine read_input

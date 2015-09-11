@@ -1,12 +1,12 @@
-module initFourierModesMod
+module init_Fourier_modes_mod
 
   implicit none
 
 contains
 
-  subroutine initFourierModes(mpol, ntor, mnmax, xm, xn)
+  subroutine init_Fourier_modes(mpol, ntor, mnmax, xm, xn)
 
-    use globalVariables, only: mode_order
+    use global_variables, only: mode_order
 
     implicit none
 
@@ -65,6 +65,6 @@ contains
        deallocate(xm_temp, xn_temp)
     end if
 
-  end subroutine initFourierModes
+  end subroutine init_Fourier_modes
   
-end module initFourierModesMod
+end module init_Fourier_modes_mod

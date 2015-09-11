@@ -1,6 +1,6 @@
-subroutine initPlasma
+subroutine init_plasma
 
-  use globalVariables
+  use global_variables
   use read_wout_mod, only: nfp_vmec => nfp, xm_vmec => xm, xn_vmec => xn, &
        rmnc_vmec => rmnc, zmns_vmec => zmns, rmns_vmec => rmns, zmnc_vmec => zmnc, &
        lasym_vmec => lasym, mnmax_vmec => mnmax, ns, Rmajor, read_wout_file, lmns, &
@@ -387,4 +387,4 @@ contains
 
   end function fzero_residual
 
-end subroutine initPlasma
+end subroutine init_plasma

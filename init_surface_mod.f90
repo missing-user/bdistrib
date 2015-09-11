@@ -1,4 +1,4 @@
-module initSurfaceMod
+module init_surface_mod
 
   ! Passing un-allocated arrays is valid in modules but not in standalone subroutine
   ! files unless using pointers or an explicit interface.
@@ -7,11 +7,11 @@ module initSurfaceMod
 
   contains
 
-    subroutine initSurface(nu, nv, nvl, u, v, vl, &
+    subroutine init_surface(nu, nv, nvl, u, v, vl, &
          r, drdu, drdv, normal, norm_normal, area, &
          geometry_option, R_specified, a, separation, du, dv, nescin_filename)
 
-      use globalVariables, only: R0_plasma, nfp
+      use global_variables, only: R0_plasma, nfp
       use stel_kinds
       use stel_constants
       use omp_lib
@@ -178,8 +178,8 @@ module initSurfaceMod
 
       area = du * dv * sum(norm_normal)
 
-    end subroutine initSurface
+    end subroutine init_surface
 
-  end module initSurfaceMod
+  end module init_surface_mod
   
 

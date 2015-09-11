@@ -1,13 +1,13 @@
-module buildInductanceMatrixMod
+module build_inductance_matrix_mod
 
   implicit none
 
 contains
 
-  subroutine buildInductanceMatrix(inductance, u_1, v_1, r_1, normal_1, basis_functions_1,  &
+  subroutine build_inductance_matrix(inductance, u_1, v_1, r_1, normal_1, basis_functions_1,  &
        u_2, v_2, r_2, normal_2, basis_functions_2)
 
-    use globalVariables, only: nfp
+    use global_variables, only: nfp
     use stel_constants
     use stel_kinds
     use omp_lib
@@ -183,9 +183,9 @@ contains
 
     deallocate(inductance_xbasis)
 
-  end subroutine buildInductanceMatrix
+  end subroutine build_inductance_matrix
 
-end module buildInductanceMatrixMod
+end module build_inductance_matrix_mod
 
 
 ! Documentation of BLAS3 DGEMM subroutine for matrix-matrix multiplication:

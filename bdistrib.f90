@@ -2,7 +2,7 @@
 
 program bdistrib
 
-  use globalVariables
+  use global_variables
   use init_basis_functions_mod
 
   implicit none
@@ -12,12 +12,12 @@ program bdistrib
   print *,"This is BDISTRIB."
   call system_clock(tic,countrate)
 
-  call readInput()
-  call validateInput()
+  call read_input()
+  call validate_input()
 
   ! Define the position vector and normal vector at each grid point for the 3 surfaces:
-  call initPlasma()
-  call initOuter2Surfaces()
+  call init_plasma()
+  call init_outer_2_surfaces()
 
   ! Initialize basis functions on the 3 surfaces:
   call system_clock(tic1)
@@ -46,10 +46,10 @@ program bdistrib
 
 
   ! Compute the mutual inductance matrices, which relate current on 1 surface to B_normal on an interior surface:
-  call buildInductanceMatrices()
+  call build_inductance_matrices()
 
   ! Compute SVD of each of the inductance matrices:
-  call svdInductanceMatrices()
+  call svd_inductance_matrices()
 
   ! Assemble transfer matrix and compute its SVD:
   call transfer_matrix()
@@ -57,7 +57,7 @@ program bdistrib
   call system_clock(toc)
   totalTime = real(toc-tic)/countrate
 
-  call writeOutput()
+  call write_output()
 
   if (allSVDsSucceeded) then
      print *,"All SVDs succeeded."

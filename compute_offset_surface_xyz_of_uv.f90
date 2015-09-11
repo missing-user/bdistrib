@@ -28,7 +28,7 @@ subroutine compute_offset_surface_xyz_of_uv(u_rootSolve,v_rootSolve_target,x_off
      print *,"WARNING: fzero returned an error code:",fzeroFlag
   end if
   
-  call expandPlasmaSurface(u_rootSolve, v_plasma_rootSolveSolution, separation, x_offsetSurface, y_offsetSurface, z_offsetSurface)
+  call expand_plasma_surface(u_rootSolve, v_plasma_rootSolveSolution, separation, x_offsetSurface, y_offsetSurface, z_offsetSurface)
   
 contains
   
@@ -36,7 +36,7 @@ contains
   
   function fzero_residual(v_plasma_test)
     
-    use globalVariables, only: nfp
+    use global_variables, only: nfp
     use stel_constants
     
     implicit none
@@ -44,7 +44,7 @@ contains
     real(dp) :: v_plasma_test, fzero_residual
     real(dp) :: x_outer, y_outer, z_outer, v_outer_new, v_error
     
-    call expandPlasmaSurface(u_rootSolve, v_plasma_test, separation, x_outer, y_outer, z_outer)
+    call expand_plasma_surface(u_rootSolve, v_plasma_test, separation, x_outer, y_outer, z_outer)
     v_outer_new = atan2(y_outer,x_outer)*nfp/twopi
     v_error = v_outer_new - v_rootSolve_target
     if (v_error < -nfp/2.0_dp) then

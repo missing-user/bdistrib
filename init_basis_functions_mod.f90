@@ -10,8 +10,8 @@ module init_basis_functions_mod
     subroutine init_basis_functions(basis_option, mpol, ntor, mnmax, xm, xn, u, v, &
          num_basis_functions, basis_functions, area, norm_normal, should_be_identity)
 
-      use globalVariables, only: symmetry_option, nfp, check_orthogonality
-      use initFourierModesMod
+      use global_variables, only: symmetry_option, nfp, check_orthogonality
+      use init_Fourier_modes_mod
       use stel_kinds
       use stel_constants
 
@@ -57,7 +57,7 @@ module init_basis_functions_mod
       end select
 
       ! Initialize Fourier arrays
-      call initFourierModes(mpol, ntor, mnmax, xm, xn)
+      call init_Fourier_modes(mpol, ntor, mnmax, xm, xn)
 
       select case (symmetry_option)
       case (1,2)

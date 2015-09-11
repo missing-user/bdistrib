@@ -1,6 +1,6 @@
-subroutine writeOutput
+subroutine write_output
 
-  use globalVariables
+  use global_variables
   use ezcdf
 
   implicit none
@@ -427,4 +427,4 @@ subroutine writeOutput
   ! Finish up:
   call cdf_close(ncid)
 
-end subroutine writeOutput
+end subroutine write_output

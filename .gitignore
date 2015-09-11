@@ -6,5 +6,6 @@ bdistrib
 bdistrib_out*
 job.out.*
 job.err.*
+make_test.o*
 *~
 \#*
