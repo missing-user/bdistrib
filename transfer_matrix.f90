@@ -1,6 +1,6 @@
 ! Documentation of LAPACK's SVD subroutine DGESDD is copied at the end of this file for convenience.
 
-subroutine buildTransferMatrix
+subroutine transfer_matrix
 
   use globalVariables
   use stel_kinds
@@ -11,7 +11,6 @@ subroutine buildTransferMatrix
   real(dp), dimension(:,:), allocatable :: Mpc_V, tempMatrix, transferMatrix
   real(dp) :: threshold
   integer :: max_singular_value_index, i
-  real(dp), dimension(:), allocatable :: svd_u_Fourier, svd_v_Fourier
 
   ! Variables needed by LAPACK:
   character :: JOBZ
@@ -33,27 +32,23 @@ subroutine buildTransferMatrix
   if (iflag .ne. 0) stop 'Allocation error!'
   allocate(n_singular_values_retained(n_pseudoinverse_thresholds), stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(svd_u_Fourier(num_basis_functions_plasma), stat=iflag)
-  if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(svd_v_Fourier(num_basis_functions_middle), stat=iflag)
-  if (iflag .ne. 0) stop 'Allocation error!'
 
   print *,"Forming matrix product M_po * V_mo"
   call system_clock(tic,countrate)
   ! Slow but simpler method using "matmul":
-  !Mpc_V = matmul(inductance_plasma, svd_v_inductance_middle)
+  !Mpc_V = matmul(inductance_plasma_outer, svd_v_inductance_middle_outer)
 
   ! A = inductance_plasma
-  ! B = svd_v_inductance_middle
+  ! B = svd_v_inductance_middle_outer
   ! C = Mpc_V
-  M_DGEMM = size(inductance_plasma,1) ! # rows of A
-  N_DGEMM = size(svd_v_inductance_middle,2) ! # cols of B
-  K_DGEMM = size(inductance_plasma,2) ! Common dimension of A and B
+  M_DGEMM = size(inductance_plasma_outer,1) ! # rows of A
+  N_DGEMM = size(svd_v_inductance_middle_outer,2) ! # cols of B
+  K_DGEMM = size(inductance_plasma_outer,2) ! Common dimension of A and B
   LDA_DGEMM = M_DGEMM
   LDB_DGEMM = K_DGEMM
   LDC_DGEMM = M_DGEMM
-  call DGEMM(TRANSA,TRANSB,M_DGEMM,N_DGEMM,K_DGEMM,ALPHA,inductance_plasma,LDA_DGEMM,&
-       svd_v_inductance_middle,LDB_DGEMM,BETA,Mpc_V,LDC_DGEMM)
+  call DGEMM(TRANSA,TRANSB,M_DGEMM,N_DGEMM,K_DGEMM,ALPHA,inductance_plasma_outer,LDA_DGEMM,&
+       svd_v_inductance_middle_outer,LDB_DGEMM,BETA,Mpc_V,LDC_DGEMM)
 
   call system_clock(toc)
   print *,"Done. Took",real(toc-tic)/countrate," sec."
@@ -87,19 +82,14 @@ subroutine buildTransferMatrix
   if (iflag .ne. 0) stop 'Allocation error E!'
   allocate(VT(N,N),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error F!'
-  allocate(svd_u_transferMatrix_sin(mnmax_plasma,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+  allocate(svd_u_transferMatrix(num_basis_functions_plasma,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error G1!'
-  allocate(svd_u_transferMatrix_cos(mnmax_plasma,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
-  if (iflag .ne. 0) stop 'Allocation error G2!'
-  allocate(svd_v_transferMatrix_sin(mnmax_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+  allocate(svd_v_transferMatrix(num_basis_functions_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error H1!'
-  allocate(svd_v_transferMatrix_cos(mnmax_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
-  if (iflag .ne. 0) stop 'Allocation error H2!'
-
-  svd_u_transferMatrix_sin = 0
-  svd_u_transferMatrix_cos = 0
-  svd_v_transferMatrix_sin = 0
-  svd_v_transferMatrix_cos = 0
+  allocate(svd_u_transferMatrix_uv(nu_plasma*nv_plasma,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error G1!'
+  allocate(svd_v_transferMatrix_uv(nu_middle*nv_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error H1!'
 
   ! Done with initialization. Now begin the loop over thresholds:
 
@@ -109,22 +99,22 @@ subroutine buildTransferMatrix
      print *,"  Beginning pseudoinverse with relative threshold",threshold
 
      ! Determine how many singular values from M_mo to include
-     max_singular_value_index = n_singular_values_inductance_middle
-     do i = 1,n_singular_values_inductance_middle
-        if (svd_s_inductance_middle(i)/svd_s_inductance_middle(1) < threshold) then
+     max_singular_value_index = n_singular_values_inductance_middle_outer
+     do i = 1,n_singular_values_inductance_middle_outer
+        if (svd_s_inductance_middle_outer(i)/svd_s_inductance_middle_outer(1) < threshold) then
            max_singular_value_index = i-1
            exit
         end if
      end do
      n_singular_values_retained(whichThreshold) = max_singular_value_index
-     print *,"  Retaining",max_singular_value_index," of ",n_singular_values_inductance_middle,&
+     print *,"  Retaining",max_singular_value_index," of ",n_singular_values_inductance_middle_outer,&
           "singular values in the pseudoinverse."
 
-     ! Next, for the matrix product s_mo^-1 * u_mo^-1
+     ! Next, form the matrix product s_mo^-1 * u_mo^-1
      call system_clock(tic)
      tempMatrix = 0
      do i = 1,max_singular_value_index
-        tempMatrix(i,:) = (1/svd_s_inductance_middle(i))*svd_uT_inductance_middle(i,:)
+        tempMatrix(i,:) = (1/svd_s_inductance_middle_outer(i))*svd_uT_inductance_middle_outer(i,:)
      end do
      call system_clock(toc)
      print *,"  Assembly of s_mo^-1 * u_mo^-1 took",real(toc-tic)/countrate," sec."
@@ -135,8 +125,8 @@ subroutine buildTransferMatrix
      ! Transparent but slow method using "matmul":
      !transferMatrix = matmul(Mpc_V, tempMatrix)
 
-     ! A = inductance_plasma
-     ! B = svd_v_inductance_middle
+     ! A = inductance_plasma_outer
+     ! B = svd_v_inductance_middle_outer
      ! C = Mpc_V
      M_DGEMM = size(Mpc_V,1) ! # rows of A
      N_DGEMM = size(tempMatrix,2) ! # cols of B
@@ -165,7 +155,7 @@ subroutine buildTransferMatrix
   
      if (INFO==0) then
         print *,"  SVD (DGESDD) successful."
-        if (n_singular_values_inductance_middle<5) then
+        if (n_singular_values_transferMatrix<5) then
            print *,"  Singular values:",svd_s_transferMatrix_single
         else
            print *,"  First 5 singular values:",svd_s_transferMatrix_single(1:5)
@@ -184,49 +174,20 @@ subroutine buildTransferMatrix
      print *,"  Done with SVD. Took ",real(toc-tic)/countrate," sec."
   
      svd_s_transferMatrix(:,whichThreshold) = svd_s_transferMatrix_single
-     do i = 1,n_singular_vectors_to_save
-        select case (weight_option)
-        case (1)
-           svd_u_Fourier = U(:,i)
-           svd_v_Fourier = VT(i,:)
-        case (2)
-           svd_u_Fourier = matmul(basis_to_Fourier_plasma,U(:,i))
-           svd_v_Fourier = matmul(basis_to_Fourier_middle,VT(i,:))
-        end select
 
-        select case (basis_set_option)
-        case (1)
-           ! sine only
-           svd_u_transferMatrix_sin(:,i,whichThreshold) = svd_u_Fourier
-           svd_v_transferMatrix_sin(:,i,whichThreshold) = svd_v_Fourier
-        case (2)
-           ! cosine only
-           svd_u_transferMatrix_cos(:,i,whichThreshold) = svd_u_Fourier
-           svd_v_transferMatrix_cos(:,i,whichThreshold) = svd_v_Fourier
-        case (3)
-           ! Both sine and cosine
-           svd_u_transferMatrix_sin(:,i,whichThreshold) &
-                = svd_u_Fourier(1:mnmax_plasma)
-
-           svd_u_transferMatrix_cos(:,i,whichThreshold) &
-                = svd_u_Fourier(mnmax_plasma+1:num_basis_functions_plasma)
-
-           svd_v_transferMatrix_sin(:,i,whichThreshold) &
-                = svd_v_Fourier(1:mnmax_middle)
-
-           svd_v_transferMatrix_cos(:,i,whichThreshold) &
-                = svd_v_Fourier(mnmax_middle+1:num_basis_functions_middle)
-        case default
-           print *,"Error! Invalid value for basis_set_option: ",basis_set_option
-           stop
-        end select
-     end do
+     call system_clock(tic)
+     svd_u_transferMatrix(:,:,whichThreshold) = U(:,1:n_singular_vectors_to_save)
+     svd_v_transferMatrix(:,:,whichThreshold) = transpose(VT(1:n_singular_vectors_to_save,:))
+     svd_u_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_plasma, svd_u_transferMatrix(:,:,whichThreshold))
+     svd_v_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_middle, svd_v_transferMatrix(:,:,whichThreshold))
+     call system_clock(toc)
+     print *,"  Final matmuls: ",real(toc-tic)/countrate," sec."
 
   end do
 
   deallocate(U,VT,WORK,IWORK)
 
-end subroutine buildTransferMatrix
+end subroutine transfer_matrix
 
     ! Here is the LAPACK documentation for the relevant SVD subroutine:
 

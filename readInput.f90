@@ -13,10 +13,11 @@ subroutine readInput
        geometry_option_plasma, geometry_option_middle, geometry_option_outer, &
        R0_plasma, R0_middle, R0_outer, a_plasma, a_middle, a_outer, &
        separation_middle, separation_outer, wout_filename, pseudoinverse_thresholds, &
-       save_level, n_singular_vectors_to_save, nfp_imposed, basis_set_option, mode_order, &
+       save_level, n_singular_vectors_to_save, nfp_imposed, symmetry_option, mode_order, &
        mpol_plasma, ntor_plasma, mpol_middle, ntor_middle, mpol_outer, ntor_outer, &
        nescin_filename_middle, nescin_filename_outer, efit_filename, efit_psiN, efit_num_modes, &
-       mpol_transform_refinement, ntor_transform_refinement, weight_option
+       mpol_transform_refinement, ntor_transform_refinement, &
+       basis_option_plasma, basis_option_middle, basis_option_outer, check_orthogonality
 
   ! getcarg is in LIBSTELL
   call getcarg(1, inputFilename, numargs)
@@ -75,25 +76,15 @@ subroutine readInput
   print *,"  ntor_middle =",ntor_middle
   print *,"  ntor_outer  =",ntor_outer
 
-  select case (basis_set_option)
+  select case (symmetry_option)
   case (1)
-     print *,"Set of basis functions: sin(2*pi*[n*u + m*v]) only"
+     print *,"Symmetry: sin(2*pi*[n*u + m*v]) type modes only"
   case (2)
-     print *,"Set of basis functions: cos(2*pi*[n*u + m*v]) only"
+     print *,"Symmetry: cos(2*pi*[n*u + m*v]) type modes only"
   case (3)
-     print *,"Set of basis functions: both sin(2*pi*[n*u + m*v]) and cos(2*pi*[n*u + m*v])"
+     print *,"Symmetry: both sin(2*pi*[n*u + m*v]) and cos(2*pi*[n*u + m*v]) type modes"
   case default
-     print *,"Error! Invalid setting for basis_set_option: ",basis_set_option
-     stop
-  end select
-
-  select case (weight_option)
-  case (1)
-     print *,"Weight w = 1 / (nfp * |N|), so the basis functions are Fourier functions."
-  case (2)
-     print *,"Weight w = 1 / area, so the basis functions are not Fourier functions."
-  case default
-     print *,"Error! Invalid setting for weight_option: ",weight_option
+     print *,"Error! Invalid setting for symmetry_option: ",symmetry_option
      stop
   end select
 

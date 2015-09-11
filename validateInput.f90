@@ -61,17 +61,42 @@ subroutine validateInput
      stop "Error! save_level must be >= 0."
   end if
 
-  if (save_level > 2) then
-     stop "Error! save_level must be <= 2."
+  if (save_level > 3) then
+     stop "Error! save_level must be <= 3."
   end if
 
 
-  if (basis_set_option < 1) then
-     stop "Error! basis_set_option must be >= 1."
+  if (symmetry_option < 1) then
+     stop "Error! symmetry_option must be >= 1."
   end if
 
-  if (basis_set_option > 3) then
-     stop "Error! basis_set_option must be <= 3."
+  if (symmetry_option > 3) then
+     stop "Error! symmetry_option must be <= 3."
+  end if
+
+
+  if (basis_option_plasma < 1) then
+     stop "Error! basis_option_plasma must be >= 1."
+  end if
+
+  if (basis_option_plasma > 3) then
+     stop "Error! basis_option_plasma must be <= 3."
+  end if
+
+  if (basis_option_middle < 1) then
+     stop "Error! basis_option_middle must be >= 1."
+  end if
+
+  if (basis_option_middle > 3) then
+     stop "Error! basis_option_middle must be <= 3."
+  end if
+
+  if (basis_option_outer < 1) then
+     stop "Error! basis_option_outer must be >= 1."
+  end if
+
+  if (basis_option_outer > 3) then
+     stop "Error! basis_option_outer must be <= 3."
   end if
 
 

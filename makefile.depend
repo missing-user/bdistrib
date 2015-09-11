@@ -1,21 +1,21 @@
 # -*- mode: makefile -*-
 
-OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildInductanceMatrices.o buildTransferMatrix.o \
+OBJ_FILES = bdistrib.o buildInductanceMatrixMod.o buildInductanceMatrices.o \
 	compute_offset_surface_xyz_of_uv.o \
-	expandPlasmaSurface.o fzero.o globalVariables.o \
+	expandPlasmaSurface.o fzero.o globalVariables.o init_basis_functions_mod.o \
 	initFourierModesMod.o initOuter2Surfaces.o initPlasma.o \
 	initSurfaceMod.o read_efit.o readInput.o read_nescin.o splines.o svdInductanceMatrices.o \
-	validateInput.o writeOutput.o
+	transfer_matrix.o validateInput.o writeOutput.o
 
 # Dependencies:
-bdistrib.o: globalVariables.o initFourierModesMod.o
+bdistrib.o: globalVariables.o init_basis_functions_mod.o
 buildInductanceMatrixMod.o: globalVariables.o
 buildInductanceMatrices.o: globalVariables.o buildInductanceMatrixMod.o
-buildTransferMatrix.o: globalVariables.o
 compute_offset_surface_xyz_of_uv.o: 
 expandPlasmaSurface.o:
 fzero.o: 
 globalVariables.o: 
+init_basis_functions_mod.o: globalVariables.o initFourierModesMod.o
 initFourierModesMod.o: globalVariables.o
 initOuter2Surfaces.o: globalVariables.o initSurfaceMod.o
 initPlasma.o: globalVariables.o
@@ -25,5 +25,6 @@ readInput.o: globalVariables.o
 read_nescin.o: 
 splines.o:
 svdInductanceMatrices.o: globalVariables.o
+transfer_matrix.o: globalVariables.o
 validateInput.o: globalVariables.o
 writeOutput.o: globalVariables.o

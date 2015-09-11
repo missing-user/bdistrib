@@ -365,33 +365,37 @@ this file will be used as the outer surface for \bdistrib.}
 
 \myhrule
 
-\param{basis\_set\_option}
+\param{symmetry\_option}
 {integer}
 {1}
 {Always}
 {Determines which set of basis functions is used.\\
 
-{\ttfamily basis\_set\_option} = 1: Use $\sin(2 \pi [mu+nv])$ basis functions.\\
+{\ttfamily symmetry\_option} = 1: Use $\sin(2 \pi [mu+nv])$ basis functions.\\
 
-{\ttfamily basis\_set\_option} = 2: Use $\cos(2 \pi [mu+nv])$ basis functions.\\
+{\ttfamily symmetry\_option} = 2: Use $\cos(2 \pi [mu+nv])$ basis functions.\\
 
-{\ttfamily basis\_set\_option} = 3: Use both $\sin(2 \pi [mu+nv])$ and $\cos(2 \pi [mu+nv])$ basis functions.
+{\ttfamily symmetry\_option} = 3: Use both $\sin(2 \pi [mu+nv])$ and $\cos(2 \pi [mu+nv])$ basis functions.
 }
 
 \myhrule
 
-\param{weight\_option}
+\param{basis\_option}
 {integer}
 {1}
 {Always}
 {Determines which weight $w$ is used to define orthogonality.\\
 
-{\ttfamily weight\_option} = 1: Use $w = 1 / (n_p |\vect{N}|)$, so the basis functions
-are $\sqrt{2} \sin(2\pi[mu+nv])$ and/or $\sqrt{2} \cos(2\pi[mu+nv])$ (
-as determined by \parlink{basis\_set\_option}).\\
+{\ttfamily basis\_option} = 1: Use $w = 1 / (n_p |\vect{N}|)$, so the basis functions
+are the Fourier functions $\sqrt{2} \sin(2\pi[mu+nv])$ and/or $\sqrt{2} \cos(2\pi[mu+nv])$ (
+as determined by \parlink{symmetry\_option}).\\
 
-{\ttfamily weight\_option} = 2: Use a constant weight, $w = 1/$area. In this case the basis functions
-are linear combinations of the sines and cosines.
+{\ttfamily basis\_option} = 2: Use a constant weight, $w = 1/A$ where $A$ is the surface area. The basis functions
+will be Fourier functions scaled by $\sqrt{2A/[n_p |\vect{N}|]}$.\\
+}
+
+{\ttfamily basis\_option} = 2: Use a constant weight, $w = 1/A$. The basis functions
+will be linear combinations of the Fourier functions, as constructed using the Cholesky method.
 }
 
 \myhrule
@@ -419,14 +423,16 @@ Regardless of this parameter, all singular \emph{values} will be saved in the ou
 
 \param{save\_level}
 {integer}
-{2}
+{3}
 {Always}
 {Option related determining how many variables are saved in the \netCDF~output file.  The larger the value, the smaller the output file.\\
 
 {\ttfamily save\_level} = 0: Save everything.\\
 
-{\ttfamily save\_level} = 1: Save everything except the inductance matrices.\\
+{\ttfamily save\_level} = 1: Save everything except the basis functions.\\
 
-{\ttfamily save\_level} = 2: Save everything except the inductance matrices and the {\ttfamily drdu}, {\ttfamily drdv}, and {\ttfamily normal} arrays.
+{\ttfamily save\_level} = 2: Save everything except the basis functions and inductance matrices.\\
+
+{\ttfamily save\_level} = 3: Save everything except the basis functions, inductance matrices, and the {\ttfamily drdu}, {\ttfamily drdv}, and {\ttfamily normal} arrays.
 }
 

@@ -1,7 +1,7 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
-  weight_option = 2
+  basis_option = 3
 
   nu_plasma=64
   nu_middle=64
@@ -32,7 +32,7 @@
   R0_outer = 10.0
   a_outer = 1.5
 
-  basis_set_option = 3
+  symmetry_option = 3
 
   pseudoinverse_thresholds = 1e-12
 

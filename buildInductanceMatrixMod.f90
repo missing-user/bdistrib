@@ -4,177 +4,59 @@ module buildInductanceMatrixMod
 
 contains
 
-  subroutine buildInductanceMatrix(inductance, r, normal, norm_normal, &
-       nu, nv, mnmax, num_basis_functions, xm, xn, u, v, &
-       basis_to_Fourier, area)
+  subroutine buildInductanceMatrix(inductance, u_1, v_1, r_1, normal_1, basis_functions_1,  &
+       u_2, v_2, r_2, normal_2, basis_functions_2)
 
-    use globalVariables, only: r_outer, normal_outer, u_outer, v_outer, nu_outer, nv_outer, &
-         du_outer, dv_outer, mnmax_outer, num_basis_functions_outer, xn_outer, xm_outer, &
-         basis_set_option, weight_option, nfp
+    use globalVariables, only: nfp
     use stel_constants
     use stel_kinds
     use omp_lib
 
     implicit none
 
-    real(dp), dimension(:,:), allocatable :: inductance
-    real(dp), dimension(:,:,:), allocatable, intent(in) :: r, normal
-    real(dp), dimension(:,:), allocatable, intent(in) :: norm_normal
-    integer, intent(in) :: nu, nv, mnmax, num_basis_functions
-    integer, dimension(:), allocatable, intent(in) :: xm, xn
-    real(dp), dimension(:), allocatable, intent(in) :: u, v
-    real(dp), dimension(:,:), allocatable :: basis_to_Fourier
-    real(dp) :: area
+    real(dp), dimension(:,:), allocatable, intent(out) :: inductance
+    real(dp), dimension(:,:,:), allocatable, intent(in) :: r_1, r_2, normal_1, normal_2
+    real(dp), dimension(:), allocatable, intent(in) :: u_1, u_2, v_1, v_2
+    real(dp), dimension(:,:), allocatable, intent(in) :: basis_functions_1, basis_functions_2
 
-    integer :: l_outer, iu, iv, iu_outer, iv_outer, ivl_outer, iflag
-    real(dp) :: x, y, z, dx, dy, dz, dr2, dr32, du, dv
-    integer :: imn, imn_outer, index, index_outer
-    real(dp), dimension(:,:), allocatable :: inductance_xbasis, xToFourier, xToFourier_outer
-    integer :: tic, toc, countrate, whichSymmetry, minSymmetry, maxSymmetry, offset
-    character :: UPLO
-    integer, dimension(:), allocatable :: IPIV
+    integer :: nu_1, nu_2, nv_1, nv_2
+    real(dp) :: du_1, du_2, dv_1, dv_2
+    integer :: num_basis_functions_1, num_basis_functions_2
+
+    integer :: l_2, iu_1, iv_1, iu_2, iv_2, ivl_2, iflag
+    real(dp) :: x, y, z, dx, dy, dz, dr2, dr32
+    integer :: imn_1, imn_2, index_1, index_2
+    real(dp), dimension(:,:), allocatable :: inductance_xbasis
+    integer :: tic, toc, countrate
 
     ! Variables needed by BLAS DGEMM:
-    character :: TRANSA='N', TRANSB='N'
-    integer :: M, N, K, LDA, LDB, LDC, INFO
+    character :: TRANSA, TRANSB
+    integer :: M, N, K, LDA, LDB, LDC
     real(dp) :: ALPHA=1, BETA=0
     real(dp), dimension(:,:), allocatable :: tempMatrix
 
+    nu_1 = size(u_1)
+    nu_2 = size(u_2)
+    nv_1 = size(v_1)
+    nv_2 = size(v_2)
+    du_1 = u_1(2)-u_1(1)
+    du_2 = u_2(2)-u_2(1)
+    dv_1 = v_1(2)-v_1(1)
+    dv_2 = v_2(2)-v_2(1)
+    num_basis_functions_1 = size(basis_functions_1,2)
+    num_basis_functions_2 = size(basis_functions_2,2)
 
-    du = u(2)-u(1)
-    dv = v(2)-v(1)
-
-    allocate(inductance(num_basis_functions, num_basis_functions_outer),stat=iflag)
+    allocate(inductance(num_basis_functions_1, num_basis_functions_2),stat=iflag)
     if (iflag .ne. 0) stop 'Allocation error!'
-    allocate(inductance_xbasis(nu*nv, nu_outer*nv_outer),stat=iflag)
+    allocate(inductance_xbasis(nu_1*nv_1, nu_2*nv_2),stat=iflag)
     if (iflag .ne. 0) stop 'Allocation error!'
-    allocate(xToFourier(num_basis_functions, nu*nv),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-    allocate(xToFourier_outer(nu_outer*nv_outer, num_basis_functions_outer),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-
-    select case (basis_set_option)
-    case (1)
-       minSymmetry = 1
-       maxSymmetry = 1
-    case (2)
-       minSymmetry = 2
-       maxSymmetry = 2
-    case (3)
-       minSymmetry = 1
-       maxSymmetry = 2
-    end select
-
-    call system_clock(tic,countrate)
-
-    ! These loops to assemble xToFourier and xToFourier_outer could be made faster
-    ! by using the sum-angle trig identities and pretabulating the trig functions.
-    ! But these loops are not the rate-limiting step, so I'll use the more transparent direct method here.
-    do whichSymmetry = minSymmetry, maxSymmetry
-
-       if (whichSymmetry==2 .and. basis_set_option==3) then
-          offset = mnmax
-       else
-          offset = 0
-       end if
-
-       do iu = 1, nu
-          do iv = 1, nv
-             index = (iv-1)*nu + iu
-             do imn = 1, mnmax
-                if (whichSymmetry==1) then
-                   xToFourier(imn, index) = sin(twopi*(xm(imn)*u(iu)+xn(imn)*v(iv)))
-                else
-                   xToFourier(imn+offset, index) = cos(twopi*(xm(imn)*u(iu)+xn(imn)*v(iv)))
-                end if
-             end do
-          end do
-       end do
-    end do
-
-
-    do whichSymmetry = minSymmetry, maxSymmetry
-
-       if (whichSymmetry==2 .and. basis_set_option==3) then
-          offset = mnmax_outer
-       else
-          offset = 0
-       end if
-
-       do imn_outer = 1, mnmax_outer
-          do iu_outer = 1, nu_outer
-             do iv_outer = 1, nv_outer
-                index_outer = (iv_outer-1)*nu_outer + iu_outer
-                if (whichSymmetry==1) then
-                   xToFourier_outer(index_outer, imn_outer) = sin(twopi*(xm_outer(imn_outer)*u_outer(iu_outer) &
-                        + xn_outer(imn_outer)*v_outer(iv_outer)))
-                else
-                   xToFourier_outer(index_outer, imn_outer+offset) = cos(twopi*(xm_outer(imn_outer)*u_outer(iu_outer) &
-                        + xn_outer(imn_outer)*v_outer(iv_outer)))
-                end if
-             end do
-          end do
-       end do
-    end do
-
-    ! Normalization so \int d^2a w f_i f_j = \delta_{i,j}
-    xToFourier       = sqrt2 * xToFourier
-    xToFourier_outer = sqrt2 * xToFourier_outer
-
-    call system_clock(toc)
-    print *,"  xToFourier matrices:",real(toc-tic)/countrate,"sec."
-
-    ! If needed, compute the transformation between the Fourier functions and the basis functions.
-    if (weight_option>1) then
-       call system_clock(tic)
-       allocate(basis_to_Fourier(num_basis_functions, num_basis_functions),stat=iflag)
-       if (iflag .ne. 0) stop 'Allocation error!'
-       allocate(tempMatrix(num_basis_functions, nu*nv),stat=iflag)
-       if (iflag .ne. 0) stop 'Allocation error!'
-
-       index = 0
-       do iv = 1,nv
-          do iu = 1,nu
-             !index = (iv-1)*nu + iu
-             index = index + 1
-             ! The 2nd dimension of norm_normal is nvl rather than nv, but we can just ignore all periods after the 1st.
-             tempMatrix(:,index) = xToFourier(:,index) * norm_normal(iu,iv)
-          end do
-       end do
-       ! The 'basis_to_Fourier' array is not yet what the name suggests, since we will shortly do an in-place Cholesky decomposition
-       basis_to_Fourier = matmul(tempMatrix,transpose(xToFourier))*du*dv*nfp/area
-
-       call system_clock(toc)
-       print *,"  Assemble A:",real(toc-tic)/countrate,"sec."
-       call system_clock(tic)
-
-       ! Compute Cholesky factorization:
-       UPLO = 'L'
-       call DPOTRF(UPLO, num_basis_functions, basis_to_Fourier, num_basis_functions, INFO)
-       if (INFO < 0) then
-          print *,"Error in Cholesky decomposition DPOTRF. The i-th argument had an illegal value. INFO=",INFO
-       elseif (INFO > 0) then
-          print *,"Error in Cholesky decomposition DPOTRF. The leading minor of order i is not positive definite, and the factorization could not be completed. INFO=",INFO
-       end if
-
-       call system_clock(toc)
-       print *,"  Cholesky decomp:",real(toc-tic)/countrate,"sec."
-       deallocate(tempMatrix)
-
-       ! LAPACK's DPOTRF leaves the upper-triangular part nonzero, so clean it up now.
-       do imn = 2,num_basis_functions
-          basis_to_Fourier(1:imn-1, imn) = 0
-       end do
-    end if
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! Done computing everything related to the basis functions.
     ! Now compute S from Boozer's eq (39)-(40).
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-
     inductance_xbasis = 0
-    call system_clock(tic)
+    call system_clock(tic,countrate)
 
     !$OMP PARALLEL
 
@@ -182,34 +64,34 @@ contains
     print *,"  Number of OpenMP threads:",omp_get_num_threads()
     !$OMP END MASTER
 
-    !$OMP DO PRIVATE(index_outer,index,x,y,z,ivl_outer,dx,dy,dz,dr2,dr32)
-    do iv_outer = 1, nv_outer
-       do iu_outer = 1, nu_outer
-          index_outer = (iv_outer-1)*nu_outer + iu_outer
-          do iv = 1, nv
-             do iu = 1, nu
-                index = (iv-1)*nu + iu
-                x = r(1,iu,iv)
-                y = r(2,iu,iv)
-                z = r(3,iu,iv)
-                do l_outer = 0, (nfp-1)
-                   ivl_outer = iv_outer + l_outer*nv_outer
-                   dx = x - r_outer(1,iu_outer,ivl_outer)
-                   dy = y - r_outer(2,iu_outer,ivl_outer)
-                   dz = z - r_outer(3,iu_outer,ivl_outer)
+    !$OMP DO PRIVATE(index_1,index_2,x,y,z,ivl_2,dx,dy,dz,dr2,dr32)
+    do iv_2 = 1, nv_2
+       do iu_2 = 1, nu_2
+          index_2 = (iv_2-1)*nu_2 + iu_2
+          do iv_1 = 1, nv_1
+             do iu_1 = 1, nu_1
+                index_1 = (iv_1-1)*nu_1 + iu_1
+                x = r_1(1,iu_1,iv_1)
+                y = r_1(2,iu_1,iv_1)
+                z = r_1(3,iu_1,iv_1)
+                do l_2 = 0, (nfp-1)
+                   ivl_2 = iv_2 + l_2*nv_2
+                   dx = x - r_2(1,iu_2,ivl_2)
+                   dy = y - r_2(2,iu_2,ivl_2)
+                   dz = z - r_2(3,iu_2,ivl_2)
 
                    dr2 = dx*dx + dy*dy + dz*dz
                    dr32 = dr2*sqrt(dr2)
 
-                   inductance_xbasis(index,index_outer) = inductance_xbasis(index,index_outer) + &
-                        (normal(1,iu,iv)*normal_outer(1,iu_outer,ivl_outer) &
-                        +normal(2,iu,iv)*normal_outer(2,iu_outer,ivl_outer) &
-                        +normal(3,iu,iv)*normal_outer(3,iu_outer,ivl_outer) &
+                   inductance_xbasis(index_1,index_2) = inductance_xbasis(index_1,index_2) + &
+                        (normal_1(1,iu_1,iv_1)*normal_2(1,iu_2,ivl_2) &
+                        +normal_1(2,iu_1,iv_1)*normal_2(2,iu_2,ivl_2) &
+                        +normal_1(3,iu_1,iv_1)*normal_2(3,iu_2,ivl_2) &
                         - (3/dr2) * &
-                        (normal(1,iu,iv)*dx + normal(2,iu,iv)*dy + normal(3,iu,iv)*dz) * &
-                        (normal_outer(1,iu_outer,ivl_outer)*dx &
-                        +normal_outer(2,iu_outer,ivl_outer)*dy &
-                        +normal_outer(3,iu_outer,ivl_outer)*dz)) / dr32
+                        (normal_1(1,iu_1,iv_1)*dx + normal_1(2,iu_1,iv_1)*dy + normal_1(3,iu_1,iv_1)*dz) * &
+                        (normal_2(1,iu_2,ivl_2)*dx &
+                        +normal_2(2,iu_2,ivl_2)*dy &
+                        +normal_2(3,iu_2,ivl_2)*dz)) / dr32
                 end do
              end do
           end do
@@ -223,41 +105,48 @@ contains
 
     call system_clock(tic)
 
+    ! Next, convert from the integrand as a function of (u,v) to the modal matrix
+    ! by sandwiching with the basis_functions matrices.
+
     ! For some reason, the BLAS matrix-matrix multiplication function DGEMM sometimes causes the
-    ! program to crash on Edison. In this case, you can use the following method which is slower but more reliable:
-!    inductance = matmul(xToFourier, matmul(inductance_xbasis, xToFourier_outer))
+    ! program to crash on Edison unless you are careful to use the Intel MKL instead of Cray LibSci.
+    ! If you like, you can use the following method which is slower but more reliable:
+!    inductance = matmul(transpose(basis_functions_1), matmul(inductance_xbasis, basis_functions_2))
 
     !*******************************************************
     ! Call BLAS3 subroutine DGEMM for matrix multiplications:
     !*******************************************************
 
-    ! Here we carry out tempMatrix = inductance_xbasis * xToFourier_outer
+    ! Here we carry out tempMatrix = inductance_xbasis * basis_functions_2
     ! A = inductance_xbasis
-    ! B = xToFourier_outer
+    ! B = basis_functions_2
     ! C = tempMatrix
-    M = nu*nv ! # rows of A
-    N = num_basis_functions_outer ! # cols of B
-    K = nu_outer*nv_outer ! Common dimension of A and B
+    M = nu_1*nv_1 ! # rows of A
+    N = num_basis_functions_2 ! # cols of B
+    K = nu_2*nv_2 ! Common dimension of A and B
     LDA = M
     LDB = K
     LDC = M
+    TRANSA = 'N' ! No transposes
+    TRANSB = 'N'
     allocate(tempMatrix(M,N),stat=iflag)
     if (iflag .ne. 0) stop 'Allocation error!'
     tempMatrix = 0
+    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,basis_functions_2,LDB,BETA,tempMatrix,LDC)
 
-    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,xToFourier_outer,LDB,BETA,tempMatrix,LDC)
-
-    ! Here we carry out inductance = xToFourier * tempMatrix
-    ! A = inductance_xbasis
-    ! B = xToFourier_outer
-    ! C = tempMatrix
-    M = num_basis_functions ! # rows of A
-    N = num_basis_functions_outer ! # cols of B
-    K = nu*nv ! Common dimension of A and B
-    LDA = M
+    ! Here we carry out inductance = (basis_functions_1 ^ T) * tempMatrix
+    ! A = basis_functions_1
+    ! B = tempMatrix
+    ! C = inductance
+    M = num_basis_functions_1 ! # rows of A^T
+    N = num_basis_functions_2 ! # cols of B
+    K = nu_1*nv_1 ! Common dimension of A^T and B
+    LDA = K ! Would be M if not taking the transpose.
     LDB = K
     LDC = M
-    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,xToFourier,LDA,tempMatrix,LDB,BETA,inductance,LDC)
+    TRANSA = 'T' ! DO take a transpose!
+    TRANSB = 'N'
+    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,basis_functions_1,LDA,tempMatrix,LDB,BETA,inductance,LDC)
 
     deallocate(tempMatrix)
     
@@ -265,49 +154,51 @@ contains
     print *,"  matmul:",real(toc-tic)/countrate,"sec."
 
     ! Multiply by some overall constants:
-    inductance = inductance * (nfp * du * dv * du_outer * dv_outer * mu0 / (4*pi))
+    inductance = inductance * (nfp * du_1 * dv_1 * du_2 * dv_2 * mu0 / (4*pi))
 
-    ! At this point, the inductance matrix assumes we have used the Fourier basis.
-    ! If needed, convert to the 'real' basis:
-    if (weight_option > 1) then
-       call system_clock(tic)
-       allocate(IPIV(num_basis_functions),stat=iflag)
-       if (iflag .ne. 0) stop 'Allocation error!'
-       allocate(tempMatrix(num_basis_functions, num_basis_functions),stat=iflag)
-       if (iflag .ne. 0) stop 'Allocation error!'
+!!$    ! At this point, the inductance matrix assumes we have used the Fourier basis.
+!!$    ! If needed, convert to the 'real' basis:
+!!$    if (basis_option == 3) then
+!!$       call system_clock(tic)
+!!$       allocate(IPIV(num_basis_functions),stat=iflag)
+!!$       if (iflag .ne. 0) stop 'Allocation error!'
+!!$       allocate(tempMatrix(num_basis_functions, num_basis_functions),stat=iflag)
+!!$       if (iflag .ne. 0) stop 'Allocation error!'
+!!$
+!!$       tempMatrix = basis_to_Fourier
+!!$       ! DGESV will overwrite tempMatrix with the L & U factors,
+!!$       ! and overwrite the old 'inductance' with the solution.
+!!$       call DGESV(num_basis_functions, num_basis_functions_2, tempMatrix, num_basis_functions, &
+!!$            IPIV, inductance, num_basis_functions, INFO)
+!!$
+!!$       if (INFO < 0) then
+!!$          print *,"Error in DGESV. The i-th argument had an illegal value. INFO=",INFO
+!!$       elseif (INFO > 0) then
+!!$          print *,"Error in DGESV. Matrix is singular. INFO=",INFO
+!!$       end if
+!!$       deallocate(IPIV,tempMatrix)
+!!$       call system_clock(toc)
+!!$       print *,"  Convert basis:",real(toc-tic)/countrate,"sec."
+!!$    end if
 
-       tempMatrix = basis_to_Fourier
-       ! DGESV will overwrite tempMatrix with the L & U factors,
-       ! and overwrite the old 'inductance' with the solution.
-       call DGESV(num_basis_functions, num_basis_functions_outer, tempMatrix, num_basis_functions, &
-            IPIV, inductance, num_basis_functions, INFO)
-
-       if (INFO < 0) then
-          print *,"Error in DGESV. The i-th argument had an illegal value. INFO=",INFO
-       elseif (INFO > 0) then
-          print *,"Error in DGESV. Matrix is singular. INFO=",INFO
-       end if
-       deallocate(IPIV,tempMatrix)
-       call system_clock(toc)
-       print *,"  Convert basis:",real(toc-tic)/countrate,"sec."
-    end if
-
-    deallocate(inductance_xbasis, xToFourier, xToFourier_outer)
+    deallocate(inductance_xbasis)
 
   end subroutine buildInductanceMatrix
 
 end module buildInductanceMatrixMod
 
-! Documentation for LAPACK subroutine for Cholesky decomposition:
 
-!!$*       SUBROUTINE DPOTRF( UPLO, N, A, LDA, INFO )
+! Documentation of BLAS3 DGEMM subroutine for matrix-matrix multiplication:
+
+!!$*       SUBROUTINE DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,A,LDA,B,LDB,BETA,C,LDC)
 !!$* 
 !!$*       .. Scalar Arguments ..
-!!$*       CHARACTER          UPLO
-!!$*       INTEGER            INFO, LDA, N
+!!$*       DOUBLE PRECISION ALPHA,BETA
+!!$*       INTEGER K,LDA,LDB,LDC,M,N
+!!$*       CHARACTER TRANSA,TRANSB
 !!$*       ..
 !!$*       .. Array Arguments ..
-!!$*       DOUBLE PRECISION   A( LDA, * )
+!!$*       DOUBLE PRECISION A(LDA,*),B(LDB,*),C(LDC,*)
 !!$*       ..
 !!$*  
 !!$*
@@ -316,153 +207,135 @@ end module buildInductanceMatrixMod
 !!$*>
 !!$*> \verbatim
 !!$*>
-!!$*> DPOTRF computes the Cholesky factorization of a real symmetric
-!!$*> positive definite matrix A.
+!!$*> DGEMM  performs one of the matrix-matrix operations
 !!$*>
-!!$*> The factorization has the form
-!!$*>    A = U**T * U,  if UPLO = 'U', or
-!!$*>    A = L  * L**T,  if UPLO = 'L',
-!!$*> where U is an upper triangular matrix and L is lower triangular.
+!!$*>    C := alpha*op( A )*op( B ) + beta*C,
 !!$*>
-!!$*> This is the block version of the algorithm, calling Level 3 BLAS.
+!!$*> where  op( X ) is one of
+!!$*>
+!!$*>    op( X ) = X   or   op( X ) = X**T,
+!!$*>
+!!$*> alpha and beta are scalars, and A, B and C are matrices, with op( A )
+!!$*> an m by k matrix,  op( B )  a  k by n matrix and  C an m by n matrix.
 !!$*> \endverbatim
 !!$*
 !!$*  Arguments:
 !!$*  ==========
 !!$*
-!!$*> \param[in] UPLO
+!!$*> \param[in] TRANSA
 !!$*> \verbatim
-!!$*>          UPLO is CHARACTER*1
-!!$*>          = 'U':  Upper triangle of A is stored;
-!!$*>          = 'L':  Lower triangle of A is stored.
+!!$*>          TRANSA is CHARACTER*1
+!!$*>           On entry, TRANSA specifies the form of op( A ) to be used in
+!!$*>           the matrix multiplication as follows:
+!!$*>
+!!$*>              TRANSA = 'N' or 'n',  op( A ) = A.
+!!$*>
+!!$*>              TRANSA = 'T' or 't',  op( A ) = A**T.
+!!$*>
+!!$*>              TRANSA = 'C' or 'c',  op( A ) = A**T.
+!!$*> \endverbatim
+!!$*>
+!!$*> \param[in] TRANSB
+!!$*> \verbatim
+!!$*>          TRANSB is CHARACTER*1
+!!$*>           On entry, TRANSB specifies the form of op( B ) to be used in
+!!$*>           the matrix multiplication as follows:
+!!$*>
+!!$*>              TRANSB = 'N' or 'n',  op( B ) = B.
+!!$*>
+!!$*>              TRANSB = 'T' or 't',  op( B ) = B**T.
+!!$*>
+!!$*>              TRANSB = 'C' or 'c',  op( B ) = B**T.
+!!$*> \endverbatim
+!!$*>
+!!$*> \param[in] M
+!!$*> \verbatim
+!!$*>          M is INTEGER
+!!$*>           On entry,  M  specifies  the number  of rows  of the  matrix
+!!$*>           op( A )  and of the  matrix  C.  M  must  be at least  zero.
 !!$*> \endverbatim
 !!$*>
 !!$*> \param[in] N
 !!$*> \verbatim
 !!$*>          N is INTEGER
-!!$*>          The order of the matrix A.  N >= 0.
+!!$*>           On entry,  N  specifies the number  of columns of the matrix
+!!$*>           op( B ) and the number of columns of the matrix C. N must be
+!!$*>           at least zero.
 !!$*> \endverbatim
 !!$*>
-!!$*> \param[in,out] A
+!!$*> \param[in] K
 !!$*> \verbatim
-!!$*>          A is DOUBLE PRECISION array, dimension (LDA,N)
-!!$*>          On entry, the symmetric matrix A.  If UPLO = 'U', the leading
-!!$*>          N-by-N upper triangular part of A contains the upper
-!!$*>          triangular part of the matrix A, and the strictly lower
-!!$*>          triangular part of A is not referenced.  If UPLO = 'L', the
-!!$*>          leading N-by-N lower triangular part of A contains the lower
-!!$*>          triangular part of the matrix A, and the strictly upper
-!!$*>          triangular part of A is not referenced.
-!!$*>
-!!$*>          On exit, if INFO = 0, the factor U or L from the Cholesky
-!!$*>          factorization A = U**T*U or A = L*L**T.
+!!$*>          K is INTEGER
+!!$*>           On entry,  K  specifies  the number of columns of the matrix
+!!$*>           op( A ) and the number of rows of the matrix op( B ). K must
+!!$*>           be at least  zero.
 !!$*> \endverbatim
 !!$*>
-!!$*> \param[in] LDA
+!!$*> \param[in] ALPHA
 !!$*> \verbatim
-!!$*>          LDA is INTEGER
-!!$*>          The leading dimension of the array A.  LDA >= max(1,N).
+!!$*>          ALPHA is DOUBLE PRECISION.
+!!$*>           On entry, ALPHA specifies the scalar alpha.
 !!$*> \endverbatim
 !!$*>
-!!$*> \param[out] INFO
+!!$*> \param[in] A
 !!$*> \verbatim
-!!$*>          INFO is INTEGER
-!!$*>          = 0:  successful exit
-!!$*>          < 0:  if INFO = -i, the i-th argument had an illegal value
-!!$*>          > 0:  if INFO = i, the leading minor of order i is not
-!!$*>                positive definite, and the factorization could not be
-!!$*>                completed.
-
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-! Documentation for LAPACK's subroutine for solving a linear system
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
-!!$
-!!$
-!!$*       SUBROUTINE DGESV( N, NRHS, A, LDA, IPIV, B, LDB, INFO )
-!!$* 
-!!$*       .. Scalar Arguments ..
-!!$*       INTEGER            INFO, LDA, LDB, N, NRHS
-!!$*       ..
-!!$*       .. Array Arguments ..
-!!$*       INTEGER            IPIV( * )
-!!$*       DOUBLE PRECISION   A( LDA, * ), B( LDB, * )
-!!$*       ..
-!!$*  
-!!$*
-!!$*> \par Purpose:
-!!$*  =============
-!!$*>
-!!$*> \verbatim
-!!$*>
-!!$*> DGESV computes the solution to a real system of linear equations
-!!$*>    A * X = B,
-!!$*> where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
-!!$*>
-!!$*> The LU decomposition with partial pivoting and row interchanges is
-!!$*> used to factor A as
-!!$*>    A = P * L * U,
-!!$*> where P is a permutation matrix, L is unit lower triangular, and U is
-!!$*> upper triangular.  The factored form of A is then used to solve the
-!!$*> system of equations A * X = B.
-!!$*> \endverbatim
-!!$*
-!!$*  Arguments:
-!!$*  ==========
-!!$*
-!!$*> \param[in] N
-!!$*> \verbatim
-!!$*>          N is INTEGER
-!!$*>          The number of linear equations, i.e., the order of the
-!!$*>          matrix A.  N >= 0.
-!!$*> \endverbatim
-!!$*>
-!!$*> \param[in] NRHS
-!!$*> \verbatim
-!!$*>          NRHS is INTEGER
-!!$*>          The number of right hand sides, i.e., the number of columns
-!!$*>          of the matrix B.  NRHS >= 0.
-!!$*> \endverbatim
-!!$*>
-!!$*> \param[in,out] A
-!!$*> \verbatim
-!!$*>          A is DOUBLE PRECISION array, dimension (LDA,N)
-!!$*>          On entry, the N-by-N coefficient matrix A.
-!!$*>          On exit, the factors L and U from the factorization
-!!$*>          A = P*L*U; the unit diagonal elements of L are not stored.
+!!$*>          A is DOUBLE PRECISION array of DIMENSION ( LDA, ka ), where ka is
+!!$*>           k  when  TRANSA = 'N' or 'n',  and is  m  otherwise.
+!!$*>           Before entry with  TRANSA = 'N' or 'n',  the leading  m by k
+!!$*>           part of the array  A  must contain the matrix  A,  otherwise
+!!$*>           the leading  k by m  part of the array  A  must contain  the
+!!$*>           matrix A.
 !!$*> \endverbatim
 !!$*>
 !!$*> \param[in] LDA
 !!$*> \verbatim
 !!$*>          LDA is INTEGER
-!!$*>          The leading dimension of the array A.  LDA >= max(1,N).
+!!$*>           On entry, LDA specifies the first dimension of A as declared
+!!$*>           in the calling (sub) program. When  TRANSA = 'N' or 'n' then
+!!$*>           LDA must be at least  max( 1, m ), otherwise  LDA must be at
+!!$*>           least  max( 1, k ).
 !!$*> \endverbatim
 !!$*>
-!!$*> \param[out] IPIV
+!!$*> \param[in] B
 !!$*> \verbatim
-!!$*>          IPIV is INTEGER array, dimension (N)
-!!$*>          The pivot indices that define the permutation matrix P;
-!!$*>          row i of the matrix was interchanged with row IPIV(i).
-!!$*> \endverbatim
-!!$*>
-!!$*> \param[in,out] B
-!!$*> \verbatim
-!!$*>          B is DOUBLE PRECISION array, dimension (LDB,NRHS)
-!!$*>          On entry, the N-by-NRHS matrix of right hand side matrix B.
-!!$*>          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+!!$*>          B is DOUBLE PRECISION array of DIMENSION ( LDB, kb ), where kb is
+!!$*>           n  when  TRANSB = 'N' or 'n',  and is  k  otherwise.
+!!$*>           Before entry with  TRANSB = 'N' or 'n',  the leading  k by n
+!!$*>           part of the array  B  must contain the matrix  B,  otherwise
+!!$*>           the leading  n by k  part of the array  B  must contain  the
+!!$*>           matrix B.
 !!$*> \endverbatim
 !!$*>
 !!$*> \param[in] LDB
 !!$*> \verbatim
 !!$*>          LDB is INTEGER
-!!$*>          The leading dimension of the array B.  LDB >= max(1,N).
+!!$*>           On entry, LDB specifies the first dimension of B as declared
+!!$*>           in the calling (sub) program. When  TRANSB = 'N' or 'n' then
+!!$*>           LDB must be at least  max( 1, k ), otherwise  LDB must be at
+!!$*>           least  max( 1, n ).
 !!$*> \endverbatim
 !!$*>
-!!$*> \param[out] INFO
+!!$*> \param[in] BETA
 !!$*> \verbatim
-!!$*>          INFO is INTEGER
-!!$*>          = 0:  successful exit
-!!$*>          < 0:  if INFO = -i, the i-th argument had an illegal value
-!!$*>          > 0:  if INFO = i, U(i,i) is exactly zero.  The factorization
-!!$*>                has been completed, but the factor U is exactly
-!!$*>                singular, so the solution could not be computed.
+!!$*>          BETA is DOUBLE PRECISION.
+!!$*>           On entry,  BETA  specifies the scalar  beta.  When  BETA  is
+!!$*>           supplied as zero then C need not be set on input.
+!!$*> \endverbatim
+!!$*>
+!!$*> \param[in,out] C
+!!$*> \verbatim
+!!$*>          C is DOUBLE PRECISION array of DIMENSION ( LDC, n ).
+!!$*>           Before entry, the leading  m by n  part of the array  C must
+!!$*>           contain the matrix  C,  except when  beta  is zero, in which
+!!$*>           case C need not be set on entry.
+!!$*>           On exit, the array  C  is overwritten by the  m by n  matrix
+!!$*>           ( alpha*op( A )*op( B ) + beta*C ).
+!!$*> \endverbatim
+!!$*>
+!!$*> \param[in] LDC
+!!$*> \verbatim
+!!$*>          LDC is INTEGER
+!!$*>           On entry, LDC specifies the first dimension of C as declared
+!!$*>           in  the  calling  (sub)  program.   LDC  must  be  at  least
+!!$*>           max( 1, m ).
+!!$*> \endverbatim

@@ -30,7 +30,7 @@
   R0_outer = 10.0
   a_outer = 1.5
 
-  basis_set_option = 2
+  symmetry_option = 2
 
   pseudoinverse_thresholds = 1e-12
 

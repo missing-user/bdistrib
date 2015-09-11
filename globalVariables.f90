@@ -32,6 +32,7 @@ module globalVariables
   real(dp), dimension(:,:,:), allocatable :: r_outer, drdu_outer, drdv_outer, normal_outer
 
   real(dp), dimension(:,:), allocatable :: norm_normal_plasma, norm_normal_middle, norm_normal_outer
+  real(dp), dimension(:,:), allocatable :: basis_functions_plasma, basis_functions_middle, basis_functions_outer
 
   real(dp) :: du_plasma, dv_plasma, du_middle, dv_middle, du_outer, dv_outer
 
@@ -46,32 +47,42 @@ module globalVariables
   integer :: mnmax, nfp
   integer, dimension(:), allocatable :: xm, xn
   logical :: lasym
-  real(dp), dimension(:,:), allocatable :: inductance_plasma, inductance_middle
+  real(dp), dimension(:,:), allocatable :: inductance_plasma_outer
+  real(dp), dimension(:,:), allocatable :: inductance_middle_outer
+  real(dp), dimension(:,:), allocatable :: inductance_plasma_middle
+  integer :: n_singular_values_inductance_plasma_outer
+  integer :: n_singular_values_inductance_middle_outer
+  integer :: n_singular_values_inductance_plasma_middle
+  real(dp), dimension(:), allocatable :: svd_s_inductance_plasma_outer
+  real(dp), dimension(:), allocatable :: svd_s_inductance_middle_outer
+  real(dp), dimension(:), allocatable :: svd_s_inductance_plasma_middle
 
-  integer :: n_singular_values_inductance_plasma, n_singular_values_inductance_middle
-  real(dp), dimension(:), allocatable :: svd_s_inductance_plasma, svd_s_inductance_middle
-
-  real(dp), dimension(:,:), allocatable :: svd_uT_inductance_middle, svd_v_inductance_middle
+  real(dp), dimension(:,:), allocatable :: svd_uT_inductance_middle_outer, svd_v_inductance_middle_outer
+  real(dp), dimension(:,:), allocatable :: svd_u_inductance_plasma_middle, svd_v_inductance_plasma_middle
+  real(dp), dimension(:,:), allocatable :: svd_u_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv
 
   integer, parameter :: nmax_pseudoinverse_thresholds = 1000
   integer :: n_pseudoinverse_thresholds
   real(dp) :: pseudoinverse_thresholds(nmax_pseudoinverse_thresholds)
 
-  integer :: save_level = 2
+  integer :: save_level = 3
   integer :: n_singular_vectors_to_save = 5, n_singular_values_transferMatrix
   integer, dimension(:), allocatable :: n_singular_values_retained
   real(dp), dimension(:,:), allocatable :: svd_s_transferMatrix
 
-  real(dp), dimension(:,:), allocatable :: basis_to_Fourier_plasma, basis_to_Fourier_middle
+  real(dp), dimension(:,:), allocatable :: should_be_identity_plasma
+  real(dp), dimension(:,:), allocatable :: should_be_identity_middle
+  real(dp), dimension(:,:), allocatable :: should_be_identity_outer
 
   ! EZCDF doesn't allow 4D arrays, so I can't include sin/cos as a 4th dimension.
-  real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix_sin, svd_v_transferMatrix_sin
-  real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix_cos, svd_v_transferMatrix_cos
+  real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix, svd_v_transferMatrix
+  real(dp), dimension(:,:,:), allocatable :: svd_u_transferMatrix_uv, svd_v_transferMatrix_uv
 
   logical :: allSVDsSucceeded
   integer :: nfp_imposed = 1
 
-  integer :: basis_set_option = 1, weight_option = 1, mode_order = 1
+  integer :: symmetry_option = 1, mode_order = 1
+  integer :: basis_option_plasma = 1, basis_option_middle = 1, basis_option_outer = 1
   real(dp) :: totalTime
 
   integer :: efit_num_modes = 10
@@ -79,6 +90,7 @@ module globalVariables
 
   real(dp) :: mpol_transform_refinement=5, ntor_transform_refinement=1
   real(dp) :: area_plasma, area_middle, area_outer
+  logical :: check_orthogonality = .false.
 
 end module globalVariables
 

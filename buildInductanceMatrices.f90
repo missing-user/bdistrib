@@ -7,20 +7,6 @@ subroutine buildInductanceMatrices()
 
   integer :: tic, toc, countrate
 
-  select case (basis_set_option)
-  case (1,2)
-     num_basis_functions_plasma = mnmax_plasma
-     num_basis_functions_middle = mnmax_middle
-     num_basis_functions_outer  = mnmax_outer
-  case (3)
-     num_basis_functions_plasma = mnmax_plasma * 2
-     num_basis_functions_middle = mnmax_middle * 2
-     num_basis_functions_outer  = mnmax_outer  * 2
-  case default
-     print *,"Error! Invalid setting for basis_set_option:",basis_set_option
-     stop
-  end select
-
   print *,"Number of basis functions on plasma surface:",num_basis_functions_plasma
   print *,"Number of basis functions on middle surface:",num_basis_functions_middle
   print *,"Number of basis functions on outer surface: ",num_basis_functions_outer
@@ -28,21 +14,37 @@ subroutine buildInductanceMatrices()
   n_singular_vectors_to_save = min(n_singular_vectors_to_save, &
        num_basis_functions_plasma, num_basis_functions_middle)
 
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
   call system_clock(tic,countrate)
   print *,"Building inductance matrix between plasma surface and outer surface."
-  call buildInductanceMatrix(inductance_plasma, r_plasma, normal_plasma, norm_normal_plasma, &
-       nu_plasma, nv_plasma, &
-       mnmax_plasma, num_basis_functions_plasma, xm_plasma, xn_plasma, u_plasma, v_plasma, &
-       basis_to_Fourier_plasma, area_plasma)
+
+  call buildInductanceMatrix(inductance_plasma_outer, u_plasma, v_plasma, r_plasma, normal_plasma, basis_functions_plasma, &
+       u_outer, v_outer, r_outer, normal_outer, basis_functions_outer)
+
   call system_clock(toc)
   print *,"Done building inductance matrix. Took ",real(toc-tic)/countrate," sec."
 
-  call system_clock(tic)
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
+  call system_clock(tic,countrate)
   print *,"Building inductance matrix between middle surface and outer surface."
-  call buildInductanceMatrix(inductance_middle, r_middle, normal_middle, norm_normal_middle, &
-       nu_middle, nv_middle, &
-       mnmax_middle, num_basis_functions_middle, xm_middle, xn_middle, u_middle, v_middle, &
-       basis_to_Fourier_middle, area_middle)
+
+  call buildInductanceMatrix(inductance_middle_outer, u_middle, v_middle, r_middle, normal_middle, basis_functions_middle, &
+       u_outer, v_outer, r_outer, normal_outer, basis_functions_outer)
+
+  call system_clock(toc)
+  print *,"Done building inductance matrix. Took ",real(toc-tic)/countrate," sec."
+
+  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
+
+  call system_clock(tic,countrate)
+  print *,"Building inductance matrix between plasma surface and middle surface."
+
+  call buildInductanceMatrix(inductance_plasma_middle, u_plasma, v_plasma, r_plasma, normal_plasma, basis_functions_plasma, &
+       u_middle, v_middle, r_middle, normal_middle, basis_functions_middle)
+
   call system_clock(toc)
   print *,"Done building inductance matrix. Took ",real(toc-tic)/countrate," sec."
 

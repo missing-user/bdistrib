@@ -1,7 +1,7 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
-  basis_set_option = 3
+  symmetry_option = 3
 
   nu_plasma=64
   nu_middle=64

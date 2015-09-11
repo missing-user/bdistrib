@@ -1,7 +1,7 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
-  weight_option = 2
+  basis_option = 3
 
   nu_plasma=64
   nu_middle=64
@@ -37,7 +37,7 @@
 
   pseudoinverse_thresholds = 1e-12
 
-  basis_set_option=3
+  symmetry_option=3
 
   save_level=1
   n_singular_vectors_to_save = 16
