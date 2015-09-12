@@ -21,15 +21,17 @@ from scipy.special import iv
 # iv is the modified Bessel function I_v
 
 svd_s_transferMatrix = data
-max_n = len(svd_s_transferMatrix[0,:])
+max_n = len(svd_s_transferMatrix[0,:])/2
 analytical = []
 for n in range(1,max_n+1):
     s = (a_plasma/a_middle)*(iv(-1,n*a_plasma/R)+iv(1,n*a_plasma/R))/(iv(-1,n*a_middle/R)+iv(1,n*a_middle/R))
     analytical.append(s)
+    analytical.append(s)
 
 # Compare to analytically expected values:
-desiredTolerance = 0.015
+desiredTolerance = 0.02
 numFailures += arrayShouldBe(data[0,:], analytical, desiredTolerance)
 
 f.close()
+print "numFailures: ",numFailures
 exit(numFailures > 0)

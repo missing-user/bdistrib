@@ -29,7 +29,7 @@ for n in range(1,max_n+1):
     analytical.append(s)
 
 # Compare to analytically expected values:
-desiredTolerance = 0.015
+desiredTolerance = 0.02
 numFailures += arrayShouldBe(data[0,:], analytical, desiredTolerance)
 
 f.close()

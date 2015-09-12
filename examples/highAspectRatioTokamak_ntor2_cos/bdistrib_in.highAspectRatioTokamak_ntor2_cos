@@ -1,7 +1,7 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
-  basis_option = 3
+  symmetry_option = 2
 
   nu_plasma=64
   nu_middle=64
@@ -11,17 +11,17 @@
   nv_middle=256
   nv_outer =256
 
-  mpol_plasma = 0
-  mpol_middle = 0
-  mpol_outer  = 0
+  mpol_plasma = 8
+  mpol_middle = 8
+  mpol_outer  = 8
 
-  ntor_plasma = 32
-  ntor_middle = 32
-  ntor_outer  = 32
+  ntor_plasma = 2
+  ntor_middle = 2
+  ntor_outer  = 2
 
   geometry_option_plasma = 0
   R0_plasma = 10.0
-  a_plasma = 0.33333333333
+  a_plasma = 0.5
   nfp_imposed = 1
 
   geometry_option_middle=0
@@ -32,9 +32,7 @@
   R0_outer = 10.0
   a_outer = 1.5
 
-  symmetry_option = 3
-
   pseudoinverse_thresholds = 1e-12
 
-  n_singular_vectors_to_save = 16
+  n_singular_vectors_to_save = 12
 /

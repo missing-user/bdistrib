@@ -231,12 +231,12 @@ module init_basis_functions_mod
                should_be_identity(imn,imn2) = temp
                if (imn==imn2) then
                   ! Diagonal elements should be 1
-                  if (abs(temp-1) > 1e-13) then
+                  if (abs(temp-1) > 1e-12) then
                      any_problems = .true.
                   end if
                else
                   ! Off-diagonal elements should be 0
-                  if (abs(temp) > 1e-13) then
+                  if (abs(temp) > 1e-12) then
                      any_problems = .true.
                   end if
                end if

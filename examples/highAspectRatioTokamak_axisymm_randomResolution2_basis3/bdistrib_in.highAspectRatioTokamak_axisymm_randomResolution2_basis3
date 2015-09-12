@@ -1,19 +1,22 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
-  basis_option = 3
+  basis_option_plasma = 3
+  basis_option_middle = 3
+  basis_option_outer  = 3
+  check_orthogonality = .t.
 
-  nu_plasma=64
-  nu_middle=65
-  nu_outer =66
+  nu_plasma=67
+  nu_middle=66
+  nu_outer =65
 
-  nv_plasma=253
-  nv_middle=254
-  nv_outer =255
+  nv_plasma=250
+  nv_middle=249
+  nv_outer =248
 
-  mpol_plasma = 14
-  mpol_middle = 15
-  mpol_outer  = 16
+  mpol_plasma = 19
+  mpol_middle = 18
+  mpol_outer  = 17
 
   ntor_plasma = 0
   ntor_middle = 0

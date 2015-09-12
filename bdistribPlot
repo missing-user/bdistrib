@@ -49,30 +49,34 @@ xn_outer  = f.variables['xn_outer'][()]
 mnmax_plasma = f.variables['mnmax_plasma'][()]
 mnmax_middle = f.variables['mnmax_middle'][()]
 mnmax_outer  = f.variables['mnmax_outer'][()]
-svd_s_inductance_plasma = f.variables['svd_s_inductance_plasma'][()]
-svd_s_inductance_middle = f.variables['svd_s_inductance_middle'][()]
+svd_s_inductance_plasma_outer = f.variables['svd_s_inductance_plasma_outer'][()]
+svd_s_inductance_middle_outer = f.variables['svd_s_inductance_middle_outer'][()]
+svd_s_inductance_plasma_middle = f.variables['svd_s_inductance_plasma_middle'][()]
 svd_s_transferMatrix = f.variables['svd_s_transferMatrix'][()]
-svd_u_transferMatrix_sin = f.variables['svd_u_transferMatrix_sin'][()]
-svd_u_transferMatrix_cos = f.variables['svd_u_transferMatrix_cos'][()]
-svd_v_transferMatrix_sin = f.variables['svd_v_transferMatrix_sin'][()]
-svd_v_transferMatrix_cos = f.variables['svd_v_transferMatrix_cos'][()]
+svd_u_transferMatrix_uv = f.variables['svd_u_transferMatrix_uv'][()]
+svd_v_transferMatrix_uv = f.variables['svd_v_transferMatrix_uv'][()]
+svd_u_inductance_plasma_middle_uv = f.variables['svd_u_inductance_plasma_middle_uv'][()]
+svd_v_inductance_plasma_middle_uv = f.variables['svd_v_inductance_plasma_middle_uv'][()]
 n_pseudoinverse_thresholds = f.variables['n_pseudoinverse_thresholds'][()]
 n_singular_vectors_to_save = f.variables['n_singular_vectors_to_save'][()]
 pseudoinverse_thresholds = f.variables['pseudoinverse_thresholds'][()]
-basis_option = f.variables['basis_option'][()]
-if basis_option==3:
-    basis_to_Fourier_plasma = f.variables['basis_to_Fourier_plasma'][()]
-    basis_to_Fourier_middle = f.variables['basis_to_Fourier_middle'][()]
+check_orthogonality = False
+try:
+    should_be_identity_plasma = f.variables['should_be_identity_plasma'][()]
+    should_be_identity_middle = f.variables['should_be_identity_middle'][()]
+    should_be_identity_outer = f.variables['should_be_identity_outer'][()]
+    check_orthogonality = True
+except:
+    pass
 
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
 print "r_plasma.shape: ",r_plasma.shape
 print "svd_s_transferMatrix.shape: ",svd_s_transferMatrix.shape
-print "svd_u_transferMatrix_sin.shape: ",svd_u_transferMatrix_sin.shape
+print "svd_u_transferMatrix_uv.shape: ",svd_u_transferMatrix_uv.shape
 
 f.close()
 
-#exit(0)
 
 ########################################################
 # Plot singular values
@@ -82,14 +86,84 @@ figureNum = 1
 fig = plt.figure(figureNum)
 fig.patch.set_facecolor('white')
 
-plt.plot(svd_s_inductance_middle,'.m',label='Inductance matrix between middle and outer surfaces')
-plt.plot(svd_s_inductance_plasma,'.r',label='Inductance matrix between plasma and outer surfaces')
-colors=['k','g','orange','c','brown','gray','darkred','olive','darkviolet','gold','lawngreen']
+plt.plot(svd_s_inductance_middle_outer,'.m',label='Inductance matrix between middle and outer surfaces')
+plt.plot(svd_s_inductance_plasma_outer,'.r',label='Inductance matrix between plasma and outer surfaces')
+plt.plot(svd_s_inductance_plasma_middle,'.g',label='Inductance matrix between plasma and middle surfaces')
+colors=['k','orange','c','brown','gray','darkred','olive','darkviolet','gold','lawngreen']
 for i in range(n_pseudoinverse_thresholds):
     plt.plot(svd_s_transferMatrix[i,:],'.',color=colors[i],label='Transfer matrix, thresh='+str(pseudoinverse_thresholds[i]))
 plt.legend(fontsize='x-small',loc=3)
 plt.title('Singular values')
 plt.yscale('log')
+
+########################################################
+# check_orthogonality plot
+########################################################
+
+if check_orthogonality:
+    figureNum += 1
+    fig = plt.figure(figureNum)
+    fig.patch.set_facecolor('white')
+
+    numRows = 1
+    numCols = 3
+    th = 1e-17
+
+    plt.subplot(numRows,numCols,1)
+    data = np.abs(should_be_identity_plasma.transpose())
+    data[data<th] = th
+    plt.pcolormesh(np.log10(data))
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('should_be_identity_plasma')
+
+    plt.subplot(numRows,numCols,2)
+    data = np.abs(should_be_identity_middle.transpose())
+    data[data<th] = th
+    plt.pcolormesh(np.log10(data))
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('should_be_identity_middle')
+
+    plt.subplot(numRows,numCols,3)
+    data = np.abs(should_be_identity_outer.transpose())
+    data[data<th] = th
+    plt.pcolormesh(np.log10(data))
+    plt.gca().invert_yaxis()
+    plt.colorbar()
+    plt.title('should_be_identity_outer')
+
+    # Maximize window. The command for this depends on the backend.
+    mng = plt.get_current_fig_manager()
+    mng.resize(*mng.window.maxsize())
+
+    figureNum += 1
+    fig = plt.figure(figureNum)
+    fig.patch.set_facecolor('white')
+
+    numRows = 1
+    numCols = 1
+    th = 1e-17
+
+    data = np.abs(np.diag(should_be_identity_plasma)-1)
+    data[data<th] = th
+    plt.plot(np.log10(data),label='plasma')
+
+    data = np.abs(np.diag(should_be_identity_middle)-1)
+    data[data<th] = th
+    plt.plot(np.log10(data),label='middle')
+
+    data = np.abs(np.diag(should_be_identity_outer)-1)
+    data[data<th] = th
+    plt.plot(np.log10(data),label='outer')
+
+    plt.title('log10(diag(should_be_identity)-1)    This should be very small.')
+    plt.legend()
+
+    # Maximize window. The command for this depends on the backend.
+    mng = plt.get_current_fig_manager()
+    mng.resize(*mng.window.maxsize())
+
 
 ########################################################
 # For 3D plotting, 'close' the arrays in u and v
@@ -153,9 +227,9 @@ Zmax = Z_slice_outer.max()
 for whichPlot in range(4):
     plt.subplot(numRows,numCols,whichPlot+1)
     v = v_slices[whichPlot]
-    plt.plot( R_slice_plasma[whichPlot,:],  Z_slice_plasma[whichPlot,:], 'r.-', label='plasma')
-    plt.plot( R_slice_middle[whichPlot,:],  Z_slice_middle[whichPlot,:], 'm.-', label='middle')
-    plt.plot(R_slice_outer[whichPlot,:], Z_slice_outer[whichPlot,:], 'b.-', label='outer')
+    plt.plot(R_slice_outer[whichPlot,:],  Z_slice_outer[whichPlot,:],  'b.-', label='outer')
+    plt.plot(R_slice_middle[whichPlot,:], Z_slice_middle[whichPlot,:], 'm.-', label='middle')
+    plt.plot(R_slice_plasma[whichPlot,:], Z_slice_plasma[whichPlot,:], 'r.-', label='plasma')
     plt.gca().set_aspect('equal',adjustable='box')
     plt.legend(fontsize='x-small')
     plt.title('v='+str(v))
@@ -166,125 +240,103 @@ for whichPlot in range(4):
 
 plt.tight_layout()
 
-#plt.show()
-#exit(0)
-
-########################################################
-# Plot matrices related basis functions to Fourier modes
-########################################################
-
-if basis_option == 3:
-    figureNum += 1
-    fig = plt.figure(figureNum)
-    fig.patch.set_facecolor('white')
-    numCols = 2
-    numRows = 2
-    titleFontSize = 12
-
-    plt.subplot(numRows,numCols,1)
-    data = np.abs(basis_to_Fourier_plasma.transpose())
-    plt.pcolormesh(data)
-    plt.gca().invert_yaxis()
-    plt.colorbar()
-    plt.title('abs(basis_to_Fourier_plasma)',fontsize=titleFontSize)
-
-    plt.subplot(numRows,numCols,2)
-    data[data<1e-17] = 1e-17
-    plt.pcolormesh(np.log10(data))
-    plt.gca().invert_yaxis()
-    plt.colorbar()
-    plt.title('log_10(abs(basis_to_Fourier_plasma))',fontsize=titleFontSize)
-
-    plt.subplot(numRows,numCols,3)
-    data = np.abs(basis_to_Fourier_middle.transpose())
-    plt.pcolormesh(data)
-    plt.gca().invert_yaxis()
-    plt.colorbar()
-    plt.title('abs(basis_to_Fourier_middle)',fontsize=titleFontSize)
-
-    plt.subplot(numRows,numCols,4)
-    data[data<1e-17] = 1e-17
-    plt.pcolormesh(np.log10(data))
-    plt.gca().invert_yaxis()
-    plt.colorbar()
-    plt.title('log_10(abs(basis_to_Fourier_middle))',fontsize=titleFontSize)
-
-    plt.tight_layout()
     
-
 ########################################################
-# Plot singular vectors on the plasma surface
+# Prepare for plotting singular vectors
 ########################################################
 
 mpl.rc('xtick',labelsize=7)
 mpl.rc('ytick',labelsize=7)
+numCols = int(np.ceil(np.sqrt(n_singular_vectors_to_save)))
+numRows = int(np.ceil(n_singular_vectors_to_save*1.0/numCols))
 
 numContours = 20
 
-nu_plot = 100
-nv_plot = 102
-u_plot = np.linspace(0,1,num=nu_plot)
-v_plot = np.linspace(0,1,num=nv_plot)
-v_plot_2D, u_plot_2D = np.meshgrid(v_plot, u_plot)
-v_plot_2D_column = np.reshape(v_plot_2D,[nu_plot*nv_plot],order='F')
-u_plot_2D_column = np.reshape(u_plot_2D,[nu_plot*nv_plot],order='F')
-FourierToX_sin = np.zeros([nu_plot*nv_plot, mnmax_plasma])
-FourierToX_cos = np.zeros([nu_plot*nv_plot, mnmax_plasma])
-for imn in range(mnmax_plasma):
-    FourierToX_sin[:,imn] = np.sin(2*np.pi*(xm_plasma[imn]*u_plot_2D_column+xn_plasma[imn]*v_plot_2D_column))
-    FourierToX_cos[:,imn] = np.cos(2*np.pi*(xm_plasma[imn]*u_plot_2D_column+xn_plasma[imn]*v_plot_2D_column))
+########################################################
+# Plot singular vectors of the plasma-middle inductance matrix on the plasma surface
+########################################################
+
+figureNum += 1
+fig = plt.figure(figureNum)
+fig.patch.set_facecolor('white')
+
+for whichPlot in range(n_singular_vectors_to_save):
+    plt.subplot(numRows,numCols,whichPlot+1)
+    data = np.reshape(svd_u_inductance_plasma_middle_uv[whichPlot,:], [nu_plasma,nv_plasma],order='F')
+    plt.contourf(v_plasma, u_plasma, data, numContours)
+    #plt.colorbar()
+    plt.xlabel('v',fontsize='x-small')
+    plt.ylabel('u',fontsize='x-small')
+    plt.title('Singular vector U '+str(whichPlot+1)+"\ns="+str(svd_s_inductance_plasma_middle[whichPlot]),fontsize='x-small')
+
+    plt.tight_layout()
+    ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
+    ax.text(0.5,0.99,"Singular vectors of the plasma-to-middle surface inductance matrix. (U vectors = plasma surface)",horizontalalignment='center',verticalalignment='top',fontsize='small')
+
+########################################################
+# Plot singular vectors of the plasma-middle inductance matrix on the middle surface
+########################################################
+
+figureNum += 1
+fig = plt.figure(figureNum)
+fig.patch.set_facecolor('white')
+
+for whichPlot in range(n_singular_vectors_to_save):
+    plt.subplot(numRows,numCols,whichPlot+1)
+    data = np.reshape(svd_v_inductance_plasma_middle_uv[whichPlot,:], [nu_middle,nv_middle],order='F')
+    plt.contourf(v_middle, u_middle, data, numContours)
+    #plt.colorbar()
+    plt.xlabel('v',fontsize='x-small')
+    plt.ylabel('u',fontsize='x-small')
+    plt.title('Singular vector V '+str(whichPlot+1)+"\ns="+str(svd_s_inductance_plasma_middle[whichPlot]),fontsize='x-small')
+
+    plt.tight_layout()
+    ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
+    ax.text(0.5,0.99,"Singular vectors of the plasma-to-middle surface inductance matrix. (V vectors = middle surface)",horizontalalignment='center',verticalalignment='top',fontsize='small')
+
+########################################################
+# Plot singular vectors of the transfer matrix on the plasma surface
+########################################################
 
 for whichThreshold in range(n_pseudoinverse_thresholds):
     figureNum += 1
     fig = plt.figure(figureNum)
     fig.patch.set_facecolor('white')
-    numCols = int(np.ceil(np.sqrt(n_singular_vectors_to_save)))
-    numRows = int(np.ceil(n_singular_vectors_to_save*1.0/numCols))
 
     for whichPlot in range(n_singular_vectors_to_save):
         plt.subplot(numRows,numCols,whichPlot+1)
-        data = np.reshape(np.dot(FourierToX_sin, svd_u_transferMatrix_sin[whichThreshold,whichPlot,:]) + \
-                          np.dot(FourierToX_cos, svd_u_transferMatrix_cos[whichThreshold,whichPlot,:]), [nu_plot,nv_plot],order='F')
-        plt.contourf(v_plot, u_plot, data, numContours)
+        data = np.reshape(svd_u_transferMatrix_uv[whichThreshold,whichPlot,:],[nu_plasma,nv_plasma],order='F')
+        plt.contourf(v_plasma, u_plasma, data, numContours)
         #plt.colorbar()
         plt.xlabel('v',fontsize='x-small')
         plt.ylabel('u',fontsize='x-small')
-        plt.title('Singular vector u '+str(whichPlot+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot]),fontsize='x-small')
+        plt.title('Singular vector U '+str(whichPlot+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot]),fontsize='x-small')
 
     plt.tight_layout()
     ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
-    ax.text(0.5,0.99,"Efficiency-ordered B_n distributions on the plasma surface (threshold="+str(pseudoinverse_thresholds[whichThreshold])+")",horizontalalignment='center',verticalalignment='top',fontsize='small')
+    ax.text(0.5,0.99,"Singular vectors of the transfer matrix. U vectors = plasma surface. (threshold="+str(pseudoinverse_thresholds[whichThreshold])+")",horizontalalignment='center',verticalalignment='top',fontsize='small')
 
 ########################################################
-# Plot singular vectors on the middle surface
+# Plot singular vectors of the transfer matrix on the middle surface
 ########################################################
-
-FourierToX_sin = np.zeros([nu_plot*nv_plot, mnmax_middle])
-FourierToX_cos = np.zeros([nu_plot*nv_plot, mnmax_middle])
-for imn in range(mnmax_middle):
-    FourierToX_sin[:,imn] = np.sin(2*np.pi*(xm_middle[imn]*u_plot_2D_column+xn_middle[imn]*v_plot_2D_column))
-    FourierToX_cos[:,imn] = np.cos(2*np.pi*(xm_middle[imn]*u_plot_2D_column+xn_middle[imn]*v_plot_2D_column))
 
 for whichThreshold in range(n_pseudoinverse_thresholds):
     figureNum += 1
     fig = plt.figure(figureNum)
     fig.patch.set_facecolor('white')
-    numCols = int(np.ceil(np.sqrt(n_singular_vectors_to_save)))
-    numRows = int(np.ceil(n_singular_vectors_to_save*1.0/numCols))
 
     for whichPlot in range(n_singular_vectors_to_save):
         plt.subplot(numRows,numCols,whichPlot+1)
-        data = np.reshape(np.dot(FourierToX_sin, svd_v_transferMatrix_sin[whichThreshold,whichPlot,:]) + \
-                          np.dot(FourierToX_cos, svd_v_transferMatrix_cos[whichThreshold,whichPlot,:]), [nu_plot,nv_plot],order='F')
-        plt.contourf(v_plot, u_plot, data, numContours)
+        data = np.reshape(svd_v_transferMatrix_uv[whichThreshold,whichPlot,:], [nu_middle,nv_middle],order='F')
+        plt.contourf(v_middle, u_middle, data, numContours)
         #plt.colorbar()
         plt.xlabel('v',fontsize='x-small')
         plt.ylabel('u',fontsize='x-small')
-        plt.title('Singular vector v '+str(whichPlot+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot]),fontsize='x-small')
+        plt.title('Singular vector V '+str(whichPlot+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot]),fontsize='x-small')
 
     plt.tight_layout()
     ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
-    ax.text(0.5,0.99,"Efficiency-ordered B_n distributions on the middle surface (threshold="+str(pseudoinverse_thresholds[whichThreshold])+")",horizontalalignment='center',verticalalignment='top',fontsize='small')
+    ax.text(0.5,0.99,"Singular vectors of the transfer matrix. V vectors = middle surface. (threshold="+str(pseudoinverse_thresholds[whichThreshold])+")",horizontalalignment='center',verticalalignment='top',fontsize='small')
 
 ########################################################
 # Now make 3D surface plot

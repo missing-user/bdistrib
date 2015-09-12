@@ -1,7 +1,10 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
-  basis_option = 3
+  basis_option_plasma = 2
+  basis_option_middle = 2
+  basis_option_outer  = 2
+  check_orthogonality = .t.
 
   ! The resolution here is low, but it doesn't matter for this test: all singular values of the transfer matrix should be exactly 1.
   nu_plasma=32
