@@ -66,6 +66,13 @@ module init_surface_mod
       drdu = 0
       drdv = 0
 
+      if (geometry_option==3 .or. geometry_option == 4) then
+         print *,"  Reading coil surface from nescin file ",trim(nescin_filename)
+
+         call read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
+      end if
+
+
       select case (geometry_option)
       case (0,1)
          ! Torus with circular cross-section
@@ -105,9 +112,13 @@ module init_surface_mod
             end do
          end do
 
-      case (2)
+      case (2,4)
 
-         print *,"  Constructing a surface offset from the plasma by ",separation
+         if (geometry_option==2) then
+            print *,"  Constructing a surface offset from the plasma by ",separation
+         else
+            print *,"  Constructing a surface offset from the nescin surface by ",separation
+         end if
 
          ! Finite differences to use:
          ! (Numerical Recipes suggests (machine epsilon)^(1/3)
@@ -157,10 +168,7 @@ module init_surface_mod
          !$OMP END PARALLEL
 
       case (3)
-
-         print *,"  Reading coil surface from nescin file ",trim(nescin_filename)
-
-         call read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
+         ! Nothing to do - we already read the nescin file.
 
       case default
          print *,"Invalid setting for geometry_option: ",geometry_option

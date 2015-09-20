@@ -131,8 +131,12 @@ subroutine validate_input
      stop "Error! geometry_option_outer must be >= 0."
   end if
 
-  if (geometry_option_outer > 3) then
-     stop "Error! geometry_option_outer must be <= 3."
+  if (geometry_option_outer > 4) then
+     stop "Error! geometry_option_outer must be <= 4."
+  end if
+
+  if (geometry_option_outer == 4 .and. geometry_option_middle .ne. 3) then
+     stop "Error! If geometry_option_outer == 4 (offset from the middle nescin file), then you must have geometry_option_middle = 3 (nescin)."
   end if
 
 
@@ -140,11 +144,11 @@ subroutine validate_input
      stop "Error! separation_middle must be >= 0."
   end if
 
-  if (separation_outer <= 0) then
-     stop "Error! separation_outer must be > 0."
+  if (separation_outer <= 0 .and. geometry_option_outer==2) then
+     stop "Error! For geometry_option_outer==2, separation_outer must be > 0."
   end if
 
-  if (separation_outer < separation_middle) then
+  if ((separation_outer < separation_middle) .and. (geometry_option_outer .ne. 4)) then
      stop "Error! separation_outer must be >= separation_middle."
   end if
 

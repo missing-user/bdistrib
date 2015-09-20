@@ -7,18 +7,29 @@ function bdistrib()
 
 clear
 
-basis_set_option = 2;
+symmetry_option = 3;
 % 1 = sines only
 % 2 = cosines only
 % 3 = both sines and cosines
 
-weight_option = 2;
+basis_option_plasma = 2;
+basis_option_middle = 2;
+basis_option_outer  = 2;
 % 1: w = 1/(nfp * |N|) so Fourier functions are basis functions.
-% 2: w = 1/area so each basis function is a linear combination of Fourier functions.
+% 2: w = 1/area. Basis functions are Fourier functions * sqrt(2*area/[nfp*|N|])
+% 3: Same weight as 2, except generate basis using Cholesky approach
+
+% Verify basis vectors are indeed orthonormal:
+%basis_vector_orthogonality_test = true;
+basis_vector_orthogonality_test = false;
+
+mode_order = 1;
+% 1: VMEC order
+% 2: reversed VMEC order
 
 % Resolution parameters:
 % **********************************
-
+%{
 nu_plasma = 63;
 nu_middle = 51;
 nu_outer  = 49;
@@ -34,8 +45,8 @@ mpol_outer  = 8;
 ntor_plasma = 7;
 ntor_middle = 6;
 ntor_outer  = 5;
+%}
 
-%{
 nu_plasma = 40;
 nu_middle = 47;
 nu_outer  = 48;
@@ -51,7 +62,7 @@ mpol_outer  = 7;
 ntor_plasma = 8;
 ntor_middle = 9;
 ntor_outer  = 10;
-%}
+
 
 % Options for the shape of the plasma surface:
 % **********************************
@@ -67,7 +78,8 @@ geometry_option_middle = 3;
 R0_middle = 3.0;
 a_middle = 1.0;
 separation_middle = 0.35;
-nescin_filename_middle = 'nescin.w7x_standardConfig_separation0.3';
+%nescin_filename_middle = 'nescin.w7x_standardConfig_separation0.3';
+nescin_filename_middle = 'nescin.w7x_winding_surface_from_Drevlak';
 
 % Options for the shape of the outer surface:
 % **********************************
@@ -106,13 +118,16 @@ stopAfterInitialPlots = false;
 
 figureOffset = 0;
 
+%plot_basis_vectors = true;
+plot_basis_vectors = false;
+
 % Options related to checking fortran version
 % *******************************************
 
 compareToFortran = true;
 %compareToFortran = false;
 
-fortranNcFilename = 'C:\Users\landreman\Box Sync\MATLAB\bdistrib_out.compareToMatlab.nc';
+fortranNcFilename = 'C:\Users\landreman\Box Sync\MATLAB\bdistrib_out.compareToMatlab2.nc';
 
 fortranComparisonThreshhold = 1e-7;
 
@@ -194,6 +209,11 @@ compareVariableToFortran('pseudoinverse_thresholds')
             xn(indices) = (-ntor):ntor;
             nextIndex = nextIndex + 2*ntor+1;
         end
+        
+        if mode_order==2
+            xm = xm(end:-1:1);
+            xn = xn(end:-1:1);
+        end
     end
 
 [mnmax_plasma, xm_plasma, xn_plasma] = setupFourierArrays(mpol_plasma, ntor_plasma);
@@ -216,8 +236,10 @@ compareVariableToFortran('xm_middle')
 compareVariableToFortran('xn_middle')
 compareVariableToFortran('xm_outer')
 compareVariableToFortran('xn_outer')
-compareVariableToFortran('basis_set_option')
-compareVariableToFortran('weight_option')
+compareVariableToFortran('symmetry_option')
+compareVariableToFortran('basis_option_plasma')
+compareVariableToFortran('basis_option_middle')
+compareVariableToFortran('basis_option_outer')
 
 % *********************************************
 % Initialize the plasma surface:
@@ -557,12 +579,12 @@ if plot3DFigure
     axis vis3d
     hold on
     
-    faceColor = [1,0,1];
-    %faceColor = [0,1,0];
+    %faceColor = [1,0,1];
+    faceColor = [0,1,0];
     surf(squeeze(r_middle_toplot(1,:,:)),squeeze(r_middle_toplot(2,:,:)),squeeze(r_middle_toplot(3,:,:)),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
     
     faceColor = [0,0,1];
-    surf(squeeze(r_outer_toplot(1,:,:)),squeeze(r_outer_toplot(2,:,:)),squeeze(r_outer_toplot(3,:,:)),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
+    %surf(squeeze(r_outer_toplot(1,:,:)),squeeze(r_outer_toplot(2,:,:)),squeeze(r_outer_toplot(3,:,:)),'FaceColor',faceColor,'EdgeColor','none','FaceAlpha',0.75)
     
     if plotGrids
         plot3(squeeze(r_middle_toplot(1,:,:)),squeeze(r_middle_toplot(2,:,:)),squeeze(r_middle_toplot(3,:,:)),'.m')
@@ -584,12 +606,11 @@ if stopAfterInitialPlots
 end
 
 
-% *********************************************
-% If needed, compute conversions between Fourier basis and the basis
-% functions.
-% *********************************************
+% ***********************************************
+% Compute the basis functions on the (u,v) grids.
+% ***********************************************
 
-switch basis_set_option
+switch symmetry_option
     case {1,2}
         num_basis_functions_plasma = mnmax_plasma;
         num_basis_functions_middle = mnmax_middle;
@@ -599,72 +620,52 @@ switch basis_set_option
         num_basis_functions_middle = mnmax_middle * 2;
         num_basis_functions_outer  = mnmax_outer  * 2;
     otherwise
-        error('Invalid value for basis_set_option')
+        error('Invalid value for symmetry_option')
 end
 
-% *********************************************
-% Compute mutual inductance matrices
-% *********************************************
-
-mu0 = 4*pi*(1e-7);
-[v_outer_2D, u_outer_2D] = meshgrid(v_outer,u_outer);
-du_outer = u_outer(2)-u_outer(1);
-dv_outer = v_outer(2)-v_outer(1);
-
-    function [inductanceMatrix, Fourier_to_basis, basis_to_Fourier] = ...
-            computeInductanceMatrix(r, normal, norm_normal, u, v, mnmax, xm, xn, num_basis_functions, area)
-        nu = size(r,2);
-        nv = size(r,3)/nfp;
-        if round(nv) ~= nv
-            error('Something went wrong.')
-        end
-        
+    function [basis_functions, basis_to_Fourier, Fourier_to_basis] = compute_basis_functions(u, v, xm, xn, mnmax, num_basis_functions, area, norm_normal, basis_option)
+        nu = numel(u);
+        nv = numel(v);
         [v2D, u2D] = meshgrid(v,u);
         du = u(2)-u(1);
         dv = v(2)-v(1);
         
         tic1 = tic;
-        xToFourier = zeros(num_basis_functions,nu*nv);
-        xToFourier_outer = zeros(nu_outer*nv_outer,num_basis_functions_outer);
-        switch basis_set_option
+        basis_functions = zeros(nu*nv, num_basis_functions);
+        switch basis_option
+            case {1,3}
+                basis_function_factor = sqrt(2) * ones(nu,nv);
+            case {2}
+                basis_function_factor = sqrt(2*area./(nfp*norm_normal(:,1:nv)));
+            otherwise
+                error('Error! Invalid basis_option')
+        end
+        switch symmetry_option
             case {1}
                 % sines only
                 for imn = 1:mnmax
-                    xToFourier(imn,:) = reshape(sin(2*pi*(xm(imn)*u2D + xn(imn)*v2D)), [nu*nv,1])';
-                end
-                for imn = 1:mnmax_outer
-                    xToFourier_outer(:,imn) = reshape(sin(2*pi*(xm_outer(imn)*u_outer_2D + xn_outer(imn)*v_outer_2D)), [nu_outer*nv_outer,1]);
+                    basis_functions(:,imn) = reshape(basis_function_factor .* sin(2*pi*(xm(imn)*u2D + xn(imn)*v2D)), [nu*nv,1]);
                 end
             case {2}
                 % cosines only
                 for imn = 1:mnmax
-                    xToFourier(imn,:) = reshape(cos(2*pi*(xm(imn)*u2D + xn(imn)*v2D)), [nu*nv,1])';
-                end
-                for imn = 1:mnmax_outer
-                    xToFourier_outer(:,imn) = reshape(cos(2*pi*(xm_outer(imn)*u_outer_2D + xn_outer(imn)*v_outer_2D)), [nu_outer*nv_outer,1]);
+                    basis_functions(:,imn) = reshape(basis_function_factor .* cos(2*pi*(xm(imn)*u2D + xn(imn)*v2D)), [nu*nv,1]);
                 end
             case {3}
                 % Both sines and cosines
                 for imn = 1:mnmax
-                    xToFourier(imn,:) = reshape(sin(2*pi*(xm(imn)*u2D + xn(imn)*v2D)), [nu*nv,1])';
-                    xToFourier(imn+mnmax,:) = reshape(cos(2*pi*(xm(imn)*u2D + xn(imn)*v2D)), [nu*nv,1])';
-                end
-                for imn = 1:mnmax_outer
-                    xToFourier_outer(:,imn) = reshape(sin(2*pi*(xm_outer(imn)*u_outer_2D + xn_outer(imn)*v_outer_2D)), [nu_outer*nv_outer,1]);
-                    xToFourier_outer(:,imn+mnmax_outer) = reshape(cos(2*pi*(xm_outer(imn)*u_outer_2D + xn_outer(imn)*v_outer_2D)), [nu_outer*nv_outer,1]);
+                    basis_functions(:,imn) = reshape(basis_function_factor .* sin(2*pi*(xm(imn)*u2D + xn(imn)*v2D)), [nu*nv,1]);
+                    basis_functions(:,imn+mnmax) = reshape(basis_function_factor .* cos(2*pi*(xm(imn)*u2D + xn(imn)*v2D)), [nu*nv,1]);
                 end
         end
-        fprintf('  xToFourier: %g\n',toc(tic1))
+        fprintf('  Computing Fourier functions: %g\n',toc(tic1))
         
-        xToFourier       = sqrt(2) * xToFourier;
-        xToFourier_outer = sqrt(2) * xToFourier_outer;
-        
-        switch weight_option
-            case 1
+        switch basis_option
+            case {1,2}
                 Fourier_to_basis = eye(num_basis_functions);
                 basis_to_Fourier = eye(num_basis_functions);
                  
-            case 2
+            case {3}
                 %norm_normal = ones(nu,nv); % This line is for testing only!
                 tic
                 % Form area integral of f_i * f_j (product of 2 Fourier functions)
@@ -672,7 +673,7 @@ dv_outer = v_outer(2)-v_outer(1);
                     % Slow but transparent method
                     A = zeros(num_basis_functions);
                     for imn_row = 1:num_basis_functions
-                        switch basis_set_option
+                        switch symmetry_option
                             case {1}
                                 Fourier_row = sin(2*pi*(xm(imn_row)*u2D + xn(imn_row)*v2D));
                             case {2}
@@ -685,7 +686,7 @@ dv_outer = v_outer(2)-v_outer(1);
                                 end
                         end
                         for imn_col = 1:num_basis_functions
-                            switch basis_set_option
+                            switch symmetry_option
                                 case {1}
                                     Fourier_col = sin(2*pi*(xm(imn_col)*u2D + xn(imn_col)*v2D));
                                 case {2}
@@ -703,98 +704,321 @@ dv_outer = v_outer(2)-v_outer(1);
                 else
                     % Faster method
                     temp = reshape(norm_normal(:,1:nv), [nu*nv,1]);
-                    A = xToFourier * diag(temp) * (xToFourier') * du * dv * nfp / area;
+                    A = (basis_functions') * diag(temp) * basis_functions * du * dv * nfp / area;
                 end
                 basis_to_Fourier = chol(A,'lower');
                 Fourier_to_basis = inv(basis_to_Fourier);
                 fprintf('  Fourier_to_basis: %g\n',toc(tic1))
                 
+                % At this point the 'basis_functions' array is really the
+                % Fourier functions. Now compute the actual basis
+                % functions:
+                %basis_functions = (basis_to_Fourier \ (basis_functions'))';
+                basis_functions = (Fourier_to_basis * (basis_functions'))';
+                
             otherwise
-                error('Invalid weight_option')
+                error('Invalid basis_option')
+        end
+    end
+
+startTime = tic;
+fprintf('Building basis functions on the plasma surface.\n')
+[basis_functions_plasma, basis_to_Fourier_plasma, Fourier_to_basis_plasma] ...
+    = compute_basis_functions(u_plasma, v_plasma, xm_plasma, xn_plasma, mnmax_plasma, num_basis_functions_plasma, area_plasma, norm_normal_plasma, basis_option_plasma);
+fprintf('Done. Took %g seconds.\n',toc(startTime))
+compareVariableToFortran('basis_functions_plasma')
+
+startTime = tic;
+fprintf('Building basis functions on the plasma surface.\n')
+[basis_functions_middle, basis_to_Fourier_middle, Fourier_to_basis_middle] ...
+    = compute_basis_functions(u_middle, v_middle, xm_middle, xn_middle, mnmax_middle, num_basis_functions_middle, area_middle, norm_normal_middle, basis_option_middle);
+fprintf('Done. Took %g seconds.\n',toc(startTime))
+compareVariableToFortran('basis_functions_middle')
+
+startTime = tic;
+fprintf('Building basis functions on the plasma surface.\n')
+[basis_functions_outer, basis_to_Fourier_outer, Fourier_to_basis_outer] ...
+    = compute_basis_functions(u_outer, v_outer, xm_outer, xn_outer, mnmax_outer, num_basis_functions_outer, area_outer, norm_normal_outer, basis_option_outer);
+fprintf('Done. Took %g seconds.\n',toc(startTime))
+compareVariableToFortran('basis_functions_outer')
+
+
+
+if basis_option_plasma == 3
+
+    % Make figure of basis_to_Fourier matrices
+    figure(figureOffset + 3)
+    clf
+    numRows = 2;
+    numCols = 2;
+    th = -17;
+    
+    subplot(numRows,numCols,1)
+    imagesc(abs(basis_to_Fourier_plasma))
+    title('abs(basis_to_Fourier_plasma)','Interpreter','none')
+    colorbar
+    
+    subplot(numRows,numCols,2)
+    data = log10(abs(basis_to_Fourier_plasma));
+    data(data<th) = th;
+    imagesc(data)
+    title('log10(abs(basis_to_Fourier_plasma))','Interpreter','none')
+    colorbar
+    
+    subplot(numRows,numCols,3)
+    imagesc(abs(Fourier_to_basis_plasma))
+    title('abs(Fourier_to_basis_plasma)','Interpreter','none')
+    colorbar
+    
+    subplot(numRows,numCols,4)
+    data = log10(abs(Fourier_to_basis_plasma));
+    data(data<th) = th;
+    imagesc(data)
+    title('log10(abs(Fourier_to_basis_plasma))','Interpreter','none')
+    colorbar
+    
+end
+
+if basis_option_middle == 3
+    figure(figureOffset + 4)
+    clf
+    numRows = 2;
+    numCols = 2;
+    th = -17;
+
+    subplot(numRows,numCols,1)
+    imagesc(abs(basis_to_Fourier_middle))
+    title('abs(basis_to_Fourier_middle)','Interpreter','none')
+    colorbar
+    
+    subplot(numRows,numCols,2)
+    data = log10(abs(basis_to_Fourier_middle));
+    data(data<th) = th;
+    imagesc(data)
+    title('log10(abs(basis_to_Fourier_middle))','Interpreter','none')
+    colorbar
+    
+    subplot(numRows,numCols,3)
+    imagesc(abs(Fourier_to_basis_middle))
+    title('abs(Fourier_to_basis_middle)','Interpreter','none')
+    colorbar
+    
+    subplot(numRows,numCols,4)
+    data = log10(abs(Fourier_to_basis_middle));
+    data(data<th) = th;
+    imagesc(data)
+    title('log10(abs(Fourier_to_basis_middle))','Interpreter','none')
+    colorbar
+    
+end
+
+    function shouldBeIdentity = check_basis_vector_orthogonality(basis_vectors, basis_option, norm_normal, u, v, area)
+        du = u(2)-u(1);
+        dv = v(2)-v(1);
+        nu = numel(u);
+        nv = numel(v);
+        
+        switch basis_option
+            case 1
+                % w = 1 / (nfp * |N|)
+                % Factors of |N| cancel.
+                basis_vectors_times_weight_and_N = basis_vectors / nfp;
+            case {2,3}
+                % w = 1 / area
+                basis_vectors_times_weight_and_N = diag(reshape(norm_normal(:,1:nv),[nu*nv,1])) * basis_vectors / area;
+            otherwise
+                error('Invalid basis_option')
         end
         
+        shouldBeIdentity = (basis_vectors') * basis_vectors_times_weight_and_N * du * dv * nfp;
+    end
 
+if basis_vector_orthogonality_test
+    figure(100)
+    clf
+    numRows = 1;
+    numCols = 3;
+    th = -17;
+    
+    subplot(numRows,numCols,1)
+    data = check_basis_vector_orthogonality(basis_functions_plasma, basis_option_plasma, norm_normal_plasma, u_plasma, v_plasma, area_plasma)
+    assignin('base','should_be_identity_plasma',data)
+    data = log10(abs(data));
+    data(data<th) = th;
+    imagesc(data)
+    title('log10(abs(should_be_identity_plasma))','Interpreter','none')
+    colorbar
+    
+    subplot(numRows,numCols,2)
+    data = check_basis_vector_orthogonality(basis_functions_middle, basis_option_middle, norm_normal_middle, u_middle, v_middle, area_middle)
+    assignin('base','should_be_identity_middle',data)
+    data = log10(abs(data));
+    data(data<th) = th;
+    imagesc(data)
+    title('log10(abs(should_be_identity_middle))','Interpreter','none')
+    colorbar
+    
+    subplot(numRows,numCols,3)
+    data = check_basis_vector_orthogonality(basis_functions_outer, basis_option_outer, norm_normal_outer, u_outer, v_outer, area_outer)
+    assignin('base','should_be_identity_outer',data)
+    data = log10(abs(data));
+    data(data<th) = th;
+    imagesc(data)
+    title('log10(abs(should_be_identity_outer))','Interpreter','none')
+    colorbar
+    
+    return
+end
+
+if plot_basis_vectors
+    numRows = 4;
+    numCols = 5;
+    maxNumFigures = 10;
+    numModesToPlot = min([num_basis_functions_plasma, numRows * numCols * maxNumFigures]);
+    numContours = 20;
+    
+    isubplot = 0;
+    ifig = 0;
+    for imode = 1:numModesToPlot
+        isubplot = isubplot + 1;
+        if mod(isubplot,numRows*numCols)==1
+            isubplot = 1;
+            ifig = ifig + 1;
+            figure(figureOffset + ifig + 10)
+            clf
+        end
+        subplot(numRows,numCols,isubplot)
+        data = reshape(basis_functions_plasma(:,imode),[nu_plasma,nv_plasma]);
+        contourf(v_plasma, u_plasma, data, numContours,'EdgeColor','none')
+        colorbar
+        xlabel('v')
+        ylabel('u')
+        title(['plasma basis vector ',num2str(imode)])
+        
+    end
+    
+    
+    return
+end
+
+% *********************************************
+% Compute mutual inductance matrices
+% *********************************************
+
+mu0 = 4*pi*(1e-7);
+
+    function inductanceMatrix = ...
+            computeInductanceMatrix(r_1, normal_1, u_1, v_1, basis_functions_1, ...
+            r_2, normal_2, u_2, v_2, basis_functions_2)
+        % _1 denotes the inner of the 2 surfaces, _2 denotes the outer of
+        % the 2 surfaces. (Actually the order doesn't really matter)
+        
+        nu_1 = numel(u_1);
+        nv_1 = numel(v_1);
+        nu_2 = numel(u_2);
+        nv_2 = numel(v_2);
+        du_1 = u_1(2)-u_1(1);
+        du_2 = u_2(2)-u_2(1);
+        dv_1 = v_1(2)-v_1(1);
+        dv_2 = v_2(2)-v_2(1);
+        
         tic1 = tic;
-        vIndices = 1:nv;
-        inductanceMatrix_xBasis = zeros(nu*nv, nu_outer*nv_outer);
-        for iu_outer = 1:nu_outer
-            for iv_outer = 1:nv_outer
-                index_outer = (iv_outer-1)*nu_outer + iu_outer;
-                for l_outer = 0:(nfp-1)
-                    ivl_outer = iv_outer + l_outer*nv_outer;
-                    dx = r(1,:,vIndices) - r_outer(1,iu_outer,ivl_outer);
-                    dy = r(2,:,vIndices) - r_outer(2,iu_outer,ivl_outer);
-                    dz = r(3,:,vIndices) - r_outer(3,iu_outer,ivl_outer);
+        v_1_indices = 1:nv_1;
+        inductanceMatrix_xBasis = zeros(nu_1*nv_1, nu_2*nv_2);
+        for iu_2 = 1:nu_2
+            for iv_2 = 1:nv_2
+                index_2 = (iv_2-1)*nu_2 + iu_2;
+                for l_2 = 0:(nfp-1)
+                    ivl_2 = iv_2 + l_2*nv_2;
+                    dx = r_1(1,:,v_1_indices) - r_2(1,iu_2,ivl_2);
+                    dy = r_1(2,:,v_1_indices) - r_2(2,iu_2,ivl_2);
+                    dz = r_1(3,:,v_1_indices) - r_2(3,iu_2,ivl_2);
                     dr2 = dx.*dx + dy.*dy + dz.*dz;
                     denominator = dr2 .* sqrt(dr2);
-                    temp = (normal(1,:,vIndices)*normal_outer(1,iu_outer,ivl_outer) ...
-                        +   normal(2,:,vIndices)*normal_outer(2,iu_outer,ivl_outer) ...
-                        +   normal(3,:,vIndices)*normal_outer(3,iu_outer,ivl_outer) ...
-                        - (3./dr2) .* (dx .* normal(1,:,vIndices) + dy .* normal(2,:,vIndices) + dz .* normal(3,:,vIndices)) ...
-                        .* (dx * normal_outer(1,iu_outer,ivl_outer) + dy * normal_outer(2,iu_outer,ivl_outer) + dz * normal_outer(3,iu_outer,ivl_outer))) ./ denominator;
-                    inductanceMatrix_xBasis(:,index_outer) = inductanceMatrix_xBasis(:,index_outer) + ...
-                        reshape(temp, [nu*nv,1]);
+                    temp = (normal_1(1,:,v_1_indices)*normal_2(1,iu_2,ivl_2) ...
+                        +   normal_1(2,:,v_1_indices)*normal_2(2,iu_2,ivl_2) ...
+                        +   normal_1(3,:,v_1_indices)*normal_2(3,iu_2,ivl_2) ...
+                        - (3./dr2) .* (dx .* normal_1(1,:,v_1_indices) + dy .* normal_1(2,:,v_1_indices) + dz .* normal_1(3,:,v_1_indices)) ...
+                        .* (dx * normal_2(1,iu_2,ivl_2) + dy * normal_2(2,iu_2,ivl_2) + dz * normal_2(3,iu_2,ivl_2))) ./ denominator;
+                    inductanceMatrix_xBasis(:,index_2) = inductanceMatrix_xBasis(:,index_2) + ...
+                        reshape(temp, [nu_1*nv_1,1]);
                 end
             end
         end
         fprintf('  xBasis: %g\n',toc(tic1))
         
         tic1 = tic;
-        inductanceMatrix = (nfp * mu0/(4*pi) * du * dv * du_outer * dv_outer) * xToFourier * inductanceMatrix_xBasis * xToFourier_outer;
-        if weight_option>1
-            inductanceMatrix = Fourier_to_basis * inductanceMatrix;
-            %inductanceMatrix = basis_to_Fourier \ inductanceMatrix;
-        end
+        inductanceMatrix = (nfp * mu0/(4*pi) * du_1 * dv_1 * du_2 * dv_2) * (basis_functions_1') * inductanceMatrix_xBasis * basis_functions_2;
         fprintf('  matmul: %g\n',toc(tic1))
     end
 
 tic
 fprintf('Building mutual inductance matrix between the plasma and outer surfaces.\n')
-[inductance_plasma, Fourier_to_basis_plasma, basis_to_Fourier_plasma] = ...
-    computeInductanceMatrix(r_plasma, normal_plasma, norm_normal_plasma, u_plasma, v_plasma, mnmax_plasma, xm_plasma, xn_plasma, num_basis_functions_plasma, area_plasma);
+inductance_plasma_outer = computeInductanceMatrix(r_plasma, normal_plasma, u_plasma, v_plasma, basis_functions_plasma, ...
+            r_outer, normal_outer, u_outer, v_outer, basis_functions_outer);
 fprintf('Done. Took %g seconds.\n',toc)
 
 tic
 fprintf('Building mutual inductance matrix between the middle and outer surfaces.\n')
-[inductance_middle, Fourier_to_basis_middle, basis_to_Fourier_middle] = ...
-    computeInductanceMatrix(r_middle, normal_middle, norm_normal_middle, u_middle, v_middle, mnmax_middle, xm_middle, xn_middle, num_basis_functions_middle, area_middle);
+inductance_middle_outer = computeInductanceMatrix(r_middle, normal_middle, u_middle, v_middle, basis_functions_middle, ...
+            r_outer, normal_outer, u_outer, v_outer, basis_functions_outer);
 fprintf('Done. Took %g seconds.\n',toc)
 
-if weight_option>1
-    compareVariableToFortran('basis_to_Fourier_plasma')
-    compareVariableToFortran('basis_to_Fourier_middle')
-end
+tic
+fprintf('Building mutual inductance matrix between the plasma and middle surfaces.\n')
+inductance_plasma_middle = computeInductanceMatrix(r_plasma, normal_plasma, u_plasma, v_plasma, basis_functions_plasma, ...
+            r_middle, normal_middle, u_middle, v_middle, basis_functions_middle);
+fprintf('Done. Took %g seconds.\n',toc)
 
-compareVariableToFortran('inductance_plasma')
-compareVariableToFortran('inductance_middle')
+compareVariableToFortran('inductance_plasma_outer')
+compareVariableToFortran('inductance_middle_outer')
+compareVariableToFortran('inductance_plasma_middle')
 %return
 % *********************************************
-% Compute SVD of the two inductance matrices
+% Compute SVD of the inductance matrices
 % *********************************************
 
 tic
 fprintf('Computing SVD of the mutual inductance matrix between the plasma and outer surfaces.\n')
-[svd_u_inductance_plasma, svd_s_inductance_plasma, svd_v_inductance_plasma] = svd(inductance_plasma);
-svd_s_inductance_plasma = diag(svd_s_inductance_plasma);
+[svd_u_inductance_plasma_outer, svd_s_inductance_plasma_outer, svd_v_inductance_plasma_outer] = svd(inductance_plasma_outer);
+svd_s_inductance_plasma_outer = diag(svd_s_inductance_plasma_outer);
 fprintf('Done. Took %g seconds.\n',toc)
 
 tic
 fprintf('Computing SVD of the mutual inductance matrix between the middle and outer surfaces.\n')
-[svd_u_inductance_middle, svd_s_inductance_middle, svd_v_inductance_middle] = svd(inductance_middle);
-svd_s_inductance_middle_size = size(svd_s_inductance_middle);
-svd_s_inductance_middle = diag(svd_s_inductance_middle);
+[svd_u_inductance_middle_outer, svd_s_inductance_middle_outer, svd_v_inductance_middle_outer] = svd(inductance_middle_outer);
+svd_s_inductance_middle_outer_size = size(svd_s_inductance_middle_outer);
+svd_s_inductance_middle_outer = diag(svd_s_inductance_middle_outer);
 fprintf('Done. Took %g seconds.\n',toc)
+
+tic
+fprintf('Computing SVD of the mutual inductance matrix between the plasma and middle surfaces.\n')
+[svd_u_inductance_plasma_middle, svd_s_inductance_plasma_middle, svd_v_inductance_plasma_middle] = svd(inductance_plasma_middle);
+svd_s_inductance_plasma_middle = diag(svd_s_inductance_plasma_middle);
+fprintf('Done. Took %g seconds.\n',toc)
+
+svd_u_inductance_plasma_middle = svd_u_inductance_plasma_middle(:,1:n_singular_vectors_to_save);
+svd_v_inductance_plasma_middle = svd_v_inductance_plasma_middle(:,1:n_singular_vectors_to_save);
+svd_u_inductance_plasma_middle_uv = basis_functions_plasma * svd_u_inductance_plasma_middle;
+svd_v_inductance_plasma_middle_uv = basis_functions_middle * svd_v_inductance_plasma_middle;
+
+compareVariableToFortran('svd_u_inductance_plasma_middle','abs')
+compareVariableToFortran('svd_u_inductance_plasma_middle_uv','abs')
+compareVariableToFortran('svd_v_inductance_plasma_middle','abs')
+compareVariableToFortran('svd_v_inductance_plasma_middle_uv','abs')
 
 figure(figureOffset + 2)
 clf
-semilogy(svd_s_inductance_middle,'.m','DisplayName','Inductance matrix between middle and outer surfaces')
+semilogy(svd_s_inductance_middle_outer,'.m','DisplayName','Inductance matrix between middle and outer surfaces')
 hold on
-semilogy(svd_s_inductance_plasma,'.r','DisplayName','Inductance matrix between plasma and outer surfaces')
+semilogy(svd_s_inductance_plasma_outer,'.r','DisplayName','Inductance matrix between plasma and outer surfaces')
+semilogy(svd_s_inductance_plasma_middle,'.','Color',[0,0.7,0],'DisplayName','Inductance matrix between plasma and middle surfaces')
 %set(gca,'xGrid','on','yGrid','on')
 title('Singular values')
 
-compareVariableToFortran('svd_s_inductance_plasma')
-compareVariableToFortran('svd_s_inductance_middle')
+compareVariableToFortran('svd_s_inductance_plasma_outer')
+compareVariableToFortran('svd_s_inductance_middle_outer')
+compareVariableToFortran('svd_s_inductance_plasma_middle')
 
 % *********************************************
 % Compute transfer matrix
@@ -803,8 +1027,10 @@ compareVariableToFortran('svd_s_inductance_middle')
 n_pseudoinverse_thresholds = numel(pseudoinverse_thresholds);
 n_singular_values_retained = zeros(n_pseudoinverse_thresholds,1);
 svd_s_transferMatrix = zeros(min([num_basis_functions_plasma,num_basis_functions_middle]), n_pseudoinverse_thresholds);
-svd_u_transferMatrix = zeros(num_basis_functions_plasma,n_singular_vectors_to_save, n_pseudoinverse_thresholds);
-svd_v_transferMatrix = zeros(num_basis_functions_middle,n_singular_vectors_to_save, n_pseudoinverse_thresholds);
+svd_u_transferMatrix = zeros(num_basis_functions_plasma, n_singular_vectors_to_save, n_pseudoinverse_thresholds);
+svd_v_transferMatrix = zeros(num_basis_functions_middle, n_singular_vectors_to_save, n_pseudoinverse_thresholds);
+svd_u_transferMatrix_uv = zeros(nu_plasma*nv_plasma, n_singular_vectors_to_save, n_pseudoinverse_thresholds);
+svd_v_transferMatrix_uv = zeros(nu_middle*nv_middle, n_singular_vectors_to_save, n_pseudoinverse_thresholds);
 
 compareVariableToFortran('n_pseudoinverse_thresholds')
 compareVariableToFortran('pseudoinverse_thresholds')
@@ -817,13 +1043,13 @@ colors = [0.9,0.6,0;
     0,0,0;];
 
 if inverse_option==0
-    Mpo_V = inductance_plasma * svd_v_inductance_middle;
+    Mpo_V = inductance_plasma_outer * svd_v_inductance_middle_outer;
 end
 
 for i = 1:n_pseudoinverse_thresholds
     % Decide how many singular values to keep:
     threshold = pseudoinverse_thresholds(i);
-    keepMask = (svd_s_inductance_middle/svd_s_inductance_middle(1)) >= threshold;
+    keepMask = (svd_s_inductance_middle_outer/svd_s_inductance_middle_outer(1)) >= threshold;
     n_singular_values_retained(i) = sum(keepMask);
     fprintf('Forming transfer matrix for pinv threshold %g: retaining %d singular values.\n',threshold, n_singular_values_retained(i))
     tic
@@ -832,22 +1058,22 @@ for i = 1:n_pseudoinverse_thresholds
         case 0
             fprintf('Using customizable pseudo-inverse to invert M_mo.\n')
             % Build the rectangular matrix of inverse singular values:
-            inverseSingularValues = 1./svd_s_inductance_middle;
+            inverseSingularValues = 1./svd_s_inductance_middle_outer;
             inverseSingularValues(~keepMask) = 0;
             inverseSingularValues = inverseSingularValues(:);
-            diagonalPart = spdiags(inverseSingularValues, 0, svd_s_inductance_middle_size(2), svd_s_inductance_middle_size(1));
+            diagonalPart = spdiags(inverseSingularValues, 0, svd_s_inductance_middle_outer_size(2), svd_s_inductance_middle_outer_size(1));
             
             % Put the pieces together:
-            transferMatrix = Mpo_V * diagonalPart * (svd_u_inductance_middle');
+            transferMatrix = Mpo_V * diagonalPart * (svd_u_inductance_middle_outer');
         case 1
             fprintf('Using Matlab''s "/" to invert M_mo.\n')
-            transferMatrix = inductance_plasma / inductance_middle;
+            transferMatrix = inductance_plasma_outer / inductance_middle_outer;
         case 2
             fprintf('Using Matlab''s "inv()" to invert M_mo.\n')
-            transferMatrix = inductance_plasma * inv(inductance_middle);
+            transferMatrix = inductance_plasma_outer * inv(inductance_middle_outer);
         case 3
             fprintf('Using Matlab''s "pinv()" to invert M_mo.\n')
-            transferMatrix = inductance_plasma * pinv(inductance_middle);
+            transferMatrix = inductance_plasma_outer * pinv(inductance_middle_outer);
         otherwise
             error('Invalid option for inverse_option')
     end
@@ -858,39 +1084,23 @@ for i = 1:n_pseudoinverse_thresholds
     [svd_u_transferMatrix_pre, svd_s_transferMatrix_pre, svd_v_transferMatrix_pre] = svd(transferMatrix);
     svd_s_transferMatrix(:,i) = diag(svd_s_transferMatrix_pre);
     fprintf('  Done with SVD. Took %g seconds.\n',toc)
-    svd_u_transferMatrix(:,:,i) = basis_to_Fourier_plasma * svd_u_transferMatrix_pre(:,1:n_singular_vectors_to_save);
-    svd_v_transferMatrix(:,:,i) = basis_to_Fourier_middle * svd_v_transferMatrix_pre(:,1:n_singular_vectors_to_save);
+    svd_u_transferMatrix(:,:,i) = svd_u_transferMatrix_pre(:,1:n_singular_vectors_to_save);
+    svd_v_transferMatrix(:,:,i) = svd_v_transferMatrix_pre(:,1:n_singular_vectors_to_save);
+    svd_u_transferMatrix_uv(:,:,i) = basis_functions_plasma * svd_u_transferMatrix_pre(:,1:n_singular_vectors_to_save);
+    svd_v_transferMatrix_uv(:,:,i) = basis_functions_middle * svd_v_transferMatrix_pre(:,1:n_singular_vectors_to_save);
     
     colorindex = 1+mod(i-1,size(colors,1));
     plot(svd_s_transferMatrix(:,i),'.','DisplayName',['Transfer matrix, th=',num2str(threshold)],'Color',colors(colorindex,:))
-end
-
-switch basis_set_option
-    case {1}
-        svd_u_transferMatrix_sin = svd_u_transferMatrix;
-        svd_u_transferMatrix_cos = zeros(size(svd_u_transferMatrix));
-        svd_v_transferMatrix_sin = svd_v_transferMatrix;
-        svd_v_transferMatrix_cos = zeros(size(svd_v_transferMatrix));
-    case {2}
-        svd_u_transferMatrix_cos = svd_u_transferMatrix;
-        svd_u_transferMatrix_sin = zeros(size(svd_u_transferMatrix));
-        svd_v_transferMatrix_cos = svd_v_transferMatrix;
-        svd_v_transferMatrix_sin = zeros(size(svd_v_transferMatrix));
-    case {3}
-        svd_u_transferMatrix_sin = svd_u_transferMatrix(1:mnmax_plasma,:,:);
-        svd_u_transferMatrix_cos = svd_u_transferMatrix(mnmax_plasma+1:end,:,:);
-        svd_v_transferMatrix_sin = svd_v_transferMatrix(1:mnmax_middle,:,:);
-        svd_v_transferMatrix_cos = svd_v_transferMatrix(mnmax_middle+1:end,:,:);
 end
 
 legend show
 set(legend,'Box','off','Location','southwest')
 
 compareVariableToFortran('svd_s_transferMatrix')
-compareVariableToFortran('svd_u_transferMatrix_sin','abs')
-compareVariableToFortran('svd_u_transferMatrix_cos','abs')
-compareVariableToFortran('svd_v_transferMatrix_sin','abs')
-compareVariableToFortran('svd_v_transferMatrix_cos','abs')
+compareVariableToFortran('svd_u_transferMatrix','abs')
+compareVariableToFortran('svd_u_transferMatrix_uv','abs')
+compareVariableToFortran('svd_v_transferMatrix','abs')
+compareVariableToFortran('svd_v_transferMatrix_uv','abs')
 
 % *********************************************
 % Done with the main calculation.
@@ -898,88 +1108,87 @@ compareVariableToFortran('svd_v_transferMatrix_cos','abs')
 % *********************************************
 
 numContours = 20;
-nextFigure = 2;
+nextFigure = 4;
+numCols = ceil(sqrt(n_singular_vectors_to_save));
+numRows = ceil(n_singular_vectors_to_save / numCols);
 
-nu_plot = 102;
-nv_plot = 100;
-u_plot = linspace(0,1,nu_plot);
-v_plot = linspace(0,1,nv_plot);
-[v_plot_2D, u_plot_2D] = meshgrid(v_plot,u_plot);
-FourierToX = zeros(nu_plot*nv_plot,num_basis_functions_plasma);
-switch basis_set_option
-    case {1}
-        for imn = 1:mnmax_plasma
-            FourierToX(:,imn) = reshape(sin(2*pi*(xm_plasma(imn)*u_plot_2D + xn_plasma(imn)*v_plot_2D)), [nu_plot*nv_plot,1]);
-        end
-    case {2}
-        for imn = 1:mnmax_plasma
-            FourierToX(:,imn) = reshape(cos(2*pi*(xm_plasma(imn)*u_plot_2D + xn_plasma(imn)*v_plot_2D)), [nu_plot*nv_plot,1]);
-        end
-    case {3}
-        for imn = 1:mnmax_plasma
-            FourierToX(:,imn) = reshape(sin(2*pi*(xm_plasma(imn)*u_plot_2D + xn_plasma(imn)*v_plot_2D)), [nu_plot*nv_plot,1]);
-            FourierToX(:,imn+mnmax_plasma) = reshape(cos(2*pi*(xm_plasma(imn)*u_plot_2D + xn_plasma(imn)*v_plot_2D)), [nu_plot*nv_plot,1]);
-        end
+nextFigure = nextFigure+1;
+figure(figureOffset + nextFigure)
+clf
+for whichPlot = 1:n_singular_vectors_to_save
+    subplot(numRows,numCols,whichPlot)
+    data = reshape(svd_u_inductance_plasma_middle_uv(:,whichPlot),[nu_plasma,nv_plasma]);
+    contourf(v_plasma, u_plasma, data, numContours,'EdgeColor','none')
+    colorbar
+    xlabel('v')
+    ylabel('u')
+    title(['Singular vector u ',num2str(whichPlot)])
 end
+stringForTop = ['Singular vectors u of the plasma-middle inductance matrix: plasma surface'];
+annotation('textbox',[0 0.96 1 .04],'HorizontalAlignment','center',...
+    'Interpreter','none','VerticalAlignment','bottom',...
+    'FontSize',11,'LineStyle','none','String',stringForTop);
+
+% **********************************
+
+nextFigure = nextFigure+1;
+figure(figureOffset + nextFigure)
+clf
+
+for whichPlot = 1:n_singular_vectors_to_save
+    subplot(numRows,numCols,whichPlot)
+    data = reshape(svd_v_inductance_plasma_middle_uv(:,whichPlot),[nu_middle,nv_middle]);
+    contourf(v_middle, u_middle, data, numContours,'EdgeColor','none')
+    colorbar
+    xlabel('v')
+    ylabel('u')
+    title(['Singular vector v ',num2str(whichPlot)])
+end
+stringForTop = ['Singular vectors v of the plasma-middle inductance matrix: middle surface'];
+annotation('textbox',[0 0.96 1 .04],'HorizontalAlignment','center',...
+    'Interpreter','none','VerticalAlignment','bottom',...
+    'FontSize',11,'LineStyle','none','String',stringForTop);
+
+% **********************************
 
 for whichThreshold = 1:n_pseudoinverse_thresholds
     nextFigure = nextFigure+1;
-    figure(nextFigure)
+    figure(figureOffset + nextFigure)
     clf
-    numCols = ceil(sqrt(n_singular_vectors_to_save));
-    numRows = ceil(n_singular_vectors_to_save / numCols);
     
     for whichPlot = 1:n_singular_vectors_to_save
         subplot(numRows,numCols,whichPlot)
-        data = reshape(FourierToX * svd_u_transferMatrix(:,whichPlot,whichThreshold),[nu_plot,nv_plot]);
-        contourf(v_plot, u_plot, data, numContours,'EdgeColor','none')
+        data = reshape(svd_u_transferMatrix_uv(:,whichPlot,whichThreshold),[nu_plasma,nv_plasma]);
+        contourf(v_plasma, u_plasma, data, numContours,'EdgeColor','none')
         colorbar
         xlabel('v')
         ylabel('u')
         title({['Singular vector u ',num2str(whichPlot)],['s=',num2str(svd_s_transferMatrix(whichPlot,whichThreshold))]})
     end
-    stringForTop = ['Efficiency-ordered B_n distributions on plasma surface (threshold=',num2str(pseudoinverse_thresholds(whichThreshold)),')'];
+    stringForTop = ['Singular vectors u of the transfer matrix: plasma surface (threshold=',num2str(pseudoinverse_thresholds(whichThreshold)),')'];
     annotation('textbox',[0 0.96 1 .04],'HorizontalAlignment','center',...
         'Interpreter','none','VerticalAlignment','bottom',...
         'FontSize',11,'LineStyle','none','String',stringForTop);
     
 end
 
-
-FourierToX = zeros(nu_plot*nv_plot,num_basis_functions_middle);
-switch basis_set_option
-    case {1}
-        for imn = 1:mnmax_middle
-            FourierToX(:,imn) = reshape(sin(2*pi*(xm_middle(imn)*u_plot_2D + xn_middle(imn)*v_plot_2D)), [nu_plot*nv_plot,1]);
-        end
-    case {2}
-        for imn = 1:mnmax_middle
-            FourierToX(:,imn) = reshape(cos(2*pi*(xm_middle(imn)*u_plot_2D + xn_middle(imn)*v_plot_2D)), [nu_plot*nv_plot,1]);
-        end
-    case {3}
-        for imn = 1:mnmax_middle
-            FourierToX(:,imn) = reshape(sin(2*pi*(xm_middle(imn)*u_plot_2D + xn_middle(imn)*v_plot_2D)), [nu_plot*nv_plot,1]);
-            FourierToX(:,imn+mnmax_middle) = reshape(cos(2*pi*(xm_middle(imn)*u_plot_2D + xn_middle(imn)*v_plot_2D)), [nu_plot*nv_plot,1]);
-        end
-end
+% **********************************
 
 for whichThreshold = 1:n_pseudoinverse_thresholds
     nextFigure = nextFigure+1;
-    figure(nextFigure)
+    figure(figureOffset + nextFigure)
     clf
-    numCols = ceil(sqrt(n_singular_vectors_to_save));
-    numRows = ceil(n_singular_vectors_to_save / numCols);
     
     for whichPlot = 1:n_singular_vectors_to_save
         subplot(numRows,numCols,whichPlot)
-        data = reshape(FourierToX * svd_v_transferMatrix(:,whichPlot,whichThreshold),[nu_plot,nv_plot]);
-        contourf(v_plot, u_plot, data, numContours,'EdgeColor','none')
+        data = reshape(svd_v_transferMatrix_uv(:,whichPlot,whichThreshold),[nu_middle,nv_middle]);
+        contourf(v_middle, u_middle, data, numContours,'EdgeColor','none')
         colorbar
         xlabel('v')
         ylabel('u')
         title(['Singular vector v ',num2str(whichPlot)])
     end
-    stringForTop = ['Efficiency-ordered B_n distributions on middle surface (threshold=',num2str(pseudoinverse_thresholds(whichThreshold)),')'];
+    stringForTop = ['Singular vectors v of the transfer matrix: middle surface (threshold=',num2str(pseudoinverse_thresholds(whichThreshold)),')'];
     annotation('textbox',[0 0.96 1 .04],'HorizontalAlignment','center',...
         'Interpreter','none','VerticalAlignment','bottom',...
         'FontSize',11,'LineStyle','none','String',stringForTop);

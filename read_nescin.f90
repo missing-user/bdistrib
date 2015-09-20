@@ -1,6 +1,6 @@
 subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
 
-  use global_variables, only: nfp
+  use global_variables, only: nfp, geometry_option_outer, xm, xn, mnmax, rmnc_global => rmnc, zmns_global => zmns
   use safe_open_mod
   use stel_constants
   use stel_kinds
@@ -13,7 +13,7 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
   real(dp), dimension(nu)  :: u
   real(dp), dimension(nvl) :: vl
   
-  integer :: iunit = 7, iu, iv
+  integer :: iunit = 7, iu, iv, iflag
   integer :: m, n, ntotal, k, mr, nr, istat
   real(dp) :: rmnc, zmns, rmns, zmnc
   real(dp) :: angle, sinangle, cosangle, dsinangledu, dsinangledv, dcosangledu, dcosangledv
@@ -43,10 +43,35 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
 
   read (iunit, *) ntotal
   print *,"  Reading",ntotal,"Fourier modes from nescin"
+
+
+  if (geometry_option_outer==4) then
+     ! Clear arrays associated with the plasma surface for offsetting,
+     ! and replace them with the nescin values.
+     deallocate(xm,xn,rmnc_global,zmns_global)
+     mnmax = ntotal
+     allocate(xm(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error"
+     allocate(xn(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error"
+     allocate(rmnc_global(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error"
+     allocate(zmns_global(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error"
+  end if
+
   read (iunit, *)
   read (iunit, *)
   do k = 1, ntotal
      read (iunit, *) m, n, rmnc, zmns, rmns, zmnc
+
+     if (geometry_option_outer==4) then
+        ! Set arrays associated with offsetting surfaces
+        xm(k) = m
+        xn(k) = -n*nfp
+        rmnc_global(k) = rmnc
+        zmns_global(k) = zmns
+     end if
 
      do iv = 1,nvl
         angle2 = twopi*vl(iv)/nfp
