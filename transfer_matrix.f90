@@ -9,8 +9,8 @@ subroutine transfer_matrix
 
   integer :: whichThreshold, iflag, tic, toc, countrate
   real(dp), dimension(:,:), allocatable :: Mpc_V, tempMatrix, transferMatrix
-  real(dp) :: threshold
-  integer :: max_singular_value_index, i
+  real(dp) :: threshold, val
+  integer :: max_singular_value_index, i, j, index
 
   ! Variables needed by LAPACK:
   character :: JOBZ
@@ -90,6 +90,12 @@ subroutine transfer_matrix
   if (iflag .ne. 0) stop 'Allocation error G1!'
   allocate(svd_v_transferMatrix_uv(nu_middle*nv_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error H1!'
+
+
+  allocate(svd_u_transferMatrix_dominant_m(num_basis_functions_plasma,n_pseudoinverse_thresholds),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(svd_u_transferMatrix_dominant_n(num_basis_functions_plasma,n_pseudoinverse_thresholds),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
 
   ! Done with initialization. Now begin the loop over thresholds:
 
@@ -182,6 +188,25 @@ subroutine transfer_matrix
      svd_v_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_middle, svd_v_transferMatrix(:,:,whichThreshold))
      call system_clock(toc)
      print *,"  Final matmuls: ",real(toc-tic)/countrate," sec."
+
+     do i = 1,num_basis_functions_plasma
+        index = 1
+        val = abs(U(1,i))
+        do j = 2,num_basis_functions_plasma
+           if (abs(U(j,i))>val) then
+              index = j
+              val = abs(U(j,i))
+           end if
+        end do
+        if (index > mnmax_plasma) then
+           svd_u_transferMatrix_dominant_m(i,whichThreshold) = xm_plasma(index-mnmax_plasma)
+           svd_u_transferMatrix_dominant_n(i,whichThreshold) = xn_plasma(index-mnmax_plasma)
+        else
+           svd_u_transferMatrix_dominant_m(i,whichThreshold) = xm_plasma(index)
+           svd_u_transferMatrix_dominant_n(i,whichThreshold) = xn_plasma(index)
+        end if
+     end do
+
 
   end do
 

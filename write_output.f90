@@ -108,7 +108,11 @@ subroutine write_output
        vn_svd_u_inductance_plasma_middle = "svd_u_inductance_plasma_middle", &
        vn_svd_v_inductance_plasma_middle = "svd_v_inductance_plasma_middle", &
        vn_svd_u_inductance_plasma_middle_uv = "svd_u_inductance_plasma_middle_uv", &
-       vn_svd_v_inductance_plasma_middle_uv = "svd_v_inductance_plasma_middle_uv"
+       vn_svd_v_inductance_plasma_middle_uv = "svd_v_inductance_plasma_middle_uv", &
+       vn_svd_u_inductance_plasma_middle_dominant_m = "svd_u_inductance_plasma_middle_dominant_m", &
+       vn_svd_u_inductance_plasma_middle_dominant_n = "svd_u_inductance_plasma_middle_dominant_n", &
+       vn_svd_u_transferMatrix_dominant_m = "svd_u_transferMatrix_dominant_m", &
+       vn_svd_u_transferMatrix_dominant_n = "svd_u_transferMatrix_dominant_n"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -127,7 +131,8 @@ subroutine write_output
        n_singular_values_inductance_plasma_outer_dim  = (/'n_singular_values_inductance_plasma_outer'/), &
        n_singular_values_inductance_middle_outer_dim  = (/'n_singular_values_inductance_middle_outer'/), &
        n_singular_values_inductance_plasma_middle_dim = (/'n_singular_values_inductance_plasma_middle'/), &
-       n_pseudoinverse_thresholds_dim = (/'n_pseudoinverse_thresholds'/)
+       n_pseudoinverse_thresholds_dim = (/'n_pseudoinverse_thresholds'/), &
+       basis_plasma_dim = (/'num_basis_functions_plasma'/)
 
   ! Arrays with dimension 2:
   character(len=*), parameter, dimension(2) :: &
@@ -148,7 +153,8 @@ subroutine write_output
        basis_plasma_nsave_dim = (/'num_basis_functions_plasma','n_singular_vectors_to_save'/), &
        basis_middle_nsave_dim = (/'num_basis_functions_middle','n_singular_vectors_to_save'/), &
        uv_plasma_nsave_dim = (/'nu_nv_plasma','n_singular_vectors_to_save'/), &
-       uv_middle_nsave_dim = (/'nu_nv_middle','n_singular_vectors_to_save'/)
+       uv_middle_nsave_dim = (/'nu_nv_middle','n_singular_vectors_to_save'/), &
+       basis_plasma_thresholds_dim = (/'num_basis_functions_plasma','n_pseudoinverse_thresholds'/)
 !       uvl_plasma_dim = (/'nvl_plasma','nu_plasma'/)
 !       u_v_uprime_vprime_plasma_dim = (/'nu_nv_plasma','nu_nv_outer'/),&
 !       u_v_uprime_vprime_middle_dim = (/'nu_nv_middle','nu_nv_outer'/), &
@@ -244,6 +250,10 @@ subroutine write_output
   call cdf_define(ncid, vn_pseudoinverse_thresholds, &
        pseudoinverse_thresholds(1:n_pseudoinverse_thresholds), dimname=n_pseudoinverse_thresholds_dim)
   call cdf_define(ncid, vn_n_singular_values_retained, n_singular_values_retained, dimname=n_pseudoinverse_thresholds_dim)
+  call cdf_define(ncid, vn_svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_m, &
+       dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_svd_u_inductance_plasma_middle_dominant_n, svd_u_inductance_plasma_middle_dominant_n, &
+       dimname=basis_plasma_dim)
 
   ! Arrays with dimension 2
 
@@ -270,6 +280,10 @@ subroutine write_output
   call cdf_define(ncid, vn_svd_v_inductance_plasma_middle, svd_v_inductance_plasma_middle, dimname=basis_middle_nsave_dim)
   call cdf_define(ncid, vn_svd_u_inductance_plasma_middle_uv, svd_u_inductance_plasma_middle_uv, dimname=uv_plasma_nsave_dim)
   call cdf_define(ncid, vn_svd_v_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv, dimname=uv_middle_nsave_dim)
+  call cdf_define(ncid, vn_svd_u_transferMatrix_dominant_m, svd_u_transferMatrix_dominant_m, &
+       dimname=basis_plasma_thresholds_dim)
+  call cdf_define(ncid, vn_svd_u_transferMatrix_dominant_n, svd_u_transferMatrix_dominant_n, &
+       dimname=basis_plasma_thresholds_dim)
 
   ! Arrays with dimension 3
 
@@ -371,6 +385,8 @@ subroutine write_output
   call cdf_write(ncid, vn_pseudoinverse_thresholds, &
        pseudoinverse_thresholds(1:n_pseudoinverse_thresholds))
   call cdf_write(ncid, vn_n_singular_values_retained, n_singular_values_retained)
+  call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_m)
+  call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_dominant_n, svd_u_inductance_plasma_middle_dominant_n)
 
   ! Arrays with dimension 2
 
@@ -397,6 +413,8 @@ subroutine write_output
   call cdf_write(ncid, vn_svd_v_inductance_plasma_middle, svd_v_inductance_plasma_middle)
   call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_uv, svd_u_inductance_plasma_middle_uv)
   call cdf_write(ncid, vn_svd_v_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv)
+  call cdf_write(ncid, vn_svd_u_transferMatrix_dominant_m, svd_u_transferMatrix_dominant_m)
+  call cdf_write(ncid, vn_svd_u_transferMatrix_dominant_n, svd_u_transferMatrix_dominant_n)
 
   ! Arrays with dimension 3
 

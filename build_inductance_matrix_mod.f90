@@ -92,6 +92,9 @@ contains
                         (normal_2(1,iu_2,ivl_2)*dx &
                         +normal_2(2,iu_2,ivl_2)*dy &
                         +normal_2(3,iu_2,ivl_2)*dz)) / dr32
+
+!!$                   inductance_xbasis(index_1,index_2) = inductance_xbasis(index_1,index_2) + &
+!!$                        (normal_1(1,iu_1,iv_1)*dx + normal_1(2,iu_1,iv_1)*dy + normal_1(3,iu_1,iv_1)*dz) / dr32
                 end do
              end do
           end do

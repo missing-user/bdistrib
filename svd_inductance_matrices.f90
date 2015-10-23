@@ -11,7 +11,9 @@ subroutine svd_inductance_matrices()
        n_singular_vectors_to_save, nu_plasma, nv_plasma, nu_middle, nv_middle, &
        basis_functions_plasma, basis_functions_middle, &
        svd_u_inductance_plasma_middle, svd_v_inductance_plasma_middle, &
-       svd_u_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv
+       svd_u_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv, &
+       xm_plasma, xn_plasma, mnmax_plasma, &
+       svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_n
   
   use stel_kinds
   
@@ -23,7 +25,9 @@ subroutine svd_inductance_matrices()
   real(dp), dimension(:,:), allocatable :: A, U, VT
   real(dp), dimension(:), allocatable :: WORK
   integer, dimension(:), allocatable :: IWORK
-  
+  integer :: i,j,index
+  real(dp) :: val
+
   !*************************************************************************
   ! Beginning of section related to the plasma-to-outer inductance matrix.
   !*************************************************************************
@@ -236,6 +240,29 @@ subroutine svd_inductance_matrices()
   svd_v_inductance_plasma_middle_uv = matmul(basis_functions_middle, svd_v_inductance_plasma_middle)
   call system_clock(toc1)
   print *,"  Final matmul: ",real(toc1-tic1)/countrate," sec."
+
+  ! Compute dominant (m,n) for each left singular vector.
+  allocate(svd_u_inductance_plasma_middle_dominant_m(num_basis_functions_plasma),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(svd_u_inductance_plasma_middle_dominant_n(num_basis_functions_plasma),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  do i = 1,num_basis_functions_plasma
+     index = 1
+     val = abs(U(1,i))
+     do j = 2,num_basis_functions_plasma
+        if (abs(U(j,i))>val) then
+           index = j
+           val = abs(U(j,i))
+        end if
+     end do
+     if (index > mnmax_plasma) then
+        svd_u_inductance_plasma_middle_dominant_m(i) = xm_plasma(index-mnmax_plasma)
+        svd_u_inductance_plasma_middle_dominant_n(i) = xn_plasma(index-mnmax_plasma)
+     else
+        svd_u_inductance_plasma_middle_dominant_m(i) = xm_plasma(index)
+        svd_u_inductance_plasma_middle_dominant_n(i) = xn_plasma(index)
+     end if
+  end do
 
   deallocate(A,U,VT,WORK,IWORK)
   

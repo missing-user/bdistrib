@@ -92,5 +92,10 @@ module global_variables
   real(dp) :: area_plasma, area_middle, area_outer
   logical :: check_orthogonality = .false.
 
+  integer, dimension(:), allocatable :: svd_u_inductance_plasma_middle_dominant_m
+  integer, dimension(:), allocatable :: svd_u_inductance_plasma_middle_dominant_n
+  integer, dimension(:,:), allocatable :: svd_u_transferMatrix_dominant_m
+  integer, dimension(:,:), allocatable :: svd_u_transferMatrix_dominant_n
+
 end module global_variables
 
