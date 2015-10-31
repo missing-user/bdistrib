@@ -368,6 +368,21 @@ this file will be used as the outer surface for \bdistrib.}
 
 \myhrule
 
+\param{transfer\_matrix\_option}
+{integer}
+{1}
+{Always}
+{Which method is used to compute the transfer matrix.\\
+
+{\ttfamily transfer\_matrix\_option} = 1: Original approach: parameterize the solutions to Laplace's equation using a surface current on an outer surface
+which is outside the control surface.\\
+
+{\ttfamily transfer\_matrix\_option} = 2: NESTOR approach: parameterize the solutions to Laplace's equation using monopoles on the control surface. In this case
+all parameters associated with the outer surface are changed to match the middle surface.
+}
+
+\myhrule
+
 \param{symmetry\_option}
 {integer}
 {1}

@@ -37,6 +37,9 @@ program bdistrib
   print *,"Done. Took ",real(toc1-tic1)/countrate," sec."
 
   call system_clock(tic1)
+  if (transfer_matrix_option==2) then
+     basis_option_outer = 1
+  end if
   print *,"Initializing basis functions on the outer surface."
   call init_basis_functions(basis_option_outer, mpol_outer, ntor_outer, mnmax_outer, xm_outer, xn_outer, &
        u_outer, v_outer, num_basis_functions_outer, basis_functions_outer, area_outer, norm_normal_outer, &

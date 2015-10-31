@@ -1,4 +1,4 @@
-subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
+subroutine read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, nu, nvl, u, vl, compute_2nd_derivs)
 
   use global_variables, only: nfp, geometry_option_outer, xm, xn, mnmax, rmnc_global => rmnc, zmns_global => zmns
   use safe_open_mod
@@ -10,14 +10,19 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
   character(*) :: nescin_filename
   integer, intent(in) :: nu, nvl
   real(dp), dimension(3,nu,nvl) :: r, drdu, drdv
+  real(dp), dimension(3,nu,nvl) :: d2rdu2, d2rdudv, d2rdv2
   real(dp), dimension(nu)  :: u
   real(dp), dimension(nvl) :: vl
+  logical :: compute_2nd_derivs
   
   integer :: iunit = 7, iu, iv, iflag
   integer :: m, n, ntotal, k, mr, nr, istat
   real(dp) :: rmnc, zmns, rmns, zmnc
   real(dp) :: angle, sinangle, cosangle, dsinangledu, dsinangledv, dcosangledu, dcosangledv
   real(dp) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
+  real(dp) :: d2sinangle2dv2, d2cosangle2dv2
+  real(dp) :: d2sinangledu2, d2sinangledudv, d2sinangledv2
+  real(dp) :: d2cosangledu2, d2cosangledudv, d2cosangledv2
 
   character(300) :: myline
   character(*), parameter :: matchString = "------ Current Surface"
@@ -25,6 +30,12 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
   r=0
   drdu=0
   drdv=0
+
+  if (compute_2nd_derivs) then
+     d2rdu2 = 0
+     d2rdudv = 0
+     d2rdv2 = 0
+  end if
 
   call safe_open(iunit, istat, trim(nescin_filename), 'old', 'formatted')
   if (istat .ne. 0) then
@@ -79,6 +90,8 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
         cosangle2 = cos(angle2)
         dsinangle2dv = cosangle2*twopi/nfp
         dcosangle2dv = -sinangle2*twopi/nfp
+        d2sinangle2dv2 = -twopi*twopi/(nfp*nfp)*sinangle2
+        d2cosangle2dv2 = -twopi*twopi/(nfp*nfp)*cosangle2
         do iu = 1,nu
            angle = twopi*(m*u(iu) + n*vl(iv))
            sinangle = sin(angle)
@@ -87,6 +100,12 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
            dcosangledu = -sinangle*twopi*m
            dsinangledv = cosangle*twopi*n
            dcosangledv = -sinangle*twopi*n
+           d2sinangledu2  = -twopi*twopi*m*m*sinangle
+           d2sinangledudv = -twopi*twopi*m*n*sinangle
+           d2sinangledv2  = -twopi*twopi*n*n*sinangle
+           d2cosangledu2  = -twopi*twopi*m*m*cosangle
+           d2cosangledudv = -twopi*twopi*m*n*cosangle
+           d2cosangledv2  = -twopi*twopi*n*n*cosangle
            
            r(1,iu,iv) = r(1,iu,iv) + rmnc * cosangle * cosangle2
            r(2,iu,iv) = r(2,iu,iv) + rmnc * cosangle * sinangle2
@@ -99,6 +118,22 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
            drdv(1,iu,iv) = drdv(1,iu,iv) + rmnc * (dcosangledv * cosangle2 + cosangle * dcosangle2dv)
            drdv(2,iu,iv) = drdv(2,iu,iv) + rmnc * (dcosangledv * sinangle2 + cosangle * dsinangle2dv)
            drdv(3,iu,iv) = drdv(3,iu,iv) + zmns * dsinangledv
+
+           if (compute_2nd_derivs) then
+              d2rdu2(1,iu,iv) = d2rdu2(1,iu,iv) + rmnc * d2cosangledu2 * cosangle2
+              d2rdu2(2,iu,iv) = d2rdu2(2,iu,iv) + rmnc * d2cosangledu2 * sinangle2
+              d2rdu2(3,iu,iv) = d2rdu2(3,iu,iv) + zmns * d2sinangled2u
+
+              d2rdudv(1,iu,iv) = d2rdudv(1,iu,iv) + rmnc * (d2cosangledudv * cosangle2 + dcosangledu * dcosangle2dv)
+              d2rdudv(2,iu,iv) = d2rdudv(2,iu,iv) + rmnc * (d2cosangledudv * sinangle2 + dcosangledu * dsinangle2dv)
+              d2rdudv(3,iu,iv) = d2rdudv(3,iu,iv) + zmns * d2sinangledudv
+           
+              d2rdv2(1,iu,iv) = d2rdv2(1,iu,iv) + rmnc * (d2cosangledv2 * cosangle2 + dcosangledv * dcosangle2dv &
+                   + dcosangledv * dcosangle2dv + cosangle * d2cosangle2dv2)
+              d2rdv2(2,iu,iv) = d2rdv2(2,iu,iv) + rmnc * (d2cosangledv2 * sinangle2 + dcosangledv * dsinangle2dv &
+                   + dcosangledv * dsinangle2dv + cosangle * d2sinangle2dv2)
+              d2rdv2(3,iu,iv) = d2rdv2(3,iu,iv) + zmns * d2sinangledv2
+           end if
         end do
      end do
   end do

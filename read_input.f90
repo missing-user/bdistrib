@@ -61,6 +61,22 @@ subroutine read_input
      end if
   end do
 
+  if (transfer_matrix_option==2) then
+     print *,"Overriding settings for outer surface. It will be the same as the middle surface."
+     ! Override all settings for the outer surface. It will be the same as the middle surface.
+     nu_outer = nu_middle
+     nv_outer = nv_middle
+     ! While nu and nv must be the same on the outer and middle surfaces, in principle ntor and mpol coud be different.
+     ! For now, though, for simplicity I will force them to be the same.
+     mpol_outer = mpol_middle
+     ntor_outer = ntor_middle
+     geometry_option_outer = geometry_option_middle
+     nescin_filename_outer = nescin_filename_middle
+     separation_outer = separation_middle
+     R0_outer = R0_middle
+     a_outer = a_middle
+  end if
+
 
   print *,"Resolution parameters:"
   print *,"  nu_plasma =",nu_plasma

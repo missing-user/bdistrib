@@ -47,6 +47,9 @@ subroutine write_output
        vn_drdv_plasma  = "drdv_plasma", &
        vn_drdv_middle  = "drdv_middle", &
        vn_drdv_outer = "drdv_outer", &
+       vn_d2rdu2_outer  = "d2rdu2_outer", &
+       vn_d2rdudv_outer = "d2rdudv_outer", &
+       vn_d2rdv2_outer  = "d2rdv2_outer", &
        vn_normal_plasma = "normal_plasma", &
        vn_normal_middle = "normal_middle", &
        vn_normal_outer = "normal_outer", &
@@ -303,6 +306,12 @@ subroutine write_output
      call cdf_define(ncid, vn_normal_plasma,  normal_plasma,  dimname=xyz_u_vl_plasma_dim)
      call cdf_define(ncid, vn_normal_middle,  normal_middle,  dimname=xyz_u_vl_middle_dim)
      call cdf_define(ncid, vn_normal_outer, normal_outer, dimname=xyz_u_vl_outer_dim)
+
+     if (transfer_matrix_option==2) then
+        call cdf_define(ncid, vn_d2rdu2_outer,  d2rdu2_outer,  dimname=xyz_u_vl_outer_dim)
+        call cdf_define(ncid, vn_d2rdudv_outer, d2rdudv_outer, dimname=xyz_u_vl_outer_dim)
+        call cdf_define(ncid, vn_d2rdv2_outer,  d2rdv2_outer,  dimname=xyz_u_vl_outer_dim)
+     end if
   end if
 
   call cdf_define(ncid, vn_svd_u_transferMatrix, svd_u_transferMatrix, dimname=basis_plasma_nsave_thresholds_dim)
@@ -434,6 +443,12 @@ subroutine write_output
      call cdf_write(ncid, vn_normal_plasma, normal_plasma)
      call cdf_write(ncid, vn_normal_middle, normal_middle)
      call cdf_write(ncid, vn_normal_outer,  normal_outer)
+
+     if (transfer_matrix_option==2) then
+        call cdf_write(ncid, vn_d2rdu2_outer,  d2rdu2_outer)
+        call cdf_write(ncid, vn_d2rdudv_outer, d2rdudv_outer)
+        call cdf_write(ncid, vn_d2rdv2_outer,  d2rdv2_outer)
+     end if
   end if
 
   call cdf_write(ncid, vn_svd_u_transferMatrix, svd_u_transferMatrix)

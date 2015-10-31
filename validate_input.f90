@@ -4,6 +4,11 @@ subroutine validate_input
 
   implicit none
 
+  if (transfer_matrix_option < 1 .or. transfer_matrix_option > 2) then
+     stop "Error! transfer_matrix_option must be 1 or 2."
+  end if
+
+
   if (nu_plasma < 1) then
      stop "Error! nu_plasma must be >= 1."
   end if

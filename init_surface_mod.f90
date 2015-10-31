@@ -8,10 +8,12 @@ module init_surface_mod
   contains
 
     subroutine init_surface(nu, nv, nvl, u, v, vl, &
-         r, drdu, drdv, normal, norm_normal, area, &
-         geometry_option, R_specified, a, separation, du, dv, nescin_filename)
+         r, drdu, drdv, &
+         d2rdu2, dr2dudv, d2rdv2, &
+         normal, norm_normal, area, &
+         geometry_option, R_specified, a, separation, du, dv, nescin_filename, which_surface)
 
-      use global_variables, only: R0_plasma, nfp
+      use global_variables, only: R0_plasma, nfp, transfer_matrix_option
       use stel_kinds
       use stel_constants
       use omp_lib
@@ -19,14 +21,16 @@ module init_surface_mod
       implicit none
 
       character(*) :: nescin_filename
-      integer :: nu, nv, nvl, geometry_option, iflag
+      integer :: nu, nv, nvl, geometry_option, iflag, which_surface
       real(dp) :: R_specified, a, separation, du, dv, area
       real(dp), dimension(:), allocatable :: u, v, vl
       real(dp), dimension(:,:,:), allocatable :: r, drdu, drdv, normal
+      real(dp), dimension(:,:,:), allocatable :: d2rdu2, d2rdudv, d2rdv2
       real(dp), dimension(:,:), allocatable :: norm_normal
       real(dp) :: R0_to_use
       real(dp) :: angle, sinangle, cosangle, dsinangledu, dcosangledu
       real(dp) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
+      real(dp) :: d2sinangledu2, d2cosangledu2, d2sinangle2dv2, d2cosangle2dv2
       integer :: i, iu, iv
       real(dp) :: x_new, y_new, z_new, x_old, y_old, z_old, delta_u, delta_v, temp
 
@@ -52,6 +56,12 @@ module init_surface_mod
       du = u(2)-u(1)
       dv = v(2)-v(1)
 
+      if (transfer_matrix_option==2 .and. which_surface==2) then
+         u = u + du/2
+         v = v + dv/2
+         vl = vl + dv/2
+      end if
+
       ! First dimension is the Cartesian component x, y, or z.
       allocate(r(3,nu,nvl),stat=iflag)
       if (iflag .ne. 0) stop 'Allocation error!'
@@ -66,10 +76,24 @@ module init_surface_mod
       drdu = 0
       drdv = 0
 
+      if (transfer_matrix_option == 2 .and. which_surface == 2) then
+         allocate(d2rdu2(3,nu,nvl),stat=iflag)
+         if (iflag .ne. 0) stop 'Allocation error!'
+         allocate(d2rdudv(3,nu,nvl),stat=iflag)
+         if (iflag .ne. 0) stop 'Allocation error!'
+         allocate(d2rdv2(3,nu,nvl),stat=iflag)
+         if (iflag .ne. 0) stop 'Allocation error!'
+
+         d2rdu2 = 0
+         d2rdudv = 0
+         d2rdv2 = 0
+      end if
+
       if (geometry_option==3 .or. geometry_option == 4) then
          print *,"  Reading coil surface from nescin file ",trim(nescin_filename)
 
-         call read_nescin(nescin_filename, r, drdu, drdv, nu, nvl, u, vl)
+         call read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, &
+              nu, nvl, u, vl, transfer_matrix_option==2 .and. which_surface==2)
       end if
 
 
@@ -91,12 +115,16 @@ module init_surface_mod
             cosangle = cos(angle)
             dsinangledu = cosangle*twopi
             dcosangledu = -sinangle*twopi
+            d2sinangledu2 = -twopi*twopi*sinangle
+            d2cosangledu2 = -twopi*twopi*cosangle
             do iv = 1,nvl
                angle2 = twopi * vl(iv) / nfp
                sinangle2 = sin(angle2)
                cosangle2 = cos(angle2)
                dsinangle2dv = cosangle2*twopi/nfp
                dcosangle2dv = -sinangle2*twopi/nfp
+               d2sinangle2dv2 = -twopi*twopi/(nfp*nfp)*sinangle2
+               d2cosangle2dv2 = -twopi*twopi/(nfp*nfp)*cosangle2
 
                r(1,iu,iv) = (R0_to_use + a * cosangle) * cosangle2
                r(2,iu,iv) = (R0_to_use + a * cosangle) * sinangle2
@@ -109,10 +137,28 @@ module init_surface_mod
                drdv(1,iu,iv) = (R0_to_use + a * cosangle) * dcosangle2dv
                drdv(2,iu,iv) = (R0_to_use + a * cosangle) * dsinangle2dv
                !drdv(3,iu,iv) = 0, so no equation needed for it here.
+
+               if (transfer_matrix_option==2 .and. which_surface == 2) then
+                  d2rdu2(1,iu,iv) = a * d2cosangledu2 * cosangle2
+                  d2rdu2(2,iu,iv) = a * d2cosangledu2 * sinangle2
+                  d2rdu2(3,iu,iv) = a * d2sinangledu2
+
+                  d2rdudv(1,iu,iv) = a * dcosangledu * dcosangle2dv
+                  d2rdudv(2,iu,iv) = a * dcosangledu * dsinangle2dv
+                  !d2rdudv(3,iu,iv) = 0, so no equation needed for it here.
+
+                  d2rdv2(1,iu,iv) = (R0_to_use + a * cosangle) * d2cosangle2dv2
+                  d2rdv2(2,iu,iv) = (R0_to_use + a * cosangle) * d2sinangle2dv2
+                  !d2rdv2(3,iu,iv) = 0, so no equation needed for it here.
+               end if
             end do
          end do
 
       case (2,4)
+
+         if (transfer_matrix_option==2) then
+            stop "Error! This geometry_option_middle is not yet implemented for transfer_matrix_option=2."
+         end if
 
          if (geometry_option==2) then
             print *,"  Constructing a surface offset from the plasma by ",separation
