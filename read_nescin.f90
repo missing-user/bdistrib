@@ -122,7 +122,7 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, 
            if (compute_2nd_derivs) then
               d2rdu2(1,iu,iv) = d2rdu2(1,iu,iv) + rmnc * d2cosangledu2 * cosangle2
               d2rdu2(2,iu,iv) = d2rdu2(2,iu,iv) + rmnc * d2cosangledu2 * sinangle2
-              d2rdu2(3,iu,iv) = d2rdu2(3,iu,iv) + zmns * d2sinangled2u
+              d2rdu2(3,iu,iv) = d2rdu2(3,iu,iv) + zmns * d2sinangledu2
 
               d2rdudv(1,iu,iv) = d2rdudv(1,iu,iv) + rmnc * (d2cosangledudv * cosangle2 + dcosangledu * dcosangle2dv)
               d2rdudv(2,iu,iv) = d2rdudv(2,iu,iv) + rmnc * (d2cosangledudv * sinangle2 + dcosangledu * dsinangle2dv)

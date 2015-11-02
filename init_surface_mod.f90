@@ -9,7 +9,7 @@ module init_surface_mod
 
     subroutine init_surface(nu, nv, nvl, u, v, vl, &
          r, drdu, drdv, &
-         d2rdu2, dr2dudv, d2rdv2, &
+         d2rdu2, d2rdudv, d2rdv2, &
          normal, norm_normal, area, &
          geometry_option, R_specified, a, separation, du, dv, nescin_filename, which_surface)
 
@@ -76,7 +76,7 @@ module init_surface_mod
       drdu = 0
       drdv = 0
 
-      if (transfer_matrix_option == 2 .and. which_surface == 2) then
+      if (transfer_matrix_option == 2 .and. which_surface == 1) then
          allocate(d2rdu2(3,nu,nvl),stat=iflag)
          if (iflag .ne. 0) stop 'Allocation error!'
          allocate(d2rdudv(3,nu,nvl),stat=iflag)
@@ -93,7 +93,7 @@ module init_surface_mod
          print *,"  Reading coil surface from nescin file ",trim(nescin_filename)
 
          call read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, &
-              nu, nvl, u, vl, transfer_matrix_option==2 .and. which_surface==2)
+              nu, nvl, u, vl, transfer_matrix_option==2 .and. which_surface==1)
       end if
 
 
@@ -138,7 +138,7 @@ module init_surface_mod
                drdv(2,iu,iv) = (R0_to_use + a * cosangle) * dsinangle2dv
                !drdv(3,iu,iv) = 0, so no equation needed for it here.
 
-               if (transfer_matrix_option==2 .and. which_surface == 2) then
+               if (transfer_matrix_option==2 .and. which_surface == 1) then
                   d2rdu2(1,iu,iv) = a * d2cosangledu2 * cosangle2
                   d2rdu2(2,iu,iv) = a * d2cosangledu2 * sinangle2
                   d2rdu2(3,iu,iv) = a * d2sinangledu2

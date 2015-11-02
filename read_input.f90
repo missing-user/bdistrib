@@ -17,7 +17,7 @@ subroutine read_input
        mpol_plasma, ntor_plasma, mpol_middle, ntor_middle, mpol_outer, ntor_outer, &
        nescin_filename_middle, nescin_filename_outer, efit_filename, efit_psiN, efit_num_modes, &
        mpol_transform_refinement, ntor_transform_refinement, &
-       basis_option_plasma, basis_option_middle, basis_option_outer, check_orthogonality
+       basis_option_plasma, basis_option_middle, basis_option_outer, check_orthogonality, transfer_matrix_option
 
   ! getcarg is in LIBSTELL
   call getcarg(1, inputFilename, numargs)

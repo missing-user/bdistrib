@@ -32,7 +32,8 @@ module global_variables
 
   real(dp), dimension(:), allocatable :: u_outer, v_outer, vl_outer
   real(dp), dimension(:,:,:), allocatable :: r_outer, drdu_outer, drdv_outer, normal_outer
-  real(dp), dimension(:,:,:), allocatable :: d2rdu2_outer, d2rdudv_outer, d2rdv2_outer
+  real(dp), dimension(:,:,:), allocatable :: d2rdu2_middle, d2rdudv_middle, d2rdv2_middle
+  real(dp), dimension(:,:), allocatable :: Merkel_Kmn
 
   real(dp), dimension(:,:), allocatable :: norm_normal_plasma, norm_normal_middle, norm_normal_outer
   real(dp), dimension(:,:), allocatable :: basis_functions_plasma, basis_functions_middle, basis_functions_outer

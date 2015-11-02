@@ -47,9 +47,9 @@ subroutine write_output
        vn_drdv_plasma  = "drdv_plasma", &
        vn_drdv_middle  = "drdv_middle", &
        vn_drdv_outer = "drdv_outer", &
-       vn_d2rdu2_outer  = "d2rdu2_outer", &
-       vn_d2rdudv_outer = "d2rdudv_outer", &
-       vn_d2rdv2_outer  = "d2rdv2_outer", &
+       vn_d2rdu2_middle  = "d2rdu2_middle", &
+       vn_d2rdudv_middle = "d2rdudv_middle", &
+       vn_d2rdv2_middle  = "d2rdv2_middle", &
        vn_normal_plasma = "normal_plasma", &
        vn_normal_middle = "normal_middle", &
        vn_normal_outer = "normal_outer", &
@@ -115,7 +115,8 @@ subroutine write_output
        vn_svd_u_inductance_plasma_middle_dominant_m = "svd_u_inductance_plasma_middle_dominant_m", &
        vn_svd_u_inductance_plasma_middle_dominant_n = "svd_u_inductance_plasma_middle_dominant_n", &
        vn_svd_u_transferMatrix_dominant_m = "svd_u_transferMatrix_dominant_m", &
-       vn_svd_u_transferMatrix_dominant_n = "svd_u_transferMatrix_dominant_n"
+       vn_svd_u_transferMatrix_dominant_n = "svd_u_transferMatrix_dominant_n", &
+       vn_Merkel_Kmn = "Merkel_Kmn"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -157,7 +158,8 @@ subroutine write_output
        basis_middle_nsave_dim = (/'num_basis_functions_middle','n_singular_vectors_to_save'/), &
        uv_plasma_nsave_dim = (/'nu_nv_plasma','n_singular_vectors_to_save'/), &
        uv_middle_nsave_dim = (/'nu_nv_middle','n_singular_vectors_to_save'/), &
-       basis_plasma_thresholds_dim = (/'num_basis_functions_plasma','n_pseudoinverse_thresholds'/)
+       basis_plasma_thresholds_dim = (/'num_basis_functions_plasma','n_pseudoinverse_thresholds'/), &
+       uv_middle_mnmax_outer_dim = (/'nu_nv_middle','mnmax_outer'/)
 !       uvl_plasma_dim = (/'nvl_plasma','nu_plasma'/)
 !       u_v_uprime_vprime_plasma_dim = (/'nu_nv_plasma','nu_nv_outer'/),&
 !       u_v_uprime_vprime_middle_dim = (/'nu_nv_middle','nu_nv_outer'/), &
@@ -287,6 +289,9 @@ subroutine write_output
        dimname=basis_plasma_thresholds_dim)
   call cdf_define(ncid, vn_svd_u_transferMatrix_dominant_n, svd_u_transferMatrix_dominant_n, &
        dimname=basis_plasma_thresholds_dim)
+  if (transfer_matrix_option==2 .and. save_level<1) then
+     call cdf_define(ncid, vn_Merkel_Kmn, Merkel_Kmn, dimname=uv_middle_mnmax_outer_dim)
+  end if
 
   ! Arrays with dimension 3
 
@@ -308,9 +313,9 @@ subroutine write_output
      call cdf_define(ncid, vn_normal_outer, normal_outer, dimname=xyz_u_vl_outer_dim)
 
      if (transfer_matrix_option==2) then
-        call cdf_define(ncid, vn_d2rdu2_outer,  d2rdu2_outer,  dimname=xyz_u_vl_outer_dim)
-        call cdf_define(ncid, vn_d2rdudv_outer, d2rdudv_outer, dimname=xyz_u_vl_outer_dim)
-        call cdf_define(ncid, vn_d2rdv2_outer,  d2rdv2_outer,  dimname=xyz_u_vl_outer_dim)
+        call cdf_define(ncid, vn_d2rdu2_middle,  d2rdu2_middle,  dimname=xyz_u_vl_middle_dim)
+        call cdf_define(ncid, vn_d2rdudv_middle, d2rdudv_middle, dimname=xyz_u_vl_middle_dim)
+        call cdf_define(ncid, vn_d2rdv2_middle,  d2rdv2_middle,  dimname=xyz_u_vl_middle_dim)
      end if
   end if
 
@@ -424,6 +429,9 @@ subroutine write_output
   call cdf_write(ncid, vn_svd_v_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv)
   call cdf_write(ncid, vn_svd_u_transferMatrix_dominant_m, svd_u_transferMatrix_dominant_m)
   call cdf_write(ncid, vn_svd_u_transferMatrix_dominant_n, svd_u_transferMatrix_dominant_n)
+  if (transfer_matrix_option==2 .and. save_level<1) then
+     call cdf_write(ncid, vn_Merkel_Kmn, Merkel_Kmn)
+  end if
 
   ! Arrays with dimension 3
 
@@ -445,9 +453,9 @@ subroutine write_output
      call cdf_write(ncid, vn_normal_outer,  normal_outer)
 
      if (transfer_matrix_option==2) then
-        call cdf_write(ncid, vn_d2rdu2_outer,  d2rdu2_outer)
-        call cdf_write(ncid, vn_d2rdudv_outer, d2rdudv_outer)
-        call cdf_write(ncid, vn_d2rdv2_outer,  d2rdv2_outer)
+        call cdf_write(ncid, vn_d2rdu2_middle,  d2rdu2_middle)
+        call cdf_write(ncid, vn_d2rdudv_middle, d2rdudv_middle)
+        call cdf_write(ncid, vn_d2rdv2_middle,  d2rdv2_middle)
      end if
   end if
 
