@@ -70,6 +70,7 @@ module global_variables
   real(dp) :: pseudoinverse_thresholds(nmax_pseudoinverse_thresholds)
 
   integer :: save_level = 3
+  logical :: save_vectors_in_uv_format
   integer :: n_singular_vectors_to_save = 5, n_singular_values_transferMatrix
   integer, dimension(:), allocatable :: n_singular_values_retained
   real(dp), dimension(:,:), allocatable :: svd_s_transferMatrix

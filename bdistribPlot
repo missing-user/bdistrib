@@ -186,10 +186,18 @@ vl_outer = np.append(vl_outer,nfp)
 ########################################################
 
 def getCrossSection(rArray, vl_old, v_new):
+    vl_old = np.concatenate((vl_old-nfp,vl_old))
+    rArray = np.concatenate((rArray,rArray),axis=0)
+
+
+    print "vl_old shape:",vl_old.shape
+    print "rArray shape:",rArray.shape
+
     x = rArray[:,:,0]
     y = rArray[:,:,1]
     z = rArray[:,:,2]
     R = np.sqrt(x**2 + y**2)
+
 
     nu = z.shape[1]
     nv_new = len(v_new)

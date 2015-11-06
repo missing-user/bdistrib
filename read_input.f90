@@ -61,6 +61,8 @@ subroutine read_input
      end if
   end do
 
+  save_vectors_in_uv_format = (save_level<4)
+
   if (transfer_matrix_option==2) then
      print *,"Overriding settings for outer surface. It will be the same as the middle surface."
      ! Override all settings for the outer surface. It will be the same as the middle surface.

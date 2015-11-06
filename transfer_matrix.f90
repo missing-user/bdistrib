@@ -86,11 +86,12 @@ subroutine transfer_matrix
   if (iflag .ne. 0) stop 'Allocation error G1!'
   allocate(svd_v_transferMatrix(num_basis_functions_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error H1!'
-  allocate(svd_u_transferMatrix_uv(nu_plasma*nv_plasma,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
-  if (iflag .ne. 0) stop 'Allocation error G1!'
-  allocate(svd_v_transferMatrix_uv(nu_middle*nv_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
-  if (iflag .ne. 0) stop 'Allocation error H1!'
-
+  if (save_vectors_in_uv_format) then
+     allocate(svd_u_transferMatrix_uv(nu_plasma*nv_plasma,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error G1!'
+     allocate(svd_v_transferMatrix_uv(nu_middle*nv_middle,n_singular_vectors_to_save,n_pseudoinverse_thresholds),stat=iflag)
+     if (iflag .ne. 0) stop 'Allocation error H1!'
+  end if
 
   allocate(svd_u_transferMatrix_dominant_m(num_basis_functions_plasma,n_pseudoinverse_thresholds),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
@@ -184,8 +185,10 @@ subroutine transfer_matrix
      call system_clock(tic)
      svd_u_transferMatrix(:,:,whichThreshold) = U(:,1:n_singular_vectors_to_save)
      svd_v_transferMatrix(:,:,whichThreshold) = transpose(VT(1:n_singular_vectors_to_save,:))
-     svd_u_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_plasma, svd_u_transferMatrix(:,:,whichThreshold))
-     svd_v_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_middle, svd_v_transferMatrix(:,:,whichThreshold))
+     if (save_vectors_in_uv_format) then
+        svd_u_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_plasma, svd_u_transferMatrix(:,:,whichThreshold))
+        svd_v_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_middle, svd_v_transferMatrix(:,:,whichThreshold))
+     end if
      call system_clock(toc)
      print *,"  Final matmuls: ",real(toc-tic)/countrate," sec."
 

@@ -283,8 +283,10 @@ subroutine write_output
   end if
   call cdf_define(ncid, vn_svd_u_inductance_plasma_middle, svd_u_inductance_plasma_middle, dimname=basis_plasma_nsave_dim)
   call cdf_define(ncid, vn_svd_v_inductance_plasma_middle, svd_v_inductance_plasma_middle, dimname=basis_middle_nsave_dim)
-  call cdf_define(ncid, vn_svd_u_inductance_plasma_middle_uv, svd_u_inductance_plasma_middle_uv, dimname=uv_plasma_nsave_dim)
-  call cdf_define(ncid, vn_svd_v_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv, dimname=uv_middle_nsave_dim)
+  if (save_vectors_in_uv_format) then
+     call cdf_define(ncid, vn_svd_u_inductance_plasma_middle_uv, svd_u_inductance_plasma_middle_uv, dimname=uv_plasma_nsave_dim)
+     call cdf_define(ncid, vn_svd_v_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv, dimname=uv_middle_nsave_dim)
+  end if
   call cdf_define(ncid, vn_svd_u_transferMatrix_dominant_m, svd_u_transferMatrix_dominant_m, &
        dimname=basis_plasma_thresholds_dim)
   call cdf_define(ncid, vn_svd_u_transferMatrix_dominant_n, svd_u_transferMatrix_dominant_n, &
@@ -321,8 +323,10 @@ subroutine write_output
 
   call cdf_define(ncid, vn_svd_u_transferMatrix, svd_u_transferMatrix, dimname=basis_plasma_nsave_thresholds_dim)
   call cdf_define(ncid, vn_svd_v_transferMatrix, svd_v_transferMatrix, dimname=basis_middle_nsave_thresholds_dim)
-  call cdf_define(ncid, vn_svd_u_transferMatrix_uv, svd_u_transferMatrix_uv, dimname=uv_plasma_nsave_thresholds_dim)
-  call cdf_define(ncid, vn_svd_v_transferMatrix_uv, svd_v_transferMatrix_uv, dimname=uv_middle_nsave_thresholds_dim)
+  if (save_vectors_in_uv_format) then
+     call cdf_define(ncid, vn_svd_u_transferMatrix_uv, svd_u_transferMatrix_uv, dimname=uv_plasma_nsave_thresholds_dim)
+     call cdf_define(ncid, vn_svd_v_transferMatrix_uv, svd_v_transferMatrix_uv, dimname=uv_middle_nsave_thresholds_dim)
+  end if
 
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
   ! Done with cdf_define calls. Now write the data.
@@ -425,8 +429,10 @@ subroutine write_output
   end if
   call cdf_write(ncid, vn_svd_u_inductance_plasma_middle, svd_u_inductance_plasma_middle)
   call cdf_write(ncid, vn_svd_v_inductance_plasma_middle, svd_v_inductance_plasma_middle)
-  call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_uv, svd_u_inductance_plasma_middle_uv)
-  call cdf_write(ncid, vn_svd_v_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv)
+  if (save_vectors_in_uv_format) then
+     call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_uv, svd_u_inductance_plasma_middle_uv)
+     call cdf_write(ncid, vn_svd_v_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv)
+  end if
   call cdf_write(ncid, vn_svd_u_transferMatrix_dominant_m, svd_u_transferMatrix_dominant_m)
   call cdf_write(ncid, vn_svd_u_transferMatrix_dominant_n, svd_u_transferMatrix_dominant_n)
   if (transfer_matrix_option==2 .and. save_level<1) then
@@ -461,9 +467,10 @@ subroutine write_output
 
   call cdf_write(ncid, vn_svd_u_transferMatrix, svd_u_transferMatrix)
   call cdf_write(ncid, vn_svd_v_transferMatrix, svd_v_transferMatrix)
-  call cdf_write(ncid, vn_svd_u_transferMatrix_uv, svd_u_transferMatrix_uv)
-  call cdf_write(ncid, vn_svd_v_transferMatrix_uv, svd_v_transferMatrix_uv)
-
+  if (save_vectors_in_uv_format) then
+     call cdf_write(ncid, vn_svd_u_transferMatrix_uv, svd_u_transferMatrix_uv)
+     call cdf_write(ncid, vn_svd_v_transferMatrix_uv, svd_v_transferMatrix_uv)
+  end if
 
   ! Finish up:
   call cdf_close(ncid)

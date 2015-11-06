@@ -1,6 +1,8 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
+  !transfer_matrix_option = 2
+
   nu_plasma=64
   nu_middle=64
   nu_outer =64

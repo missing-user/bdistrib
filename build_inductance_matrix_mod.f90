@@ -171,7 +171,7 @@ contains
        u_2, v_2, r_2, normal_2, basis_functions_2, &
        drdu_1, drdv_1, d2rdu2_1, d2rdudv_1, d2rdv2_1, subtract_singularity)
 
-    use global_variables, only: nfp, Merkel_Kmn, nu_middle, nv_middle, mnmax_outer
+    use global_variables, only: nfp, Merkel_Kmn, nu_middle, nv_middle, mnmax_outer, xm_outer, xn_outer, symmetry_option
     use stel_constants
     use stel_kinds
     use omp_lib
@@ -198,12 +198,13 @@ contains
     real(dp) :: Merkel_big_A, Merkel_big_B, Merkel_big_C
     real(dp) :: temp, Ys
     real(dp), dimension(:,:), allocatable :: tanU, tanV, tan2U, tan2V
+    integer :: whichSymmetry, minSymmetry, maxSymmetry, offset
 
     ! Variables needed by BLAS DGEMM:
     character :: TRANSA, TRANSB
     integer :: M, N, K, LDA, LDB, LDC
     real(dp) :: ALPHA=1, BETA=0
-    real(dp), dimension(:,:), allocatable :: tempMatrix
+    real(dp), dimension(:,:), allocatable :: tempMatrix, sincos_on_middle
 
     nu_1 = size(u_1)
     nu_2 = size(u_2)
@@ -239,6 +240,8 @@ contains
        if (iflag .ne. 0) stop 'Allocation error!'
        allocate(tan2V(nv_1, nv_2),stat=iflag)
        if (iflag .ne. 0) stop 'Allocation error!'
+       allocate(sincos_on_middle(nu_1*nv_1,num_basis_functions_2),stat=iflag)
+       if (iflag .ne. 0) stop 'Allocation error!'
 
        ! Instead of forming a 2D array for tanU and tanV, we could just form 1D arrays.
        ! But the 2D method is not too slow, and it is less prone to indexing errors.
@@ -257,6 +260,47 @@ contains
           end do
        end do
 
+       ! We need sin/cos functions evaluated on the middle (1) (u,v) grid
+       select case (symmetry_option)
+       case (1)
+          minSymmetry = 1
+          maxSymmetry = 1
+       case (2)
+          minSymmetry = 2
+          maxSymmetry = 2
+       case (3)
+          minSymmetry = 1
+          maxSymmetry = 2
+       end select
+
+       ! This loop could be made faster
+       ! by using the sum-angle trig identities and pretabulating the trig functions.
+       ! But these loops are not the rate-limiting step, so I'll use the more transparent direct method here.
+       do whichSymmetry = minSymmetry, maxSymmetry
+         
+          if (whichSymmetry==2 .and. symmetry_option==3) then
+             offset = mnmax_outer
+          else
+             offset = 0
+          end if
+         
+          do iu_1 = 1, nu_1
+             do iv_1 = 1, nv_1
+                index_1 = (iv_1-1)*nu_1 + iu_1
+                do imn_2 = 1, mnmax_outer
+                   if (whichSymmetry==1) then
+                      sincos_on_middle(index_1, imn_2)        = sqrt2 * sin(twopi*(xm_outer(imn_2)*u_1(iu_1)+xn_outer(imn_2)*v_1(iv_1)))
+                   else
+                      sincos_on_middle(index_1, imn_2+offset) = sqrt2 * cos(twopi*(xm_outer(imn_2)*u_1(iu_1)+xn_outer(imn_2)*v_1(iv_1)))
+                   end if
+                end do
+             end do
+          end do
+       end do
+
+       call system_clock(toc)
+       print *,"  Build tan and sincos matrices:",real(toc-tic)/countrate,"sec."
+       call system_clock(tic)
 
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
        ! Now compute (r - r') dot N / |r - r'|^(3/2)
@@ -268,7 +312,7 @@ contains
        print *,"  Number of OpenMP threads:",omp_get_num_threads()
        !$OMP END MASTER
 
-       !$OMP DO PRIVATE(index_1,index_2,x,y,z,ivl_2,dx,dy,dz,dr2,dr32)
+       !$OMP DO PRIVATE(index_1,index_2,x,y,z,ivl_2,dx,dy,dz,dr2,dr32,Merkel_little_a,Merkel_little_b,Merkel_little_c,Merkel_big_A,Merkel_big_B,Merkel_big_C,temp,Ys)
        do iv_1 = 1, nv_1
           do iu_1 = 1, nu_1
              index_1 = (iv_1-1)*nu_1 + iu_1
@@ -321,6 +365,62 @@ contains
 
        deallocate(tanU,tanV,tan2U,tan2V)
 
+       call system_clock(toc)
+       print *,"  inductance_xbasis:",real(toc-tic)/countrate,"sec."
+       call system_clock(tic)
+
+       !*******************************************************
+       ! Call BLAS3 subroutine DGEMM for matrix multiplications:
+       !*******************************************************
+
+       ! Here we carry out tempMatrix = inductance_xbasis * basis_functions_2
+       ! A = inductance_xbasis
+       ! B = basis_functions_2
+       ! C = tempMatrix
+       M = nu_1*nv_1 ! # rows of A
+       N = num_basis_functions_2 ! # cols of B
+       K = nu_2*nv_2 ! Common dimension of A and B
+       LDA = M
+       LDB = K
+       LDC = M
+       TRANSA = 'N' ! No transposes
+       TRANSB = 'N'
+       allocate(tempMatrix(M,N),stat=iflag)
+       if (iflag .ne. 0) stop 'Allocation error!'
+       tempMatrix = 0
+       call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,basis_functions_2,LDB,BETA,tempMatrix,LDC)
+
+       tempMatrix = tempMatrix * (du_2*dv_2)
+
+       call system_clock(toc)
+       print *,"  1st matmul:",real(toc-tic)/countrate,"sec."
+       call system_clock(tic)
+
+       !*******************************************************
+       ! Now add back the singularity, using Merkel's analytic Kmn integrals.
+       !*******************************************************
+
+!!$       do imn_2 = 1,mnmax_outer
+!!$          do index_1 = 1,(nu_1*nv_1)
+!!$             tempMatrix(index_1,imn_2) = tempMatrix(index_1,imn_2) &
+!!$                  - Merkel_Kmn(index_1,imn_2)*sincos_on_middle(index_1,imn_2)
+!!$          end do
+!!$       end do
+!!$       if (symmetry_option==3) then
+!!$          do imn_2 = 1,mnmax_outer
+!!$             do index_1 = 1,(nu_1*nv_1)
+!!$                tempMatrix(index_1,imn_2+mnmax_outer) = tempMatrix(index_1,imn_2+mnmax_outer) &
+!!$                     - Merkel_Kmn(index_1,imn_2)*sincos_on_middle(index_1,imn_2+mnmax_outer)
+!!$             end do
+!!$          end do
+!!$       end if
+
+       deallocate(sincos_on_middle)
+
+       call system_clock(toc)
+       print *,"  Add Kmn:",real(toc-tic)/countrate,"sec."
+       call system_clock(tic)
+
     else
 
        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -363,12 +463,39 @@ contains
        !$OMP END DO
        !$OMP END PARALLEL
 
+       call system_clock(toc)
+       print *,"  inductance_xbasis:",real(toc-tic)/countrate,"sec."
+       call system_clock(tic)
+
+       !*******************************************************
+       ! Call BLAS3 subroutine DGEMM for matrix multiplications:
+       !*******************************************************
+
+       ! Here we carry out tempMatrix = inductance_xbasis * basis_functions_2
+       ! A = inductance_xbasis
+       ! B = basis_functions_2
+       ! C = tempMatrix
+       M = nu_1*nv_1 ! # rows of A
+       N = num_basis_functions_2 ! # cols of B
+       K = nu_2*nv_2 ! Common dimension of A and B
+       LDA = M
+       LDB = K
+       LDC = M
+       TRANSA = 'N' ! No transposes
+       TRANSB = 'N'
+       allocate(tempMatrix(M,N),stat=iflag)
+       if (iflag .ne. 0) stop 'Allocation error!'
+       tempMatrix = 0
+       call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,basis_functions_2,LDB,BETA,tempMatrix,LDC)
+
+       tempMatrix = tempMatrix * (du_2*dv_2)
+
+       call system_clock(toc)
+       print *,"  1st matmul:",real(toc-tic)/countrate,"sec."
+       call system_clock(tic)
+
     end if
 
-    call system_clock(toc)
-    print *,"  inductance_xbasis:",real(toc-tic)/countrate,"sec."
-
-    call system_clock(tic)
 
     ! Next, convert from the integrand as a function of (u,v) to the modal matrix
     ! by sandwiching with the basis_functions matrices.
@@ -381,24 +508,6 @@ contains
     !*******************************************************
     ! Call BLAS3 subroutine DGEMM for matrix multiplications:
     !*******************************************************
-
-    ! Here we carry out tempMatrix = inductance_xbasis * basis_functions_2
-    ! A = inductance_xbasis
-    ! B = basis_functions_2
-    ! C = tempMatrix
-    M = nu_1*nv_1 ! # rows of A
-    N = num_basis_functions_2 ! # cols of B
-    K = nu_2*nv_2 ! Common dimension of A and B
-    LDA = M
-    LDB = K
-    LDC = M
-    TRANSA = 'N' ! No transposes
-    TRANSB = 'N'
-    allocate(tempMatrix(M,N),stat=iflag)
-    if (iflag .ne. 0) stop 'Allocation error!'
-    tempMatrix = 0
-    call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,basis_functions_2,LDB,BETA,tempMatrix,LDC)
-
     ! Here we carry out inductance = (basis_functions_1 ^ T) * tempMatrix
     ! A = basis_functions_1
     ! B = tempMatrix
@@ -416,10 +525,10 @@ contains
     deallocate(tempMatrix)
     
     call system_clock(toc)
-    print *,"  matmul:",real(toc-tic)/countrate,"sec."
+    print *,"  2nd matmul:",real(toc-tic)/countrate,"sec."
 
     ! Multiply by some overall constants:
-    inductance = inductance * (-nfp * du_1 * dv_1 * du_2 * dv_2)
+    inductance = inductance * (-nfp * du_1 * dv_1)
 
     deallocate(inductance_xbasis)
 
