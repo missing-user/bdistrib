@@ -9,7 +9,108 @@
 
 In this section we describe all the parameters which can be included in the input namelist. 
 
+\section{General parameters}
+
+\param{transfer\_matrix\_option}
+{integer}
+{1}
+{Always}
+{Which method is used to compute the transfer matrix.\\
+
+{\ttfamily transfer\_matrix\_option} = 1: 3-surface approach: parameterize the solutions to Laplace's equation using a surface current on an outer surface
+which is outside the control surface.\\
+
+{\ttfamily transfer\_matrix\_option} = 2: 2-surface approach: parameterize the solutions to Laplace's equation using monopoles on the control surface. In this case
+all parameters associated with the outer surface are changed to match the middle surface.
+}
+
 \myhrule
+
+\param{symmetry\_option}
+{integer}
+{1}
+{Always}
+{Determines which set of basis functions is used.\\
+
+{\ttfamily symmetry\_option} = 1: Use $\sin(2 \pi [mu+nv])$ basis functions.\\
+
+{\ttfamily symmetry\_option} = 2: Use $\cos(2 \pi [mu+nv])$ basis functions.\\
+
+{\ttfamily symmetry\_option} = 3: Use both $\sin(2 \pi [mu+nv])$ and $\cos(2 \pi [mu+nv])$ basis functions.
+}
+
+\myhrule
+
+\param{basis\_option\_plasma}
+{integer}
+{1}
+{Always}
+{Determines which basis functions are used, as well as which weight $w$ is used to define orthogonality.
+This option controls only the plasma surface. Analogous options {\ttfamily basis\_option\_middle} and {\ttfamily basis\_option\_outer}
+exist for the other two surfaces.\\
+
+{\ttfamily basis\_option\_plasma} = 1: Use $w = 1 / (n_p |\vect{N}|)$, so the basis functions
+are the Fourier functions $\sqrt{2} \sin(2\pi[mu+nv])$ and/or $\sqrt{2} \cos(2\pi[mu+nv])$ (
+as determined by \parlink{symmetry\_option}).\\
+
+{\ttfamily basis\_option\_plasma} = 2: Use a constant weight, $w = 1/A$ where $A$ is the surface area. The basis functions
+will be Fourier functions scaled by $\sqrt{2A/[n_p |\vect{N}|]}$.\\
+
+{\ttfamily basis\_option\_plasma} = 3: Use a constant weight, $w = 1/A$. The basis functions
+will be linear combinations of the Fourier functions, as constructed using the Cholesky method.
+}
+
+\myhrule
+
+\param{pseudoinverse\_thresholds}
+{real array}
+{1e-12}
+{Always}
+{To form the pseudoinverse of the outer-to-middle inductance matrix, singular values larger than this threshold
+will be replaced by their inverse, whereas singular values smaller than this threshold will be replaced by zero.
+You can supply more than one threshold value in order to compare results for different choices.
+Good threshold values are in the range 1e-6 to 1e-13, i.e. small compared to 1 but larger than machine precision.}
+
+\myhrule
+
+\param{check\_orthogonality}
+{logical}
+{\false}
+{Always}
+{If this parameter is set to \true, the integrals $\int d^2a\; w f_i f_j$ will be computed for all $i$ and $j$,
+to be sure the result is $\delta_{i,j}$ to machine precision.}
+
+\myhrule
+
+\param{n\_singular\_vectors\_to\_save}
+{integer}
+{12}
+{Always}
+{Number of columns of $U$ and $V$ to save in the output file, where $U$ and $V$ are the matrices of left and right singular vectors of the transfer matrix,
+$T = U\Sigma V^{T}$.
+Regardless of this parameter, all singular \emph{values} will be saved in the output file.}
+
+\myhrule
+
+\param{save\_level}
+{integer}
+{3}
+{Always}
+{Option related determining how many variables are saved in the \netCDF~output file.  The larger the value, the smaller the output file.\\
+
+{\ttfamily save\_level} = 0: Save everything.\\
+
+{\ttfamily save\_level} = 1: Do not save the basis functions or $K_{mn}$.\\
+
+{\ttfamily save\_level} = 2: Also do not save the inductance matrices.\\
+
+{\ttfamily save\_level} = 3: Also do not save the {\ttfamily drdu}, {\ttfamily drdv}, and {\ttfamily normal} arrays.\\
+
+{\ttfamily save\_level} = 4: Also do not save the singular vectors as functions of $(u,v)$. The vectors
+will still be saved as amplitudes of basis functions.
+}
+
+
 
 \section{Resolution parameters}
 
@@ -312,6 +413,11 @@ this file will be used as the middle surface for \bdistrib.}
 
 \section{Geometry parameters for the outer surface}
 
+Note that all parameters in this namelist are ignored
+when \parlink{transfer\_matrix\_option} = 2.
+
+\myhrule
+
 \param{geometry\_option\_outer}
 {integer}
 {0}
@@ -363,107 +469,4 @@ expanded uniformly by a distance \parlink{separation\_outer}.
 {Only when \parlink{geometry\_option\_outer} is 3.}
 {Name of a \nescoil~{\ttfamily nescin} input file. The coil surface from
 this file will be used as the outer surface for \bdistrib.}
-
-\section{Other parameters}
-
-\myhrule
-
-\param{transfer\_matrix\_option}
-{integer}
-{1}
-{Always}
-{Which method is used to compute the transfer matrix.\\
-
-{\ttfamily transfer\_matrix\_option} = 1: Original approach: parameterize the solutions to Laplace's equation using a surface current on an outer surface
-which is outside the control surface.\\
-
-{\ttfamily transfer\_matrix\_option} = 2: NESTOR approach: parameterize the solutions to Laplace's equation using monopoles on the control surface. In this case
-all parameters associated with the outer surface are changed to match the middle surface.
-}
-
-\myhrule
-
-\param{symmetry\_option}
-{integer}
-{1}
-{Always}
-{Determines which set of basis functions is used.\\
-
-{\ttfamily symmetry\_option} = 1: Use $\sin(2 \pi [mu+nv])$ basis functions.\\
-
-{\ttfamily symmetry\_option} = 2: Use $\cos(2 \pi [mu+nv])$ basis functions.\\
-
-{\ttfamily symmetry\_option} = 3: Use both $\sin(2 \pi [mu+nv])$ and $\cos(2 \pi [mu+nv])$ basis functions.
-}
-
-\myhrule
-
-\param{basis\_option\_plasma}
-{integer}
-{1}
-{Always}
-{Determines which basis functions are used, as well as which weight $w$ is used to define orthogonality.
-This option controls only the plasma surface. Analogous options {\ttfamily basis\_option\_middle} and {\ttfamily basis\_option\_outer}
-exist for the other two surfaces.\\
-
-{\ttfamily basis\_option\_plasma} = 1: Use $w = 1 / (n_p |\vect{N}|)$, so the basis functions
-are the Fourier functions $\sqrt{2} \sin(2\pi[mu+nv])$ and/or $\sqrt{2} \cos(2\pi[mu+nv])$ (
-as determined by \parlink{symmetry\_option}).\\
-
-{\ttfamily basis\_option\_plasma} = 2: Use a constant weight, $w = 1/A$ where $A$ is the surface area. The basis functions
-will be Fourier functions scaled by $\sqrt{2A/[n_p |\vect{N}|]}$.\\
-
-{\ttfamily basis\_option\_plasma} = 3: Use a constant weight, $w = 1/A$. The basis functions
-will be linear combinations of the Fourier functions, as constructed using the Cholesky method.
-}
-
-\myhrule
-
-\param{pseudoinverse\_thresholds}
-{real array}
-{1e-12}
-{Always}
-{To form the pseudoinverse of the outer-to-middle inductance matrix, singular values larger than this threshold
-will be replaced by their inverse, whereas singular values smaller than this threshold will be replaced by zero.
-You can supply more than one threshold value in order to compare results for different choices.
-Good threshold values are in the range 1e-6 to 1e-13, i.e. small compared to 1 but larger than machine precision.}
-
-\myhrule
-
-\param{check\_orthogonality}
-{logical}
-{\false}
-{Always}
-{If this parameter is set to \true, the integrals $\int d^2a\; w f_i f_j$ will be computed for all $i$ and $j$,
-to be sure the result is $\delta_{i,j}$ to machine precision.}
-
-\myhrule
-
-\param{n\_singular\_vectors\_to\_save}
-{integer}
-{12}
-{Always}
-{Number of columns of $U$ and $V$ to save in the output file, where $U$ and $V$ are the matrices of left and right singular vectors of the transfer matrix,
-$T = U\Sigma V^{T}$.
-Regardless of this parameter, all singular \emph{values} will be saved in the output file.}
-
-\myhrule
-
-\param{save\_level}
-{integer}
-{3}
-{Always}
-{Option related determining how many variables are saved in the \netCDF~output file.  The larger the value, the smaller the output file.\\
-
-{\ttfamily save\_level} = 0: Save everything.\\
-
-{\ttfamily save\_level} = 1: Do not save the basis functions or $K_{mn}$.\\
-
-{\ttfamily save\_level} = 2: Also do not save the inductance matrices.\\
-
-{\ttfamily save\_level} = 3: Also do not save the {\ttfamily drdu}, {\ttfamily drdv}, and {\ttfamily normal} arrays.\\
-
-{\ttfamily save\_level} = 4: Also do not save the singular vectors as functions of $(u,v)$. The vectors
-will still be saved as amplitudes of basis functions.
-}
 

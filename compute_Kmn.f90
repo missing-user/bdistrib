@@ -35,7 +35,6 @@ subroutine compute_Kmn
      !factorial(index) = index * factorial(index-1)
      factorial(index+1) = index * factorial(index)
   end do
-  print *,"factorial:",factorial
 
   max_index = max(mpol_outer+ntor_outer,1)
   allocate(TPlus(max_index+1),stat=iflag)
@@ -68,25 +67,9 @@ subroutine compute_Kmn
         end do
      end do
   end do
-  print *,"Done tabulating factor"
-
-  print *,"factor for l=0:"
-  l=0
-  do m=0,mpol_outer
-     print *,factor(l+1,m+1,:)
-  end do
-
-  print *,"factor for l=3:"
-  l=3
-  do m=0,mpol_outer
-     print *,factor(l+1,m+1,:)
-  end do
 
   do iu = 1,nu_middle
-     !print *,"iu=",iu
      do iv = 1,nv_middle
-        !print *," iv=",iv
-
         ! Since Fortran is case-insensitive, Merkel's uppercase characters are doubled, e.g. AA
 
         a = drdu_middle(1,iu,iv)*drdu_middle(1,iu,iv) + drdu_middle(2,iu,iv)*drdu_middle(2,iu,iv) + drdu_middle(3,iu,iv)*drdu_middle(3,iu,iv)
@@ -121,8 +104,6 @@ subroutine compute_Kmn
         TPlus(2)  = 1/(a+2*b+c) * (2*(sqrt(c)-sqrt(a)) - (c-a)*TPlus(1));
         TMinus(2) = 1/(a-2*b+c) * (2*(sqrt(c)-sqrt(a)) - (c-a)*TMinus(1));
                     
-        !print *,"  ddd"
-
         do l = 2,max_index
            TPlus(l+1)  = 1/(l*(a+2*b+c))*(2*(sqrt(c) + ((-1)**l)*sqrt(a)) - (2*l-1)*(c-a)*TPlus(l-1+1)  - (l-1)*(a-2*b+c)*TPlus(l-2+1));
            TMinus(l+1) = 1/(l*(a-2*b+c))*(2*(sqrt(c) + ((-1)**l)*sqrt(a)) - (2*l-1)*(c-a)*TMinus(l-1+1) - (l-1)*(a+2*b+c)*TMinus(l-2+1));
@@ -150,8 +131,6 @@ subroutine compute_Kmn
                 /((a-2*b+c)*(a*c-b*b))
         end do
 
-        !print *,"  ggg"
-        
         cSPlus  = 0
         cSMinus = 0
         do m = 0,mpol_outer
@@ -166,8 +145,6 @@ subroutine compute_Kmn
            end do
         end do
                     
-!        print *,"  iii"
-
         index = (iv-1)*nu_middle + iu
         do imn = 1,mnmax_outer
            m = xm_outer(imn);
@@ -201,32 +178,10 @@ subroutine compute_Kmn
               end if
            end if
         end do
-        if (iu==2 .and. iv==3) then
-           print *,"TPlus:",TPlus
-           print *," "
-           print *,"TMinus:",TMinus
-           print *," "
-           print *,"SPlus:",SMinus
-           print *," "
-           print *,"SMinus:",SMinus
-           print *," "
-           print *,"cSPlus:"
-           do m=0,mpol_outer
-              print *,csPlus(m+1,:)
-           end do
-           print *," "
-           print *,"cSMinus:"
-           do m=0,mpol_outer
-              print *,csMinus(m+1,:)
-           end do
-        end if
      end do
   end do
 
-  print *,"About to deallocate"
-!!$  deallocate(factorial)
   deallocate(TPlus,TMinus,SPlus,SMinus,cSPlus,cSMinus,factorial,factor)
-  print *,"Deallocation done."
 
   call system_clock(toc)
   print *,"Done computing Kmn. Took ",real(toc-tic)/countrate," sec."

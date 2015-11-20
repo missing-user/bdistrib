@@ -31,5 +31,6 @@ subroutine init_outer_2_surfaces
        nescin_filename_outer, which_surface)
   call system_clock(toc)
   print *,"Done initializing outer surface. Took ",real(toc-tic)/countrate," sec."
+  
 
 end subroutine init_outer_2_surfaces

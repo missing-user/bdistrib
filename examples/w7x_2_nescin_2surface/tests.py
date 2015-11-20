@@ -7,7 +7,7 @@
 
 execfile('../testsCommon.py')
 
-desiredTolerance = 0.033
+desiredTolerance = 0.04
 
 numFailures = 0
 
@@ -16,8 +16,7 @@ f = readOutputFile()
 variableName = 'svd_s_transferMatrix'
 data = f.variables[variableName][()]
 
-# 'Correct' values below come from the 3-surface calculation,
-# so if this test is passed, it indicates the 2-surface and 3-surface calculations agree to within 3.3%.
+# The values below come from the 3-surface calculation:
 
 numFailures += arrayShouldBe(data[0,:], [ \
     0.756733254860545, 0.675471379935325, 0.592208082776024, 0.536884314491204, \
@@ -48,8 +47,8 @@ numFailures += arrayShouldBe(data[0,:], [ \
     0.0887574228776865, 0.085599196725491, 0.0852461926201933,\
     0.084097083662554, 0.0831740683726667, 0.0813099469428992,\
     0.0809564210197215, 0.0786395793267298, 0.0775260568268283,\
-    0.0759165587811006, 0.0749048769083686,\
-], desiredTolerance, requireSameLength=False)
+    0.0759165587811006, 0.0749048769083686, 0.0736942554462586,\
+ ], desiredTolerance, requireSameLength=False)
 
 
 #numFailures += shouldBe(data[0,0], 0.500, desiredTolerance)

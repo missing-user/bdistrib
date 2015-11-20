@@ -1,10 +1,7 @@
 ! For documentation of these input parameters and their default values, see the README.
 
 &bdistrib
-  basis_option_plasma = 2
-  basis_option_middle = 2
-  basis_option_outer  = 2
-  check_orthogonality = .t.
+  transfer_matrix_option = 2
 
   nu_plasma=64
   nu_middle=64
