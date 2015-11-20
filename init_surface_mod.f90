@@ -56,11 +56,11 @@ module init_surface_mod
       du = u(2)-u(1)
       dv = v(2)-v(1)
 
-      if (transfer_matrix_option==2 .and. which_surface==2) then
-         u = u + du/2
-         v = v + dv/2
-         vl = vl + dv/2
-      end if
+!!$      if (transfer_matrix_option==2 .and. which_surface==2) then
+!!$         u = u + du/2
+!!$         v = v + dv/2
+!!$         vl = vl + dv/2
+!!$      end if
 
       ! First dimension is the Cartesian component x, y, or z.
       allocate(r(3,nu,nvl),stat=iflag)

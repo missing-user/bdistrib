@@ -189,7 +189,7 @@ contains
     real(dp) :: du_1, du_2, dv_1, dv_2
     integer :: num_basis_functions_1, num_basis_functions_2
 
-    integer :: l_2, iu_1, iv_1, iu_2, iv_2, ivl_2, iflag
+    integer :: l_2, iu_1, iv_1, iu_2, iv_2, ivl_2, iflag, min_l_2
     real(dp) :: x, y, z, dx, dy, dz, dr2, dr32
     integer :: imn_1, imn_2, index_1, index_2
     real(dp), dimension(:,:), allocatable :: inductance_xbasis
@@ -199,6 +199,7 @@ contains
     real(dp) :: temp, Ys
     real(dp), dimension(:,:), allocatable :: tanU, tanV, tan2U, tan2V
     integer :: whichSymmetry, minSymmetry, maxSymmetry, offset
+    real(dp) :: epsilon, big_number
 
     ! Variables needed by BLAS DGEMM:
     character :: TRANSA, TRANSB
@@ -245,16 +246,28 @@ contains
 
        ! Instead of forming a 2D array for tanU and tanV, we could just form 1D arrays.
        ! But the 2D method is not too slow, and it is less prone to indexing errors.
+       ! If the argument of tan() is close to (within epsilon of) +/- pi/2, where tan() is singular, replace
+       ! tan() with big_number. 
+       epsilon = 1e-12
+       big_number = 1e12
        do iu_1 = 1,nu_1
           do iu_2 = 1,nu_2
-             temp = tan(pi*(u_2(iu_2) - u_1(iu_1)))
+             if (abs(abs(u_2(iu_2) - u_1(iu_1))-0.5) < epsilon) then
+                temp = big_number
+             else
+                temp = tan(pi*(u_2(iu_2) - u_1(iu_1)))
+             end if
              tanU(iu_1,iu_2) = temp
              tan2U(iu_1,iu_2) = temp*temp
           end do
        end do
        do iv_1 = 1,nv_1
           do iv_2 = 1,nv_2
-             temp = tan(pi*(v_2(iv_2) - v_1(iv_1)))
+             if (abs(abs(v_2(iv_2) - v_1(iv_1))-0.5) < epsilon) then
+                temp = big_number
+             else
+                temp = tan(pi*(v_2(iv_2) - v_1(iv_1)))
+             end if
              tanV(iv_1,iv_2) = temp
              tan2V(iv_1,iv_2) = temp*temp
           end do
@@ -312,7 +325,7 @@ contains
        print *,"  Number of OpenMP threads:",omp_get_num_threads()
        !$OMP END MASTER
 
-       !$OMP DO PRIVATE(index_1,index_2,x,y,z,ivl_2,dx,dy,dz,dr2,dr32,Merkel_little_a,Merkel_little_b,Merkel_little_c,Merkel_big_A,Merkel_big_B,Merkel_big_C,temp,Ys)
+       !$OMP DO PRIVATE(index_1,index_2,x,y,z,ivl_2,dx,dy,dz,dr2,dr32,Merkel_little_a,Merkel_little_b,Merkel_little_c,Merkel_big_A,Merkel_big_B,Merkel_big_C,temp,Ys,min_l_2)
        do iv_1 = 1, nv_1
           do iu_1 = 1, nu_1
              index_1 = (iv_1-1)*nu_1 + iu_1
@@ -339,7 +352,18 @@ contains
              do iv_2 = 1, nv_2
                 do iu_2 = 1, nu_2
                    index_2 = (iv_2-1)*nu_2 + iu_2
-                   do l_2 = 0, (nfp-1)
+                   if ((iv_1==iv_2) .and. (iu_1==iu_2)) then
+                      ! Avoid divide-by-0 singularity
+                      min_l_2 = 1
+                   else
+                      min_l_2 = 0
+                      temp = Merkel_little_a*tan2U(iu_1,iu_2) + 2*Merkel_little_b*tanU(iu_1,iu_2)*tanV(iv_1,iv_2) + Merkel_little_c*tan2V(iv_1,iv_2)
+                      Ys = -pi*(Merkel_big_A*tan2U(iu_1,iu_2) + 2*Merkel_big_B*tanU(iu_1,iu_2)*tanV(iv_1,iv_2) + Merkel_big_C*tan2V(iv_1,iv_2)) &
+                           / (temp*sqrt(temp))
+
+                      inductance_xbasis(index_1,index_2) = inductance_xbasis(index_1,index_2) - Ys
+                   end if
+                   do l_2 = min_l_2, (nfp-1)
                       ivl_2 = iv_2 + l_2*nv_2
                       dx = x - r_2(1,iu_2,ivl_2)
                       dy = y - r_2(2,iu_2,ivl_2)
@@ -348,12 +372,8 @@ contains
                       dr2 = dx*dx + dy*dy + dz*dz
                       dr32 = dr2*sqrt(dr2)
                       
-                      temp = Merkel_little_a*tan2U(iu_1,iu_2) + 2*Merkel_little_b*tanU(iu_1,iu_2)*tanV(iv_1,iv_2) + Merkel_little_c*tan2V(iv_1,iv_2)
-                      Ys = -pi*(Merkel_big_A*tan2U(iu_1,iu_2) + 2*Merkel_big_B*tanU(iu_1,iu_2)*tanV(iv_1,iv_2) + Merkel_big_C*tan2V(iv_1,iv_2)) &
-                           / (temp*sqrt(temp))
-
                       inductance_xbasis(index_1,index_2) = inductance_xbasis(index_1,index_2) + &
-                           (dx*normal_1(1,iu_1,iv_1) + dy*normal_1(2,iu_1,iv_1) + dz*normal_1(3,iu_1,iv_1)) / dr32 - Ys
+                           (dx*normal_1(1,iu_1,iv_1) + dy*normal_1(2,iu_1,iv_1) + dz*normal_1(3,iu_1,iv_1)) / dr32
                       
                    end do
                 end do
@@ -414,6 +434,31 @@ contains
 !!$             end do
 !!$          end do
 !!$       end if
+
+       do imn_2 = 1,mnmax_outer
+          index_1 = 0
+          do iv_1 = 1,nv_1
+             do iu_1 = 1,nu_1
+                index_1 = index_1+1
+                tempMatrix(index_1,imn_2) = tempMatrix(index_1,imn_2) &
+                     - (Merkel_Kmn(index_1,imn_2) + twopi) * sincos_on_middle(index_1,imn_2)
+!                tempMatrix(index_1,imn_2) = twopi*norm_normal_middle(iu_1,iv_1) * sincos_on_middle(index_1,imn_2)
+             end do
+          end do
+       end do
+       if (symmetry_option==3) then
+          do imn_2 = 1,mnmax_outer
+             index_1 = 0
+             do iv_1 = 1,nv_1
+                do iu_1 = 1,nu_1
+                   index_1 = index_1 + 1
+                   tempMatrix(index_1,imn_2+mnmax_outer) = tempMatrix(index_1,imn_2+mnmax_outer) &
+                        - (Merkel_Kmn(index_1,imn_2) + twopi) * sincos_on_middle(index_1,imn_2+mnmax_outer)
+!                   tempMatrix(index_1,imn_2+mnmax_outer) = twopi*norm_normal_middle(iu_1,iv_1) * sincos_on_middle(index_1,imn_2+mnmax_outer)
+                end do
+             end do
+          end do
+       end if
 
        deallocate(sincos_on_middle)
 
