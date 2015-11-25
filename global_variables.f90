@@ -64,6 +64,8 @@ module global_variables
   real(dp), dimension(:,:), allocatable :: svd_uT_inductance_middle_outer, svd_v_inductance_middle_outer
   real(dp), dimension(:,:), allocatable :: svd_u_inductance_plasma_middle, svd_v_inductance_plasma_middle
   real(dp), dimension(:,:), allocatable :: svd_u_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv
+  real(dp), dimension(:,:), allocatable :: svd_u_inductance_plasma_middle_all, svd_v_inductance_plasma_middle_all
+  real(dp), dimension(:,:), allocatable :: overlap_plasma, overlap_middle
 
   integer, parameter :: nmax_pseudoinverse_thresholds = 1000
   integer :: n_pseudoinverse_thresholds

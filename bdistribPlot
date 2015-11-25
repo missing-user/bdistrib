@@ -69,6 +69,13 @@ try:
 except:
     pass
 
+try:
+    overlap_plasma = f.variables['overlap_plasma'][()]
+    overlap_middle = f.variables['overlap_middle'][()]
+    overlap_exists = True
+except:
+    overlap_exists = False
+
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
 print "r_plasma.shape: ",r_plasma.shape
@@ -367,7 +374,39 @@ plotLMax = r_outer.max()
 ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
 
 
+########################################################
+# Plot overlap of transfer matrix and inductance matrix singular vectors
+########################################################
 
+if overlap_exists:
+    execfile('/global/homes/l/landrema/scripts/colormaps.py')
+    ##myCmap=viridis
+    #myCmap=plasma
+
+    figureNum += 1
+    fig = plt.figure(figureNum)
+    fig.patch.set_facecolor('white')
+
+    numRows = 1
+    numCols = 2
+    my_clim = (-6.0,0.0)
+
+    plt.subplot(numRows,numCols,1)
+    plt.imshow(np.log10(np.abs(overlap_plasma)),interpolation='none',clim=my_clim,cmap=viridis)
+    plt.gca().xaxis.tick_top()
+    plt.colorbar()
+    plt.title('Log10 overlap of transfer and inductance singular vectors on plasma surface')
+
+    plt.subplot(numRows,numCols,2)
+    plt.imshow(np.log10(np.abs(overlap_middle)),interpolation='none',clim=my_clim,cmap=viridis)
+    plt.gca().xaxis.tick_top()
+    plt.colorbar()
+    plt.title('Log10 overlap of transfer and inductance singular vectors on middle surface')
+
+    # Maximize window. The command for this depends on the backend.
+    mng = plt.get_current_fig_manager()
+    #mng.resize(*mng.window.maxsize())
+    mng.window.showMaximized()
 
 
 plt.show()

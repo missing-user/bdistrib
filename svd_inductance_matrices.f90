@@ -13,7 +13,8 @@ subroutine svd_inductance_matrices()
        svd_u_inductance_plasma_middle, svd_v_inductance_plasma_middle, &
        svd_u_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv, &
        xm_plasma, xn_plasma, mnmax_plasma, save_vectors_in_uv_format, &
-       svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_n
+       svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_n, &
+       svd_u_inductance_plasma_middle_all, svd_v_inductance_plasma_middle_all
   
   use stel_kinds
   
@@ -206,6 +207,10 @@ subroutine svd_inductance_matrices()
   if (iflag .ne. 0) stop 'Allocation error!'
   allocate(svd_v_inductance_plasma_middle(num_basis_functions_middle,n_singular_vectors_to_save),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(svd_u_inductance_plasma_middle_all(num_basis_functions_plasma,num_basis_functions_plasma),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(svd_v_inductance_plasma_middle_all(num_basis_functions_middle,num_basis_functions_middle),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
   if (save_vectors_in_uv_format) then
      allocate(svd_u_inductance_plasma_middle_uv(nu_plasma*nv_plasma,n_singular_vectors_to_save),stat=iflag)
      if (iflag .ne. 0) stop 'Allocation error!'
@@ -238,6 +243,8 @@ subroutine svd_inductance_matrices()
   ! Convert singular vectors from basis functions to functions of (u,v):
   svd_u_inductance_plasma_middle = U(:,1:n_singular_vectors_to_save)
   svd_v_inductance_plasma_middle = transpose(VT(1:n_singular_vectors_to_save,:))
+  svd_u_inductance_plasma_middle_all = U
+  svd_v_inductance_plasma_middle_all = transpose(VT)
   if (save_vectors_in_uv_format) then
      svd_u_inductance_plasma_middle_uv = matmul(basis_functions_plasma, svd_u_inductance_plasma_middle)
      svd_v_inductance_plasma_middle_uv = matmul(basis_functions_middle, svd_v_inductance_plasma_middle)

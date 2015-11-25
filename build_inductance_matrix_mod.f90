@@ -135,6 +135,8 @@ contains
     allocate(tempMatrix(M,N),stat=iflag)
     if (iflag .ne. 0) stop 'Allocation error!'
     tempMatrix = 0
+    ALPHA=1
+    BETA=0
     call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,inductance_xbasis,LDA,basis_functions_2,LDB,BETA,tempMatrix,LDC)
 
     ! Here we carry out inductance = (basis_functions_1 ^ T) * tempMatrix
@@ -149,6 +151,8 @@ contains
     LDC = M
     TRANSA = 'T' ! DO take a transpose!
     TRANSB = 'N'
+    ALPHA=1
+    BETA=0
     call DGEMM(TRANSA,TRANSB,M,N,K,ALPHA,basis_functions_1,LDA,tempMatrix,LDB,BETA,inductance,LDC)
 
     deallocate(tempMatrix)

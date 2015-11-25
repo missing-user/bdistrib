@@ -91,7 +91,8 @@ if True:
             inputFile = "bdistrib_in."+subdirectory
             try:
                 # Next we launch BDISTRIB.
-                subprocess.call(["../../bdistrib",inputFile])
+                subprocess.call(["srun","-n","1","-c","32","../../bdistrib",inputFile])
+                #subprocess.call(["../../bdistrib",inputFile])
             except:
                 print "An error occurred when attempting to launch BDISTRIB."
                 raise

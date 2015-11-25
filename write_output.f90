@@ -116,7 +116,9 @@ subroutine write_output
        vn_svd_u_inductance_plasma_middle_dominant_n = "svd_u_inductance_plasma_middle_dominant_n", &
        vn_svd_u_transferMatrix_dominant_m = "svd_u_transferMatrix_dominant_m", &
        vn_svd_u_transferMatrix_dominant_n = "svd_u_transferMatrix_dominant_n", &
-       vn_Merkel_Kmn = "Merkel_Kmn"
+       vn_Merkel_Kmn = "Merkel_Kmn", &
+       vn_overlap_plasma = "overlap_plasma", &
+       vn_overlap_middle = "overlap_middle"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -294,6 +296,8 @@ subroutine write_output
   if (transfer_matrix_option==2 .and. save_level<1) then
      call cdf_define(ncid, vn_Merkel_Kmn, Merkel_Kmn, dimname=uv_middle_mnmax_outer_dim)
   end if
+  call cdf_define(ncid, vn_overlap_plasma, overlap_plasma, dimname=basis_basis_plasma_dim)
+  call cdf_define(ncid, vn_overlap_middle, overlap_middle, dimname=basis_basis_middle_dim)
 
   ! Arrays with dimension 3
 
@@ -438,6 +442,8 @@ subroutine write_output
   if (transfer_matrix_option==2 .and. save_level<1) then
      call cdf_write(ncid, vn_Merkel_Kmn, Merkel_Kmn)
   end if
+  call cdf_write(ncid, vn_overlap_plasma, overlap_plasma)
+  call cdf_write(ncid, vn_overlap_middle, overlap_middle)
 
   ! Arrays with dimension 3
 
