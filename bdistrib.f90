@@ -47,6 +47,7 @@ program bdistrib
   call system_clock(toc1)
   print *,"Done. Took ",real(toc1-tic1)/countrate," sec."
 
+  call one_over_R_field()
 
   ! Compute the mutual inductance matrices, which relate current on 1 surface to B_normal on an interior surface:
   call build_inductance_matrices()

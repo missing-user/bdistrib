@@ -197,42 +197,6 @@ subroutine transfer_matrix
         svd_u_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_plasma, svd_u_transferMatrix(:,:,whichThreshold))
         svd_v_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_middle, svd_v_transferMatrix(:,:,whichThreshold))
      end if
-     if (whichThreshold==1) then
-        ! Transparent but slow method using matmul:
-!!$        overlap_plasma = matmul(VT, svd_v_inductance_plasma_middle_all)
-!!$        overlap_middle = matmul(transpose(U), svd_u_inductance_plasma_middle_all)
-
-        ! Carry out the matrix-matrix multiplication C = A * B
-        ! A = VT
-        ! B = svd_v_inductance_plasma_middle_all
-        ! C = overlap_plasma
-        M_DGEMM = num_basis_functions_plasma ! # rows of A
-        N_DGEMM = num_basis_functions_plasma ! # cols of B
-        K_DGEMM = num_basis_functions_plasma ! Common dimension of A and B
-        LDA_DGEMM = M_DGEMM
-        LDB_DGEMM = K_DGEMM
-        LDC_DGEMM = M_DGEMM
-        TRANSA = 'N' ! No transpose
-        TRANSB = 'N' ! No transpose
-        call DGEMM(TRANSA,TRANSB,M_DGEMM,N_DGEMM,K_DGEMM,ALPHA,VT,LDA_DGEMM, &
-             svd_v_inductance_plasma_middle_all,LDB_DGEMM,BETA,overlap_plasma,LDC_DGEMM)
-
-        ! Carry out the matrix-matrix multiplication C = A * B
-        ! A = U
-        ! B = svd_u_inductance_plasma_middle_all
-        ! C = overlap_middle
-        M_DGEMM = num_basis_functions_middle ! # rows of A
-        N_DGEMM = num_basis_functions_middle ! # cols of B
-        K_DGEMM = num_basis_functions_middle ! Common dimension of A and B
-        LDA_DGEMM = M_DGEMM
-        LDB_DGEMM = K_DGEMM
-        LDC_DGEMM = M_DGEMM
-        TRANSA = 'T' ! DO take transpose
-        TRANSB = 'N' ! No transpose
-        call DGEMM(TRANSA,TRANSB,M_DGEMM,N_DGEMM,K_DGEMM,ALPHA,U,LDA_DGEMM, &
-             svd_u_inductance_plasma_middle_all,LDB_DGEMM,BETA,overlap_middle,LDC_DGEMM)
-
-     end if
      call system_clock(toc)
      print *,"  Final matmuls: ",real(toc-tic)/countrate," sec."
 
@@ -253,6 +217,51 @@ subroutine transfer_matrix
            svd_u_transferMatrix_dominant_n(i,whichThreshold) = xn_plasma(index)
         end if
      end do
+
+     if (whichThreshold==1) then
+        call system_clock(tic)
+        if (zero_first_transfer_vector_in_overlap) then
+           U(:,1) = 0
+           VT(1,:) = 0
+        end if
+
+        ! Transparent but slow method using matmul:
+!!$        overlap_middle = matmul(VT, svd_v_inductance_plasma_middle_all)
+!!$        overlap_plasma = matmul(transpose(U), svd_u_inductance_plasma_middle_all)
+
+        ! Carry out the matrix-matrix multiplication C = A * B
+        ! A = VT
+        ! B = svd_v_inductance_plasma_middle_all
+        ! C = overlap_plasma
+        M_DGEMM = num_basis_functions_plasma ! # rows of A
+        N_DGEMM = num_basis_functions_plasma ! # cols of B
+        K_DGEMM = num_basis_functions_plasma ! Common dimension of A and B
+        LDA_DGEMM = M_DGEMM
+        LDB_DGEMM = K_DGEMM
+        LDC_DGEMM = M_DGEMM
+        TRANSA = 'N' ! No transpose
+        TRANSB = 'N' ! No transpose
+        call DGEMM(TRANSA,TRANSB,M_DGEMM,N_DGEMM,K_DGEMM,ALPHA,VT,LDA_DGEMM, &
+             svd_v_inductance_plasma_middle_all,LDB_DGEMM,BETA,overlap_middle,LDC_DGEMM)
+
+        ! Carry out the matrix-matrix multiplication C = A * B
+        ! A = U
+        ! B = svd_u_inductance_plasma_middle_all
+        ! C = overlap_middle
+        M_DGEMM = num_basis_functions_middle ! # rows of A
+        N_DGEMM = num_basis_functions_middle ! # cols of B
+        K_DGEMM = num_basis_functions_middle ! Common dimension of A and B
+        LDA_DGEMM = M_DGEMM
+        LDB_DGEMM = K_DGEMM
+        LDC_DGEMM = M_DGEMM
+        TRANSA = 'T' ! DO take transpose
+        TRANSB = 'N' ! No transpose
+        call DGEMM(TRANSA,TRANSB,M_DGEMM,N_DGEMM,K_DGEMM,ALPHA,U,LDA_DGEMM, &
+             svd_u_inductance_plasma_middle_all,LDB_DGEMM,BETA,overlap_plasma,LDC_DGEMM)
+
+        call system_clock(toc)
+        print *,"  Compute overlap: ",real(toc-tic)/countrate," sec."
+     end if
 
 
   end do

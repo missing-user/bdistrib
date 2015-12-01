@@ -110,6 +110,18 @@ Regardless of this parameter, all singular \emph{values} will be saved in the ou
 will still be saved as amplitudes of basis functions.
 }
 
+\myhrule
+
+\param{zero\_first\_transfer\_vector\_in\_overlap}
+{logical}
+{\false}
+{Always}
+{A tool for determining which axis of the {\ttfamily overlap\_plasma} and {\ttfamily overlap\_middle}
+matrices corresponds to the transfer matrix versus the plasma-middle inductance matrix.
+When this parameter is true, the first column (i.e. first singular vector) in both $\vect{U}$
+and $\vect{V}$ for the transfer matrix SVD are set to 0 before computing the overlap matrices.
+}
+
 
 
 \section{Resolution parameters}

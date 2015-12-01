@@ -76,6 +76,13 @@ try:
 except:
     overlap_exists = False
 
+try:
+    normal_component_of_1_over_R_field = f.variables['normal_component_of_1_over_R_field'][()]
+    normal_component_of_1_over_R_field_uv = f.variables['normal_component_of_1_over_R_field_uv'][()]
+    one_over_R_exists = True
+except:
+    one_over_R_exists = False
+
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
 print "r_plasma.shape: ",r_plasma.shape
@@ -142,7 +149,8 @@ if check_orthogonality:
 
     # Maximize window. The command for this depends on the backend.
     mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
+    #mng.resize(*mng.window.maxsize())
+    mng.window.showMaximized()
 
     figureNum += 1
     fig = plt.figure(figureNum)
@@ -169,7 +177,8 @@ if check_orthogonality:
 
     # Maximize window. The command for this depends on the backend.
     mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
+    #mng.resize(*mng.window.maxsize())
+    mng.window.showMaximized()
 
 
 ########################################################
@@ -260,10 +269,14 @@ plt.tight_layout()
 # Prepare for plotting singular vectors
 ########################################################
 
+maxVectorsToPlot = 25
+numVectorsToPlot = min(maxVectorsToPlot,n_singular_vectors_to_save)
+# If more vectors are saved than the number allowed to plot, then plot the last ones saved.
+plotOffset = n_singular_vectors_to_save - numVectorsToPlot
 mpl.rc('xtick',labelsize=7)
 mpl.rc('ytick',labelsize=7)
-numCols = int(np.ceil(np.sqrt(n_singular_vectors_to_save)))
-numRows = int(np.ceil(n_singular_vectors_to_save*1.0/numCols))
+numCols = int(np.ceil(np.sqrt(numVectorsToPlot)))
+numRows = int(np.ceil(numVectorsToPlot*1.0/numCols))
 
 numContours = 20
 
@@ -275,14 +288,14 @@ figureNum += 1
 fig = plt.figure(figureNum)
 fig.patch.set_facecolor('white')
 
-for whichPlot in range(n_singular_vectors_to_save):
+for whichPlot in range(numVectorsToPlot):
     plt.subplot(numRows,numCols,whichPlot+1)
-    data = np.reshape(svd_u_inductance_plasma_middle_uv[whichPlot,:], [nu_plasma,nv_plasma],order='F')
+    data = np.reshape(svd_u_inductance_plasma_middle_uv[whichPlot+plotOffset,:], [nu_plasma,nv_plasma],order='F')
     plt.contourf(v_plasma, u_plasma, data, numContours)
     #plt.colorbar()
     plt.xlabel('v',fontsize='x-small')
     plt.ylabel('u',fontsize='x-small')
-    plt.title('Singular vector U '+str(whichPlot+1)+"\ns="+str(svd_s_inductance_plasma_middle[whichPlot]),fontsize='x-small')
+    plt.title('Singular vector U '+str(whichPlot+plotOffset+1)+"\ns="+str(svd_s_inductance_plasma_middle[whichPlot+plotOffset]),fontsize='x-small')
 
     plt.tight_layout()
     ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
@@ -296,14 +309,14 @@ figureNum += 1
 fig = plt.figure(figureNum)
 fig.patch.set_facecolor('white')
 
-for whichPlot in range(n_singular_vectors_to_save):
+for whichPlot in range(numVectorsToPlot):
     plt.subplot(numRows,numCols,whichPlot+1)
-    data = np.reshape(svd_v_inductance_plasma_middle_uv[whichPlot,:], [nu_middle,nv_middle],order='F')
+    data = np.reshape(svd_v_inductance_plasma_middle_uv[whichPlot+plotOffset,:], [nu_middle,nv_middle],order='F')
     plt.contourf(v_middle, u_middle, data, numContours)
     #plt.colorbar()
     plt.xlabel('v',fontsize='x-small')
     plt.ylabel('u',fontsize='x-small')
-    plt.title('Singular vector V '+str(whichPlot+1)+"\ns="+str(svd_s_inductance_plasma_middle[whichPlot]),fontsize='x-small')
+    plt.title('Singular vector V '+str(whichPlot+plotOffset+1)+"\ns="+str(svd_s_inductance_plasma_middle[whichPlot+plotOffset]),fontsize='x-small')
 
     plt.tight_layout()
     ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
@@ -318,14 +331,14 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
     fig = plt.figure(figureNum)
     fig.patch.set_facecolor('white')
 
-    for whichPlot in range(n_singular_vectors_to_save):
+    for whichPlot in range(numVectorsToPlot):
         plt.subplot(numRows,numCols,whichPlot+1)
-        data = np.reshape(svd_u_transferMatrix_uv[whichThreshold,whichPlot,:],[nu_plasma,nv_plasma],order='F')
+        data = np.reshape(svd_u_transferMatrix_uv[whichThreshold,whichPlot+plotOffset,:],[nu_plasma,nv_plasma],order='F')
         plt.contourf(v_plasma, u_plasma, data, numContours)
         #plt.colorbar()
         plt.xlabel('v',fontsize='x-small')
         plt.ylabel('u',fontsize='x-small')
-        plt.title('Singular vector U '+str(whichPlot+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot]),fontsize='x-small')
+        plt.title('Singular vector U '+str(whichPlot+plotOffset+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot+plotOffset]),fontsize='x-small')
 
     plt.tight_layout()
     ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
@@ -340,14 +353,14 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
     fig = plt.figure(figureNum)
     fig.patch.set_facecolor('white')
 
-    for whichPlot in range(n_singular_vectors_to_save):
+    for whichPlot in range(numVectorsToPlot):
         plt.subplot(numRows,numCols,whichPlot+1)
-        data = np.reshape(svd_v_transferMatrix_uv[whichThreshold,whichPlot,:], [nu_middle,nv_middle],order='F')
+        data = np.reshape(svd_v_transferMatrix_uv[whichThreshold,whichPlot+plotOffset,:], [nu_middle,nv_middle],order='F')
         plt.contourf(v_middle, u_middle, data, numContours)
         #plt.colorbar()
         plt.xlabel('v',fontsize='x-small')
         plt.ylabel('u',fontsize='x-small')
-        plt.title('Singular vector V '+str(whichPlot+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot]),fontsize='x-small')
+        plt.title('Singular vector V '+str(whichPlot+plotOffset+1)+"\ns="+str(svd_s_transferMatrix[whichThreshold,whichPlot+plotOffset]),fontsize='x-small')
 
     plt.tight_layout()
     ax = fig.add_axes(np.array([0,0,1,1]), frameon=False)
@@ -357,21 +370,21 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
 # Now make 3D surface plot
 ########################################################
 
-figureNum += 1
-fig = plt.figure(figureNum)
-fig.patch.set_facecolor('white')
-ax = fig.gca(projection='3d')
-ax.plot_surface(r_plasma[:,:,0], r_plasma[:,:,1], r_plasma[:,:,2], rstride=1, cstride=1, color='r',linewidth=0)
-
-maxIndex = int(nvl_middle*0.7)
-ax.plot_surface(r_middle[:maxIndex,:,0], r_middle[:maxIndex,:,1], r_middle[:maxIndex,:,2], rstride=1, cstride=1, color='m',linewidth=0)
-
-maxIndex = int(nvl_outer*0.55)
-minIndex = int(nvl_outer*0.15)
-ax.plot_surface(r_outer[minIndex:maxIndex,:,0], r_outer[minIndex:maxIndex,:,1], r_outer[minIndex:maxIndex,:,2], rstride=1, cstride=1, color='b',linewidth=0)
-
-plotLMax = r_outer.max()
-ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
+#figureNum += 1
+#fig = plt.figure(figureNum)
+#fig.patch.set_facecolor('white')
+#ax = fig.gca(projection='3d')
+#ax.plot_surface(r_plasma[:,:,0], r_plasma[:,:,1], r_plasma[:,:,2], rstride=1, cstride=1, color='r',linewidth=0)
+#
+#maxIndex = int(nvl_middle*0.7)
+#ax.plot_surface(r_middle[:maxIndex,:,0], r_middle[:maxIndex,:,1], r_middle[:maxIndex,:,2], rstride=1, cstride=1, color='m',linewidth=0)
+#
+#maxIndex = int(nvl_outer*0.55)
+#minIndex = int(nvl_outer*0.15)
+#ax.plot_surface(r_outer[minIndex:maxIndex,:,0], r_outer[minIndex:maxIndex,:,1], r_outer[minIndex:maxIndex,:,2], rstride=1, cstride=1, color='b',linewidth=0)
+#
+#plotLMax = r_outer.max()
+#ax.auto_scale_xyz([-plotLMax, plotLMax], [-plotLMax, plotLMax], [-plotLMax, plotLMax])
 
 
 ########################################################
@@ -382,6 +395,7 @@ if overlap_exists:
     execfile('/global/homes/l/landrema/scripts/colormaps.py')
     ##myCmap=viridis
     #myCmap=plasma
+    myCmap = inferno
 
     figureNum += 1
     fig = plt.figure(figureNum)
@@ -389,19 +403,59 @@ if overlap_exists:
 
     numRows = 1
     numCols = 2
-    my_clim = (-6.0,0.0)
+    my_clim = (-4.0,0.0)
 
     plt.subplot(numRows,numCols,1)
-    plt.imshow(np.log10(np.abs(overlap_plasma)),interpolation='none',clim=my_clim,cmap=viridis)
-    plt.gca().xaxis.tick_top()
+    #plt.imshow(np.log10(np.abs(overlap_plasma)),interpolation='none',clim=my_clim)
+    plt.imshow(np.log10(np.abs(overlap_plasma.transpose())),interpolation='none',clim=my_clim,cmap=myCmap)
+    #plt.gca().xaxis.tick_top()
     plt.colorbar()
     plt.title('Log10 overlap of transfer and inductance singular vectors on plasma surface')
+    plt.xlabel('Index of inductance singular vector')
+    plt.ylabel('Index of transfer singular vector')
 
     plt.subplot(numRows,numCols,2)
-    plt.imshow(np.log10(np.abs(overlap_middle)),interpolation='none',clim=my_clim,cmap=viridis)
-    plt.gca().xaxis.tick_top()
+    #plt.imshow(np.log10(np.abs(overlap_middle)),interpolation='none',clim=my_clim)
+    plt.imshow(np.log10(np.abs(overlap_middle.transpose())),interpolation='none',clim=my_clim,cmap=myCmap)
+    #plt.gca().xaxis.tick_top()
     plt.colorbar()
     plt.title('Log10 overlap of transfer and inductance singular vectors on middle surface')
+    plt.xlabel('Index of inductance singular vector')
+    plt.ylabel('Index of transfer singular vector')
+
+    # Maximize window. The command for this depends on the backend.
+    mng = plt.get_current_fig_manager()
+    #mng.resize(*mng.window.maxsize())
+    mng.window.showMaximized()
+
+#######################################################
+# Plot quantities related to 1/R field
+########################################################
+
+if one_over_R_exists:
+
+    figureNum += 1
+    fig = plt.figure(figureNum)
+    fig.patch.set_facecolor('white')
+
+    numRows = 1
+    numCols = 2
+
+    plt.subplot(numRows,numCols,1)
+    plt.contourf(v_plasma, u_plasma, normal_component_of_1_over_R_field_uv.transpose(), numContours)
+    plt.xlabel('v',fontsize='x-small')
+    plt.ylabel('u',fontsize='x-small')
+    #plt.imshow(,interpolation='none')
+    ##plt.gca().xaxis.tick_top()
+    plt.colorbar()
+    plt.title('1/R toroidal field (component normal to plasma surface)')
+    #plt.xlabel('iu')
+    #plt.ylabel('iv')
+
+    plt.subplot(numRows,numCols,2)
+    plt.semilogy(abs(normal_component_of_1_over_R_field),'.-')
+    plt.title('abs normal_component_of_1_over_R_field')
+    plt.xlabel('Plasma surface basis function index')
 
     # Maximize window. The command for this depends on the backend.
     mng = plt.get_current_fig_manager()

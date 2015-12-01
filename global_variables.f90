@@ -26,6 +26,8 @@ module global_variables
 
   real(dp), dimension(:), allocatable :: u_plasma, v_plasma, vl_plasma
   real(dp), dimension(:,:,:), allocatable :: r_plasma, drdu_plasma, drdv_plasma, normal_plasma
+  real(dp), dimension(:), allocatable :: normal_component_of_1_over_R_field
+  real(dp), dimension(:,:), allocatable :: normal_component_of_1_over_R_field_uv
 
   real(dp), dimension(:), allocatable :: u_middle, v_middle, vl_middle
   real(dp), dimension(:,:,:), allocatable :: r_middle, drdu_middle, drdv_middle, normal_middle
@@ -103,6 +105,8 @@ module global_variables
   integer, dimension(:), allocatable :: svd_u_inductance_plasma_middle_dominant_n
   integer, dimension(:,:), allocatable :: svd_u_transferMatrix_dominant_m
   integer, dimension(:,:), allocatable :: svd_u_transferMatrix_dominant_n
+
+  logical :: zero_first_transfer_vector_in_overlap = .false.
 
 end module global_variables
 

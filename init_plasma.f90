@@ -9,7 +9,7 @@ subroutine init_plasma
 
   implicit none
 
-  integer :: i, iu, iv, imn, tic, toc, countrate, iflag, ierr, iopen, tic1, toc1
+  integer :: i, iu, iv, imn, tic, toc, countrate, iflag, ierr, iopen, tic1, toc1, iunit
   real(dp) :: angle, sinangle, cosangle, dsinangledu, dsinangledv, dcosangledu, dcosangledv
   real(dp) :: angle2, sinangle2, cosangle2, dsinangle2dv, dcosangle2dv
   real(dp) :: weight1, weight2, u, v, r_temp, z_temp, dnorm
@@ -236,7 +236,7 @@ subroutine init_plasma
      end do
      call system_clock(toc1)
      print *,"  Time for Fourier transform:",real(toc1-tic1)/countrate
-     
+
   case (5)
      ! EFIT
 
@@ -269,6 +269,24 @@ subroutine init_plasma
      print *,"Error! Invalid setting for geometry_option_plasma:",geometry_option_plasma
      stop
   end select
+
+!!$  ! Save plasma surface shape for NESCOIL
+!!$  iunit = 15
+!!$  call safe_open(iunit,ierr,'nescin_plasma_surface','replace','formatted')
+!!$  if (ierr .ne. 0) stop "Unable to open nescin output file"
+!!$  write (iunit, 10) '------ Plasma Surface ---- '
+!!$  write (iunit, 10) 'Number of fourier modes in table'
+!!$  write (iunit,*) mnmax
+!!$  write (iunit, 10) 'Table of fourier coefficients'
+!!$  write (iunit, 10) 'm,n,crc,czs,cls,crs,czc,clc'
+!!$  do imn = 1, mnmax
+!!$     write (iunit,'(x,2i6,1p6e20.12)') xm(imn), xn(imn), &
+!!$          rmnc(imn), zmns(imn), cl(m,n), crs(m,n), czc(m,n), clc(m,n)
+!!$  end do
+!!$
+!!$  close(iunit)
+     
+
 
   nvl_plasma = nv_plasma * nfp
   nvl_middle = nv_middle * nfp
@@ -365,7 +383,7 @@ subroutine init_plasma
   dv_plasma = v_plasma(2)-v_plasma(1)
 
   area_plasma = du_plasma * dv_plasma * sum(norm_normal_plasma)
-  
+
   call system_clock(toc)
   print *,"Done initializing plasma surface. Took ",real(toc-tic)/countrate," sec."
 
