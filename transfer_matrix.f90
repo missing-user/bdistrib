@@ -198,6 +198,9 @@ subroutine transfer_matrix
         svd_v_transferMatrix_uv(:,:,whichThreshold) = matmul(basis_functions_middle, svd_v_transferMatrix(:,:,whichThreshold))
      end if
      call system_clock(toc)
+     if (whichThreshold==1) then
+        normal_component_of_1_over_R_field_transfer = matmul(normal_component_of_1_over_R_field,U)
+     end if
      print *,"  Final matmuls: ",real(toc-tic)/countrate," sec."
 
      do i = 1,num_basis_functions_plasma
@@ -232,10 +235,10 @@ subroutine transfer_matrix
         ! Carry out the matrix-matrix multiplication C = A * B
         ! A = VT
         ! B = svd_v_inductance_plasma_middle_all
-        ! C = overlap_plasma
-        M_DGEMM = num_basis_functions_plasma ! # rows of A
-        N_DGEMM = num_basis_functions_plasma ! # cols of B
-        K_DGEMM = num_basis_functions_plasma ! Common dimension of A and B
+        ! C = overlap_middle
+        M_DGEMM = num_basis_functions_middle ! # rows of A
+        N_DGEMM = num_basis_functions_middle ! # cols of B
+        K_DGEMM = num_basis_functions_middle ! Common dimension of A and B
         LDA_DGEMM = M_DGEMM
         LDB_DGEMM = K_DGEMM
         LDC_DGEMM = M_DGEMM
@@ -247,10 +250,10 @@ subroutine transfer_matrix
         ! Carry out the matrix-matrix multiplication C = A * B
         ! A = U
         ! B = svd_u_inductance_plasma_middle_all
-        ! C = overlap_middle
-        M_DGEMM = num_basis_functions_middle ! # rows of A
-        N_DGEMM = num_basis_functions_middle ! # cols of B
-        K_DGEMM = num_basis_functions_middle ! Common dimension of A and B
+        ! C = overlap_plasma
+        M_DGEMM = num_basis_functions_plasma ! # rows of A
+        N_DGEMM = num_basis_functions_plasma ! # cols of B
+        K_DGEMM = num_basis_functions_plasma ! Common dimension of A and B
         LDA_DGEMM = M_DGEMM
         LDB_DGEMM = K_DGEMM
         LDC_DGEMM = M_DGEMM
@@ -262,7 +265,6 @@ subroutine transfer_matrix
         call system_clock(toc)
         print *,"  Compute overlap: ",real(toc-tic)/countrate," sec."
      end if
-
 
   end do
 

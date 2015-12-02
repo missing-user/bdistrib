@@ -14,7 +14,8 @@ subroutine svd_inductance_matrices()
        svd_u_inductance_plasma_middle_uv, svd_v_inductance_plasma_middle_uv, &
        xm_plasma, xn_plasma, mnmax_plasma, save_vectors_in_uv_format, &
        svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_n, &
-       svd_u_inductance_plasma_middle_all, svd_v_inductance_plasma_middle_all
+       svd_u_inductance_plasma_middle_all, svd_v_inductance_plasma_middle_all, &
+       normal_component_of_1_over_R_field_inductance, normal_component_of_1_over_R_field
   
   use stel_kinds
   
@@ -249,8 +250,9 @@ subroutine svd_inductance_matrices()
      svd_u_inductance_plasma_middle_uv = matmul(basis_functions_plasma, svd_u_inductance_plasma_middle)
      svd_v_inductance_plasma_middle_uv = matmul(basis_functions_middle, svd_v_inductance_plasma_middle)
   end if
+  normal_component_of_1_over_R_field_inductance = matmul(normal_component_of_1_over_R_field,U)
   call system_clock(toc1)
-  print *,"  Final matmul: ",real(toc1-tic1)/countrate," sec."
+  print *,"  Final matmuls: ",real(toc1-tic1)/countrate," sec."
 
   ! Compute dominant (m,n) for each left singular vector.
   allocate(svd_u_inductance_plasma_middle_dominant_m(num_basis_functions_plasma),stat=iflag)

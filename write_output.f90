@@ -120,7 +120,9 @@ subroutine write_output
        vn_overlap_plasma = "overlap_plasma", &
        vn_overlap_middle = "overlap_middle", &
        vn_normal_component_of_1_over_R_field = "normal_component_of_1_over_R_field", &
-       vn_normal_component_of_1_over_R_field_uv = "normal_component_of_1_over_R_field_uv"
+       vn_normal_component_of_1_over_R_field_uv = "normal_component_of_1_over_R_field_uv", &
+       vn_normal_component_of_1_over_R_field_inductance = "normal_component_of_1_over_R_field_inductance", &
+       vn_normal_component_of_1_over_R_field_transfer = "normal_component_of_1_over_R_field_transfer"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -265,6 +267,8 @@ subroutine write_output
   call cdf_define(ncid, vn_svd_u_inductance_plasma_middle_dominant_n, svd_u_inductance_plasma_middle_dominant_n, &
        dimname=basis_plasma_dim)
   call cdf_define(ncid, vn_normal_component_of_1_over_R_field, normal_component_of_1_over_R_field, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_normal_component_of_1_over_R_field_inductance, normal_component_of_1_over_R_field_inductance, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_normal_component_of_1_over_R_field_transfer, normal_component_of_1_over_R_field_transfer, dimname=basis_plasma_dim)
 
   ! Arrays with dimension 2
 
@@ -415,6 +419,8 @@ subroutine write_output
   call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_m)
   call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_dominant_n, svd_u_inductance_plasma_middle_dominant_n)
   call cdf_write(ncid, vn_normal_component_of_1_over_R_field, normal_component_of_1_over_R_field)
+  call cdf_write(ncid, vn_normal_component_of_1_over_R_field_inductance, normal_component_of_1_over_R_field_inductance)
+  call cdf_write(ncid, vn_normal_component_of_1_over_R_field_transfer,   normal_component_of_1_over_R_field_transfer)
 
   ! Arrays with dimension 2
 

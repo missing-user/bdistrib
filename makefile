@@ -1,7 +1,9 @@
 # makefile for NERSC Edison and Cori
 # You must first load the cray-netcdf module:
 #   module load cray-netcdf
-
+# For Cori is is also necessary to run
+#   module swap intel/16.0.0.109 intel/15.0.1.133
+# to avoid a bug in the Intel MKL!!!
 # It is convenient to run
 #   module unload cray-libsci
 # to avoid warning messages about libsci during compiling.

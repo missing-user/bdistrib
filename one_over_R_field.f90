@@ -15,6 +15,10 @@ subroutine one_over_R_field
   
   allocate(normal_component_of_1_over_R_field(num_basis_functions_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(normal_component_of_1_over_R_field_inductance(num_basis_functions_plasma),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
+  allocate(normal_component_of_1_over_R_field_transfer(num_basis_functions_plasma),stat=iflag)
+  if (iflag .ne. 0) stop 'Allocation error!'
   allocate(normal_component_of_1_over_R_field_uv(nu_plasma,nv_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
   allocate(tempVec(nu_plasma*nv_plasma),stat=iflag)

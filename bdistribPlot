@@ -79,6 +79,8 @@ except:
 try:
     normal_component_of_1_over_R_field = f.variables['normal_component_of_1_over_R_field'][()]
     normal_component_of_1_over_R_field_uv = f.variables['normal_component_of_1_over_R_field_uv'][()]
+    normal_component_of_1_over_R_field_inductance = f.variables['normal_component_of_1_over_R_field_inductance'][()]
+    normal_component_of_1_over_R_field_transfer = f.variables['normal_component_of_1_over_R_field_transfer'][()]
     one_over_R_exists = True
 except:
     one_over_R_exists = False
@@ -453,9 +455,12 @@ if one_over_R_exists:
     #plt.ylabel('iv')
 
     plt.subplot(numRows,numCols,2)
-    plt.semilogy(abs(normal_component_of_1_over_R_field),'.-')
-    plt.title('abs normal_component_of_1_over_R_field')
-    plt.xlabel('Plasma surface basis function index')
+    plt.semilogy(abs(normal_component_of_1_over_R_field),'.-',label='Basis functions')
+    plt.semilogy(abs(normal_component_of_1_over_R_field_inductance),'.-',label='Left-singular vectors of inductance matrix')
+    plt.semilogy(abs(normal_component_of_1_over_R_field_transfer),'.-',label='Left-singular vectors of transfer matrix')
+    plt.title('abs (normal_component_of_1_over_R_field) on the plasma surface')
+    plt.xlabel('index')
+    plt.legend(fontsize=8)
 
     # Maximize window. The command for this depends on the backend.
     mng = plt.get_current_fig_manager()

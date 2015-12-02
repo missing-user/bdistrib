@@ -27,6 +27,8 @@ module global_variables
   real(dp), dimension(:), allocatable :: u_plasma, v_plasma, vl_plasma
   real(dp), dimension(:,:,:), allocatable :: r_plasma, drdu_plasma, drdv_plasma, normal_plasma
   real(dp), dimension(:), allocatable :: normal_component_of_1_over_R_field
+  real(dp), dimension(:), allocatable :: normal_component_of_1_over_R_field_inductance
+  real(dp), dimension(:), allocatable :: normal_component_of_1_over_R_field_transfer
   real(dp), dimension(:,:), allocatable :: normal_component_of_1_over_R_field_uv
 
   real(dp), dimension(:), allocatable :: u_middle, v_middle, vl_middle
