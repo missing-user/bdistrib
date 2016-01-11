@@ -1,6 +1,6 @@
 subroutine read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, nu, nvl, u, vl, compute_2nd_derivs)
 
-  use global_variables, only: nfp, geometry_option_outer, xm, xn, mnmax, rmnc_global => rmnc, zmns_global => zmns
+  use global_variables, only: nfp, geometry_option_outer, xm, xn, mnmax, rmnc_global => rmnc, zmns_global => zmns, rmns_global => rmns, zmnc_global => zmnc
   use safe_open_mod
   use stel_constants
   use stel_kinds
@@ -69,6 +69,10 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, 
      if (iflag .ne. 0) stop "Allocation error"
      allocate(zmns_global(mnmax),stat=iflag)
      if (iflag .ne. 0) stop "Allocation error"
+     allocate(rmns_global(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error"
+     allocate(zmnc_global(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error"
   end if
 
   read (iunit, *)
@@ -82,6 +86,8 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, 
         xn(k) = -n*nfp
         rmnc_global(k) = rmnc
         zmns_global(k) = zmns
+        rmns_global(k) = rmns
+        zmnc_global(k) = zmnc
      end if
 
      do iv = 1,nvl
@@ -107,32 +113,40 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, 
            d2cosangledudv = -twopi*twopi*m*n*cosangle
            d2cosangledv2  = -twopi*twopi*n*n*cosangle
            
-           r(1,iu,iv) = r(1,iu,iv) + rmnc * cosangle * cosangle2
-           r(2,iu,iv) = r(2,iu,iv) + rmnc * cosangle * sinangle2
-           r(3,iu,iv) = r(3,iu,iv) + zmns * sinangle
+           r(1,iu,iv) = r(1,iu,iv) + rmnc * cosangle * cosangle2 + rmns * sinangle * cosangle2
+           r(2,iu,iv) = r(2,iu,iv) + rmnc * cosangle * sinangle2 + rmns * sinangle * sinangle2
+           r(3,iu,iv) = r(3,iu,iv) + zmns * sinangle             + zmnc * cosangle
            
-           drdu(1,iu,iv) = drdu(1,iu,iv) + rmnc * dcosangledu * cosangle2
-           drdu(2,iu,iv) = drdu(2,iu,iv) + rmnc * dcosangledu * sinangle2
-           drdu(3,iu,iv) = drdu(3,iu,iv) + zmns * dsinangledu
+           drdu(1,iu,iv) = drdu(1,iu,iv) + rmnc * dcosangledu * cosangle2 + rmns * dsinangledu * cosangle2
+           drdu(2,iu,iv) = drdu(2,iu,iv) + rmnc * dcosangledu * sinangle2 + rmns * dsinangledu * sinangle2
+           drdu(3,iu,iv) = drdu(3,iu,iv) + zmns * dsinangledu + zmnc * dcosangledu
            
-           drdv(1,iu,iv) = drdv(1,iu,iv) + rmnc * (dcosangledv * cosangle2 + cosangle * dcosangle2dv)
-           drdv(2,iu,iv) = drdv(2,iu,iv) + rmnc * (dcosangledv * sinangle2 + cosangle * dsinangle2dv)
-           drdv(3,iu,iv) = drdv(3,iu,iv) + zmns * dsinangledv
+           drdv(1,iu,iv) = drdv(1,iu,iv) + rmnc * (dcosangledv * cosangle2 + cosangle * dcosangle2dv) &
+                + rmns * (dsinangledv * cosangle2 + sinangle * dcosangle2dv)
+           drdv(2,iu,iv) = drdv(2,iu,iv) + rmnc * (dcosangledv * sinangle2 + cosangle * dsinangle2dv) &
+                + rmns * (dsinangledv * sinangle2 + sinangle * dsinangle2dv)
+           drdv(3,iu,iv) = drdv(3,iu,iv) + zmns * dsinangledv + zmnc * dcosangledv
 
            if (compute_2nd_derivs) then
-              d2rdu2(1,iu,iv) = d2rdu2(1,iu,iv) + rmnc * d2cosangledu2 * cosangle2
-              d2rdu2(2,iu,iv) = d2rdu2(2,iu,iv) + rmnc * d2cosangledu2 * sinangle2
-              d2rdu2(3,iu,iv) = d2rdu2(3,iu,iv) + zmns * d2sinangledu2
+              d2rdu2(1,iu,iv) = d2rdu2(1,iu,iv) + rmnc * d2cosangledu2 * cosangle2 + rmns * d2sinangledu2 * cosangle2
+              d2rdu2(2,iu,iv) = d2rdu2(2,iu,iv) + rmnc * d2cosangledu2 * sinangle2 + rmns * d2sinangledu2 * sinangle2
+              d2rdu2(3,iu,iv) = d2rdu2(3,iu,iv) + zmns * d2sinangledu2 + zmnc * d2cosangledu2
 
-              d2rdudv(1,iu,iv) = d2rdudv(1,iu,iv) + rmnc * (d2cosangledudv * cosangle2 + dcosangledu * dcosangle2dv)
-              d2rdudv(2,iu,iv) = d2rdudv(2,iu,iv) + rmnc * (d2cosangledudv * sinangle2 + dcosangledu * dsinangle2dv)
-              d2rdudv(3,iu,iv) = d2rdudv(3,iu,iv) + zmns * d2sinangledudv
+              d2rdudv(1,iu,iv) = d2rdudv(1,iu,iv) + rmnc * (d2cosangledudv * cosangle2 + dcosangledu * dcosangle2dv) &
+                   + rmns * (d2sinangledudv * cosangle2 + dsinangledu * dcosangle2dv)
+              d2rdudv(2,iu,iv) = d2rdudv(2,iu,iv) + rmnc * (d2cosangledudv * sinangle2 + dcosangledu * dsinangle2dv) &
+                   + rmns * (d2sinangledudv * sinangle2 + dsinangledu * dsinangle2dv)
+              d2rdudv(3,iu,iv) = d2rdudv(3,iu,iv) + zmns * d2sinangledudv + zmnc * d2cosangledudv
            
               d2rdv2(1,iu,iv) = d2rdv2(1,iu,iv) + rmnc * (d2cosangledv2 * cosangle2 + dcosangledv * dcosangle2dv &
-                   + dcosangledv * dcosangle2dv + cosangle * d2cosangle2dv2)
+                   + dcosangledv * dcosangle2dv + cosangle * d2cosangle2dv2) &
+                   + rmns * (d2sinangledv2 * cosangle2 + dsinangledv * dcosangle2dv &
+                   + dsinangledv * dcosangle2dv + sinangle * d2cosangle2dv2)
               d2rdv2(2,iu,iv) = d2rdv2(2,iu,iv) + rmnc * (d2cosangledv2 * sinangle2 + dcosangledv * dsinangle2dv &
-                   + dcosangledv * dsinangle2dv + cosangle * d2sinangle2dv2)
-              d2rdv2(3,iu,iv) = d2rdv2(3,iu,iv) + zmns * d2sinangledv2
+                   + dcosangledv * dsinangle2dv + cosangle * d2sinangle2dv2) &
+                   + rmns * (d2sinangledv2 * sinangle2 + dsinangledv * dsinangle2dv &
+                   + dsinangledv * dsinangle2dv + sinangle * d2sinangle2dv2)
+              d2rdv2(3,iu,iv) = d2rdv2(3,iu,iv) + zmns * d2sinangledv2 + zmnc * d2cosangledv2
            end if
         end do
      end do

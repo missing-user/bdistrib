@@ -105,9 +105,11 @@ fig.patch.set_facecolor('white')
 plt.plot(svd_s_inductance_middle_outer,'.m',label='Inductance matrix between middle and outer surfaces')
 plt.plot(svd_s_inductance_plasma_outer,'.r',label='Inductance matrix between plasma and outer surfaces')
 plt.plot(svd_s_inductance_plasma_middle,'.g',label='Inductance matrix between plasma and middle surfaces')
+#plt.plot(svd_s_inductance_plasma_middle,'.g',label='Inductance matrix between plasma and control surfaces')
 colors=['k','orange','c','brown','gray','darkred','olive','darkviolet','gold','lawngreen']
 for i in range(n_pseudoinverse_thresholds):
-    plt.plot(svd_s_transferMatrix[i,:],'.',color=colors[i],label='Transfer matrix, thresh='+str(pseudoinverse_thresholds[i]))
+    plt.plot(svd_s_transferMatrix[i,:],'.',color=colors[i],label='Transfer matrix')
+#    plt.plot(svd_s_transferMatrix[i,:],'.',color=colors[i],label='Transfer matrix, thresh='+str(pseudoinverse_thresholds[i]))
 plt.legend(fontsize='x-small',loc=3)
 plt.title('Singular values')
 plt.yscale('log')
@@ -254,7 +256,7 @@ for whichPlot in range(4):
     plt.subplot(numRows,numCols,whichPlot+1)
     v = v_slices[whichPlot]
     plt.plot(R_slice_outer[whichPlot,:],  Z_slice_outer[whichPlot,:],  'b.-', label='outer')
-    plt.plot(R_slice_middle[whichPlot,:], Z_slice_middle[whichPlot,:], 'm.-', label='middle')
+    plt.plot(R_slice_middle[whichPlot,:], Z_slice_middle[whichPlot,:], 'm.-', label='control')
     plt.plot(R_slice_plasma[whichPlot,:], Z_slice_plasma[whichPlot,:], 'r.-', label='plasma')
     plt.gca().set_aspect('equal',adjustable='box')
     plt.legend(fontsize='x-small')
@@ -274,7 +276,8 @@ plt.tight_layout()
 maxVectorsToPlot = 25
 numVectorsToPlot = min(maxVectorsToPlot,n_singular_vectors_to_save)
 # If more vectors are saved than the number allowed to plot, then plot the last ones saved.
-plotOffset = n_singular_vectors_to_save - numVectorsToPlot
+#plotOffset = n_singular_vectors_to_save - numVectorsToPlot
+plotOffset = 0
 mpl.rc('xtick',labelsize=7)
 mpl.rc('ytick',labelsize=7)
 numCols = int(np.ceil(np.sqrt(numVectorsToPlot)))

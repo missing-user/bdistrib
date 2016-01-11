@@ -41,7 +41,7 @@ fig = plt.figure(1)
 fig.patch.set_facecolor('white')
 
 for i in range(len(dataNames)):
-    plt.semilogy(svd_s_transferMatrix_many[i],'.',label=dataNames[i])
+    plt.semilogy(svd_s_transferMatrix_many[i],'.-',label=dataNames[i])
 plt.title('Singular values of transfer matrix')
 plt.legend(frameon=False,prop=dict(size='x-small'),loc=3)
 plt.grid(True)
@@ -65,7 +65,7 @@ fig.patch.set_facecolor('white')
 
 for whichFile in range(1,len(sys.argv)):
     filename = sys.argv[whichFile]
-    plt.semilogy(svd_s_inductance_plasma_middle_many[whichFile-1],'.',label=filename)
+    plt.semilogy(svd_s_inductance_plasma_middle_many[whichFile-1],'.-',label=filename)
 plt.title('Singular values of plasma-control inductance matrix')
 plt.legend(frameon=False,prop=dict(size='x-small'),loc=3)
 plt.grid(True)

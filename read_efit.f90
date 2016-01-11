@@ -54,8 +54,8 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
   print *,"  Reading EFIT file ",trim(filename)
 
 
-  if (psiN_desired >= 1) then
-     stop "Error! psiN_desired must be less than 1."
+  if (psiN_desired > 1) then
+     stop "Error! psiN_desired must be <= 1."
   end if
 
   if (psiN_desired <= 0) then
@@ -252,25 +252,38 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
   rootSolve_abserr = 1.0e-10_dp
   rootSolve_relerr = 1.0e-10_dp
   do i = 1,ntheta
+     print *,"i=",i,"of",ntheta
      rootSolve_min = 0.0_dp
      rootSolve_max = r_LCFS(i)
      this_theta = theta(i)
 
-     call fzero(fzero_residual, rootSolve_min, rootSolve_max, rootSolve_max * psiN_desired, &
-          rootSolve_relerr, rootSolve_abserr, fzeroFlag)
-     ! Note: fzero returns its answer in rootSolve_min
-     r_minor = rootSolve_min
-     if (fzeroFlag == 4) then
-        stop "ERROR: fzero returned error 4: no sign change in residual"
-     else if (fzeroFlag > 2) then
-        print *,"WARNING: fzero returned an error code:",fzeroFlag
-     end if   
+     if (abs(psiN_desired-1) < 1d-7) then
+        r_minor = r_LCFS(i)
+        if (i==1) then
+           print *,"Using EFIT LCFS directly"
+        end if
+     else
+        if (i==1) then
+           print *,"Computing a flux surface inside the EFIT LCFS."
+        end if
+
+        call fzero(fzero_residual, rootSolve_min, rootSolve_max, rootSolve_max * psiN_desired, &
+             rootSolve_relerr, rootSolve_abserr, fzeroFlag)
+        ! Note: fzero returns its answer in rootSolve_min
+        r_minor = rootSolve_min
+        if (fzeroFlag == 4) then
+           stop "ERROR: fzero returned error 4: no sign change in residual"
+        else if (fzeroFlag > 2) then
+           print *,"WARNING: fzero returned an error code:",fzeroFlag
+        end if
+     end if
 
      R_surface(i) = Rpos(r_minor, this_theta)
-     Z_surface(i) = Zpos(r_minor, this_theta)
+     !Z_surface(i) = Zpos(r_minor, this_theta) - Z_mag  ! Shift vertically so magnetic axis is now at Z=0
+     Z_surface(i) = Zpos(r_minor, this_theta) 
   end do
 
-
+  print *,"Begin Fourier coefficients of plasma surface ----------"
   ! Begin code adapted from BNORM to Fourier transform data on the theta grid to sin/cos coefficients
   do m = 0, mnmax-1
      dnorm = (1.0_dp)/ntheta
@@ -291,7 +304,19 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
      zmns(m+1) = ztemp
      rmns(m+1) = rtemps
      zmnc(m+1) = ztempc
+     ! Example of format for VMEC input:
+     ! RBC(-12, 0) = -5.1637E-05 ZBS(-12, 0) = -9.4960E-05
+     print "(a,i3.3,a,e20.12,a,i3.3,a,e20.12)","RBC(0,",m,")=",rmnc(m+1)," ZBS(0,",m,")=",zmns(m+1)
+     print "(a,i3.3,a,e20.12,a,i3.3,a,e20.12)","RBS(0,",m,")=",rmns(m+1)," ZBC(0,",m,")=",zmnc(m+1)
   end do
+  print *,"End Fourier coefficients of plasma surface ----------"
+
+  print *,"Begin Fourier coefficients of plasma surface ----------"
+  print *,'m, rmnc, rmns, zmnc, zmns'
+  do m = 0, mnmax-1
+     print "(i3.3,4e20.12)",m,rmnc(m+1),rmns(m+1),zmnc(m+1),zmns(m+1)
+  end do
+  print *,"End Fourier coefficients of plasma surface ----------"
 
 !!$  print *,"r_surface:",r_surface
 !!$  print *," "
