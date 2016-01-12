@@ -122,7 +122,12 @@ subroutine write_output
        vn_normal_component_of_1_over_R_field = "normal_component_of_1_over_R_field", &
        vn_normal_component_of_1_over_R_field_uv = "normal_component_of_1_over_R_field_uv", &
        vn_normal_component_of_1_over_R_field_inductance = "normal_component_of_1_over_R_field_inductance", &
-       vn_normal_component_of_1_over_R_field_transfer = "normal_component_of_1_over_R_field_transfer"
+       vn_normal_component_of_1_over_R_field_transfer = "normal_component_of_1_over_R_field_transfer", &
+       vn_normal_component_of_const_v_field = "normal_component_of_const_v_field", &
+       vn_normal_component_of_const_v_field_uv = "normal_component_of_const_v_field_uv", &
+       vn_normal_component_of_const_v_field_inductance = "normal_component_of_const_v_field_inductance", &
+       vn_normal_component_of_const_v_field_transfer = "normal_component_of_const_v_field_transfer", &
+       vn_net_poloidal_current_Amperes = "net_poloidal_current_Amperes"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -235,6 +240,7 @@ subroutine write_output
   call cdf_define(ncid, vn_area_middle, area_middle)
   call cdf_define(ncid, vn_area_outer, area_outer)
   call cdf_define(ncid, vn_check_orthogonality, check_orthogonality)
+  call cdf_define(ncid, vn_net_poloidal_current_Amperes, net_poloidal_current_Amperes)
 
   ! Arrays with dimension 1
 
@@ -269,6 +275,9 @@ subroutine write_output
   call cdf_define(ncid, vn_normal_component_of_1_over_R_field, normal_component_of_1_over_R_field, dimname=basis_plasma_dim)
   call cdf_define(ncid, vn_normal_component_of_1_over_R_field_inductance, normal_component_of_1_over_R_field_inductance, dimname=basis_plasma_dim)
   call cdf_define(ncid, vn_normal_component_of_1_over_R_field_transfer, normal_component_of_1_over_R_field_transfer, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_normal_component_of_const_v_field, normal_component_of_const_v_field, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_normal_component_of_const_v_field_inductance, normal_component_of_const_v_field_inductance, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_normal_component_of_const_v_field_transfer, normal_component_of_const_v_field_transfer, dimname=basis_plasma_dim)
 
   ! Arrays with dimension 2
 
@@ -307,6 +316,7 @@ subroutine write_output
   call cdf_define(ncid, vn_overlap_plasma, overlap_plasma, dimname=basis_basis_plasma_dim)
   call cdf_define(ncid, vn_overlap_middle, overlap_middle, dimname=basis_basis_middle_dim)
   call cdf_define(ncid, vn_normal_component_of_1_over_R_field_uv, normal_component_of_1_over_R_field_uv, dimname=u_v_plasma_dim)
+  call cdf_define(ncid, vn_normal_component_of_const_v_field_uv, normal_component_of_const_v_field_uv, dimname=u_v_plasma_dim)
 
   ! Arrays with dimension 3
 
@@ -392,6 +402,7 @@ subroutine write_output
   call cdf_write(ncid, vn_area_middle, area_middle)
   call cdf_write(ncid, vn_area_outer, area_outer)
   call cdf_write(ncid, vn_check_orthogonality, check_orthogonality)
+  call cdf_write(ncid, vn_net_poloidal_current_Amperes, net_poloidal_current_Amperes)
 
   ! Arrays with dimension 1
 
@@ -421,6 +432,9 @@ subroutine write_output
   call cdf_write(ncid, vn_normal_component_of_1_over_R_field, normal_component_of_1_over_R_field)
   call cdf_write(ncid, vn_normal_component_of_1_over_R_field_inductance, normal_component_of_1_over_R_field_inductance)
   call cdf_write(ncid, vn_normal_component_of_1_over_R_field_transfer,   normal_component_of_1_over_R_field_transfer)
+  call cdf_write(ncid, vn_normal_component_of_const_v_field, normal_component_of_const_v_field)
+  call cdf_write(ncid, vn_normal_component_of_const_v_field_inductance, normal_component_of_const_v_field_inductance)
+  call cdf_write(ncid, vn_normal_component_of_const_v_field_transfer,   normal_component_of_const_v_field_transfer)
 
   ! Arrays with dimension 2
 
@@ -457,6 +471,7 @@ subroutine write_output
   call cdf_write(ncid, vn_overlap_plasma, overlap_plasma)
   call cdf_write(ncid, vn_overlap_middle, overlap_middle)
   call cdf_write(ncid, vn_normal_component_of_1_over_R_field_uv, normal_component_of_1_over_R_field_uv)
+  call cdf_write(ncid, vn_normal_component_of_const_v_field_uv, normal_component_of_const_v_field_uv)
 
   ! Arrays with dimension 3
 

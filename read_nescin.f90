@@ -60,19 +60,25 @@ subroutine read_nescin(nescin_filename, r, drdu, drdv, d2rdu2, d2rdudv, d2rdv2, 
      ! Clear arrays associated with the plasma surface for offsetting,
      ! and replace them with the nescin values.
      deallocate(xm,xn,rmnc_global,zmns_global)
+     if (allocated(rmns_global)) then
+        deallocate(rmns_global)
+     end if
+     if (allocated(zmnc_global)) then
+        deallocate(zmnc_global)
+     end if
      mnmax = ntotal
      allocate(xm(mnmax),stat=iflag)
-     if (iflag .ne. 0) stop "Allocation error"
+     if (iflag .ne. 0) stop "Allocation error! read_nescin 1"
      allocate(xn(mnmax),stat=iflag)
-     if (iflag .ne. 0) stop "Allocation error"
+     if (iflag .ne. 0) stop "Allocation error! read_nescin 2"
      allocate(rmnc_global(mnmax),stat=iflag)
-     if (iflag .ne. 0) stop "Allocation error"
+     if (iflag .ne. 0) stop "Allocation error! read_nescin 3"
      allocate(zmns_global(mnmax),stat=iflag)
-     if (iflag .ne. 0) stop "Allocation error"
+     if (iflag .ne. 0) stop "Allocation error! read_nescin 4"
      allocate(rmns_global(mnmax),stat=iflag)
-     if (iflag .ne. 0) stop "Allocation error"
+     if (iflag .ne. 0) stop "Allocation error! read_nescin 5"
      allocate(zmnc_global(mnmax),stat=iflag)
-     if (iflag .ne. 0) stop "Allocation error"
+     if (iflag .ne. 0) stop "Allocation error! read_nescin 6"
   end if
 
   read (iunit, *)

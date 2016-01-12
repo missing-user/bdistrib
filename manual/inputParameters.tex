@@ -122,6 +122,19 @@ When this parameter is true, the first column (i.e. first singular vector) in bo
 and $\vect{V}$ for the transfer matrix SVD are set to 0 before computing the overlap matrices.
 }
 
+\myhrule
+
+\param{net\_poloidal\_current\_Amperes}
+{real}
+{1.0}
+{If \parlink{geometry\_option\_plasma}=0,1,or 5, i.e. if the plasma surface is not a vmec equilibrium.}
+{The number of Amperes of current the links the middle surface toroidally. This
+number is used to set the overall magnitude of the normal fields due to a $1/R$ external
+field or due to constant-$v$ coils. If the plasma surface is obtained from a vmec equilibrium,
+then {\ttfamily net\_poloidal\_current\_Amperes} will be determined instead
+from the {\ttfamily bvco} value in the vmec wout file.
+}
+
 
 
 \section{Resolution parameters}

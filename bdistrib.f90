@@ -47,7 +47,9 @@ program bdistrib
   call system_clock(toc1)
   print *,"Done. Took ",real(toc1-tic1)/countrate," sec."
 
+  ! Compute several important distributions of B_normal on the plasma surface:
   call one_over_R_field()
+  call constant_v_coil_field()
 
   ! Compute the mutual inductance matrices, which relate current on 1 surface to B_normal on an interior surface:
   call build_inductance_matrices()

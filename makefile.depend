@@ -1,7 +1,7 @@
 # -*- mode: makefile -*-
 
 OBJ_FILES = bdistrib.o build_inductance_matrix_mod.o build_inductance_matrices.o \
-	compute_Kmn.o compute_offset_surface_xyz_of_uv.o \
+	compute_Kmn.o compute_offset_surface_xyz_of_uv.o constant_v_coil_field.o \
 	expand_plasma_surface.o fzero.o global_variables.o init_basis_functions_mod.o \
 	init_Fourier_modes_mod.o init_outer_2_surfaces.o init_plasma.o \
 	init_surface_mod.o one_over_R_field.o read_efit.o read_input.o read_nescin.o splines.o svd_inductance_matrices.o \
@@ -13,6 +13,7 @@ build_inductance_matrix_mod.o: global_variables.o
 build_inductance_matrices.o: global_variables.o build_inductance_matrix_mod.o
 compute_Kmn.o: global_variables.o
 compute_offset_surface_xyz_of_uv.o: global_variables.o
+constant_v_coil_field.o: global_variables.o
 expand_plasma_surface.o: global_variables.o
 fzero.o: 
 global_variables.o: 

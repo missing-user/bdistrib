@@ -85,6 +85,15 @@ try:
 except:
     one_over_R_exists = False
 
+try:
+    normal_component_of_const_v_field = f.variables['normal_component_of_const_v_field'][()]
+    normal_component_of_const_v_field_uv = f.variables['normal_component_of_const_v_field_uv'][()]
+    normal_component_of_const_v_field_inductance = f.variables['normal_component_of_const_v_field_inductance'][()]
+    normal_component_of_const_v_field_transfer = f.variables['normal_component_of_const_v_field_transfer'][()]
+    const_v_exists = True
+except:
+    const_v_exists = False
+
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
 print "r_plasma.shape: ",r_plasma.shape
@@ -437,33 +446,54 @@ if overlap_exists:
 # Plot quantities related to 1/R field
 ########################################################
 
-if one_over_R_exists:
+if one_over_R_exists or const_v_exists:
 
     figureNum += 1
     fig = plt.figure(figureNum)
     fig.patch.set_facecolor('white')
 
-    numRows = 1
+    numRows = 2
     numCols = 2
 
-    plt.subplot(numRows,numCols,1)
-    plt.contourf(v_plasma, u_plasma, normal_component_of_1_over_R_field_uv.transpose(), numContours)
-    plt.xlabel('v',fontsize='x-small')
-    plt.ylabel('u',fontsize='x-small')
-    #plt.imshow(,interpolation='none')
-    ##plt.gca().xaxis.tick_top()
-    plt.colorbar()
-    plt.title('1/R toroidal field (component normal to plasma surface)')
-    #plt.xlabel('iu')
-    #plt.ylabel('iv')
+    if one_over_R_exists:
+        plt.subplot(numRows,numCols,1)
+        plt.contourf(v_plasma, u_plasma, normal_component_of_1_over_R_field_uv.transpose(), numContours)
+        plt.xlabel('v',fontsize='x-small')
+        plt.ylabel('u',fontsize='x-small')
+        #plt.imshow(,interpolation='none')
+        ##plt.gca().xaxis.tick_top()
+        plt.colorbar()
+        plt.title('1/R toroidal field (component normal to plasma surface)')
+        #plt.xlabel('iu')
+        #plt.ylabel('iv')
 
-    plt.subplot(numRows,numCols,2)
-    plt.semilogy(abs(normal_component_of_1_over_R_field),'.-',label='Basis functions')
-    plt.semilogy(abs(normal_component_of_1_over_R_field_inductance),'.-',label='Left-singular vectors of inductance matrix')
-    plt.semilogy(abs(normal_component_of_1_over_R_field_transfer),'.-',label='Left-singular vectors of transfer matrix')
-    plt.title('abs (normal_component_of_1_over_R_field) on the plasma surface')
-    plt.xlabel('index')
-    plt.legend(fontsize=8)
+        plt.subplot(numRows,numCols,2)
+        plt.semilogy(abs(normal_component_of_1_over_R_field),'x-',label='Basis functions')
+        plt.semilogy(abs(normal_component_of_1_over_R_field_inductance),'x-',label='Left-singular vectors of inductance matrix')
+        plt.semilogy(abs(normal_component_of_1_over_R_field_transfer),'x-',label='Left-singular vectors of transfer matrix')
+        plt.title('abs (normal_component_of_1_over_R_field) on the plasma surface')
+        plt.xlabel('index')
+        plt.legend(fontsize=8)
+
+    if const_v_exists:
+        plt.subplot(numRows,numCols,3)
+        plt.contourf(v_plasma, u_plasma, normal_component_of_const_v_field_uv.transpose(), numContours)
+        plt.xlabel('v',fontsize='x-small')
+        plt.ylabel('u',fontsize='x-small')
+        #plt.imshow(,interpolation='none')
+        ##plt.gca().xaxis.tick_top()
+        plt.colorbar()
+        plt.title('B field due to constant-v coils (component normal to plasma surface)')
+        #plt.xlabel('iu')
+        #plt.ylabel('iv')
+
+        plt.subplot(numRows,numCols,2)
+        plt.semilogy(abs(normal_component_of_const_v_field),'+-',label='Basis functions')
+        plt.semilogy(abs(normal_component_of_const_v_field_inductance),'+-',label='Left-singular vectors of inductance matrix')
+        plt.semilogy(abs(normal_component_of_const_v_field_transfer),'+-',label='Left-singular vectors of transfer matrix')
+        plt.title('abs (normal_component_of_const_v_field) on the plasma surface')
+        plt.xlabel('index')
+        plt.legend(fontsize=8)
 
     # Maximize window. The command for this depends on the backend.
     mng = plt.get_current_fig_manager()

@@ -35,11 +35,11 @@ module init_surface_mod
       real(dp) :: x_new, y_new, z_new, x_old, y_old, z_old, delta_u, delta_v, temp
 
       allocate(u(nu),stat=iflag)
-      if (iflag .ne. 0) stop 'Allocation error!'
+      if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 1'
       allocate(v(nv),stat=iflag)
-      if (iflag .ne. 0) stop 'Allocation error!'
+      if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 2'
       allocate(vl(nvl),stat=iflag)
-      if (iflag .ne. 0) stop 'Allocation error!'
+      if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 3'
 
       do i = 1,nu
          u(i) = (i-1.0_dp)/nu
@@ -64,13 +64,13 @@ module init_surface_mod
 
       ! First dimension is the Cartesian component x, y, or z.
       allocate(r(3,nu,nvl),stat=iflag)
-      if (iflag .ne. 0) stop 'Allocation error!'
+      if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 4'
       allocate(drdu(3,nu,nvl),stat=iflag)
-      if (iflag .ne. 0) stop 'Allocation error!'
+      if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 5'
       allocate(drdv(3,nu,nvl),stat=iflag)
-      if (iflag .ne. 0) stop 'Allocation error!'
+      if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 6'
       allocate(normal(3,nu,nvl),stat=iflag)
-      if (iflag .ne. 0) stop 'Allocation error!'
+      if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 7'
 
       r = 0
       drdu = 0
@@ -78,11 +78,11 @@ module init_surface_mod
 
       if (transfer_matrix_option == 2 .and. which_surface == 1) then
          allocate(d2rdu2(3,nu,nvl),stat=iflag)
-         if (iflag .ne. 0) stop 'Allocation error!'
+         if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 8'
          allocate(d2rdudv(3,nu,nvl),stat=iflag)
-         if (iflag .ne. 0) stop 'Allocation error!'
+         if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 9'
          allocate(d2rdv2(3,nu,nvl),stat=iflag)
-         if (iflag .ne. 0) stop 'Allocation error!'
+         if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 10'
 
          d2rdu2 = 0
          d2rdudv = 0
@@ -227,7 +227,7 @@ module init_surface_mod
       normal(3,:,:) = drdv(1,:,:) * drdu(2,:,:) - drdu(1,:,:) * drdv(2,:,:)
 
       allocate(norm_normal(nu, nvl),stat=iflag)
-      if (iflag .ne. 0) stop 'Allocation error!'
+      if (iflag .ne. 0) stop 'Allocation error! init_surface_mod 11'
       norm_normal = sqrt(normal(1,:,:)**2 + normal(2,:,:)**2 + normal(3,:,:)**2)
 
       area = du * dv * sum(norm_normal)

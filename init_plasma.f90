@@ -4,7 +4,7 @@ subroutine init_plasma
   use read_wout_mod, only: nfp_vmec => nfp, xm_vmec => xm, xn_vmec => xn, &
        rmnc_vmec => rmnc, zmns_vmec => zmns, rmns_vmec => rmns, zmnc_vmec => zmnc, &
        lasym_vmec => lasym, mnmax_vmec => mnmax, ns, Rmajor, read_wout_file, lmns, &
-       mpol_vmec => mpol, ntor_vmec => ntor
+       mpol_vmec => mpol, ntor_vmec => ntor, bvco
   use stel_constants
 
   implicit none
@@ -383,6 +383,20 @@ subroutine init_plasma
   dv_plasma = v_plasma(2)-v_plasma(1)
 
   area_plasma = du_plasma * dv_plasma * sum(norm_normal_plasma)
+
+  select case (geometry_option_plasma)
+  case (2,3,4)
+     ! A VMEC wout file is available
+     print *,"Overriding net_poloidal_current_Amperes with value from the VMEC wout file."
+     ! VMEC stores the toroidal Boozer component B_zeta as "bvco", using the HALF mesh
+     net_poloidal_current_Amperes = 2*pi/mu0*(1.5_dp*bvco(ns)-0.5_dp*bvco(ns-1))
+  case default
+     if (abs(net_poloidal_current_Amperes-1)<1e-12) then
+        print *,"No VMEC file is available, and the default value of net_poloidal_current_Amperes (=1) will be used."
+     else
+        print *,"No VMEC file is available, so net_poloidal_current_Amperes will be taken from the bdistrib input file."
+     end if
+  end select
 
   call system_clock(toc)
   print *,"Done initializing plasma surface. Took ",real(toc-tic)/countrate," sec."

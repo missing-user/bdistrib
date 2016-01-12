@@ -200,6 +200,7 @@ subroutine transfer_matrix
      call system_clock(toc)
      if (whichThreshold==1) then
         normal_component_of_1_over_R_field_transfer = matmul(normal_component_of_1_over_R_field,U)
+        normal_component_of_const_v_field_transfer  = matmul(normal_component_of_const_v_field, U)
      end if
      print *,"  Final matmuls: ",real(toc-tic)/countrate," sec."
 
