@@ -119,15 +119,20 @@ subroutine write_output
        vn_Merkel_Kmn = "Merkel_Kmn", &
        vn_overlap_plasma = "overlap_plasma", &
        vn_overlap_middle = "overlap_middle", &
-       vn_normal_component_of_1_over_R_field = "normal_component_of_1_over_R_field", &
-       vn_normal_component_of_1_over_R_field_uv = "normal_component_of_1_over_R_field_uv", &
-       vn_normal_component_of_1_over_R_field_inductance = "normal_component_of_1_over_R_field_inductance", &
-       vn_normal_component_of_1_over_R_field_transfer = "normal_component_of_1_over_R_field_transfer", &
-       vn_normal_component_of_const_v_field = "normal_component_of_const_v_field", &
-       vn_normal_component_of_const_v_field_uv = "normal_component_of_const_v_field_uv", &
-       vn_normal_component_of_const_v_field_inductance = "normal_component_of_const_v_field_inductance", &
-       vn_normal_component_of_const_v_field_transfer = "normal_component_of_const_v_field_transfer", &
-       vn_net_poloidal_current_Amperes = "net_poloidal_current_Amperes"
+       vn_Bnormal_from_1_over_R_field = "Bnormal_from_1_over_R_field", &
+       vn_Bnormal_from_1_over_R_field_uv = "Bnormal_from_1_over_R_field_uv", &
+       vn_Bnormal_from_1_over_R_field_inductance = "Bnormal_from_1_over_R_field_inductance", &
+       vn_Bnormal_from_1_over_R_field_transfer = "Bnormal_from_1_over_R_field_transfer", &
+       vn_Bnormal_from_const_v_coils = "Bnormal_from_const_v_coils", &
+       vn_Bnormal_from_const_v_coils_uv = "Bnormal_from_const_v_coils_uv", &
+       vn_Bnormal_from_const_v_coils_inductance = "Bnormal_from_const_v_coils_inductance", &
+       vn_Bnormal_from_const_v_coils_transfer = "Bnormal_from_const_v_coils_transfer", &
+       vn_Bnormal_from_plasma_current = "Bnormal_from_plasma_current", &
+       vn_Bnormal_from_plasma_current_uv = "Bnormal_from_plasma_current_uv", &
+       vn_Bnormal_from_plasma_current_inductance = "Bnormal_from_plasma_current_inductance", &
+       vn_Bnormal_from_plasma_current_transfer = "Bnormal_from_plasma_current_transfer", &
+       vn_net_poloidal_current_Amperes = "net_poloidal_current_Amperes", &
+       vn_curpol = "curpol"
 
   ! Arrays with dimension 1:
   character(len=*), parameter, dimension(1) :: &
@@ -241,6 +246,7 @@ subroutine write_output
   call cdf_define(ncid, vn_area_outer, area_outer)
   call cdf_define(ncid, vn_check_orthogonality, check_orthogonality)
   call cdf_define(ncid, vn_net_poloidal_current_Amperes, net_poloidal_current_Amperes)
+  call cdf_define(ncid, vn_curpol, curpol)
 
   ! Arrays with dimension 1
 
@@ -272,12 +278,15 @@ subroutine write_output
        dimname=basis_plasma_dim)
   call cdf_define(ncid, vn_svd_u_inductance_plasma_middle_dominant_n, svd_u_inductance_plasma_middle_dominant_n, &
        dimname=basis_plasma_dim)
-  call cdf_define(ncid, vn_normal_component_of_1_over_R_field, normal_component_of_1_over_R_field, dimname=basis_plasma_dim)
-  call cdf_define(ncid, vn_normal_component_of_1_over_R_field_inductance, normal_component_of_1_over_R_field_inductance, dimname=basis_plasma_dim)
-  call cdf_define(ncid, vn_normal_component_of_1_over_R_field_transfer, normal_component_of_1_over_R_field_transfer, dimname=basis_plasma_dim)
-  call cdf_define(ncid, vn_normal_component_of_const_v_field, normal_component_of_const_v_field, dimname=basis_plasma_dim)
-  call cdf_define(ncid, vn_normal_component_of_const_v_field_inductance, normal_component_of_const_v_field_inductance, dimname=basis_plasma_dim)
-  call cdf_define(ncid, vn_normal_component_of_const_v_field_transfer, normal_component_of_const_v_field_transfer, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_1_over_R_field, Bnormal_from_1_over_R_field, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_1_over_R_field_inductance, Bnormal_from_1_over_R_field_inductance, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_1_over_R_field_transfer, Bnormal_from_1_over_R_field_transfer, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_const_v_coils, Bnormal_from_const_v_coils, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_const_v_coils_inductance, Bnormal_from_const_v_coils_inductance, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_const_v_coils_transfer, Bnormal_from_const_v_coils_transfer, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_plasma_current, Bnormal_from_plasma_current, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_plasma_current_inductance, Bnormal_from_plasma_current_inductance, dimname=basis_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_plasma_current_transfer, Bnormal_from_plasma_current_transfer, dimname=basis_plasma_dim)
 
   ! Arrays with dimension 2
 
@@ -315,8 +324,9 @@ subroutine write_output
   end if
   call cdf_define(ncid, vn_overlap_plasma, overlap_plasma, dimname=basis_basis_plasma_dim)
   call cdf_define(ncid, vn_overlap_middle, overlap_middle, dimname=basis_basis_middle_dim)
-  call cdf_define(ncid, vn_normal_component_of_1_over_R_field_uv, normal_component_of_1_over_R_field_uv, dimname=u_v_plasma_dim)
-  call cdf_define(ncid, vn_normal_component_of_const_v_field_uv, normal_component_of_const_v_field_uv, dimname=u_v_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_1_over_R_field_uv, Bnormal_from_1_over_R_field_uv, dimname=u_v_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_const_v_coils_uv, Bnormal_from_const_v_coils_uv, dimname=u_v_plasma_dim)
+  call cdf_define(ncid, vn_Bnormal_from_plasma_current_uv, Bnormal_from_plasma_current_uv, dimname=u_v_plasma_dim)
 
   ! Arrays with dimension 3
 
@@ -403,6 +413,7 @@ subroutine write_output
   call cdf_write(ncid, vn_area_outer, area_outer)
   call cdf_write(ncid, vn_check_orthogonality, check_orthogonality)
   call cdf_write(ncid, vn_net_poloidal_current_Amperes, net_poloidal_current_Amperes)
+  call cdf_write(ncid, vn_curpol, curpol)
 
   ! Arrays with dimension 1
 
@@ -429,12 +440,15 @@ subroutine write_output
   call cdf_write(ncid, vn_n_singular_values_retained, n_singular_values_retained)
   call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_m)
   call cdf_write(ncid, vn_svd_u_inductance_plasma_middle_dominant_n, svd_u_inductance_plasma_middle_dominant_n)
-  call cdf_write(ncid, vn_normal_component_of_1_over_R_field, normal_component_of_1_over_R_field)
-  call cdf_write(ncid, vn_normal_component_of_1_over_R_field_inductance, normal_component_of_1_over_R_field_inductance)
-  call cdf_write(ncid, vn_normal_component_of_1_over_R_field_transfer,   normal_component_of_1_over_R_field_transfer)
-  call cdf_write(ncid, vn_normal_component_of_const_v_field, normal_component_of_const_v_field)
-  call cdf_write(ncid, vn_normal_component_of_const_v_field_inductance, normal_component_of_const_v_field_inductance)
-  call cdf_write(ncid, vn_normal_component_of_const_v_field_transfer,   normal_component_of_const_v_field_transfer)
+  call cdf_write(ncid, vn_Bnormal_from_1_over_R_field, Bnormal_from_1_over_R_field)
+  call cdf_write(ncid, vn_Bnormal_from_1_over_R_field_inductance, Bnormal_from_1_over_R_field_inductance)
+  call cdf_write(ncid, vn_Bnormal_from_1_over_R_field_transfer,   Bnormal_from_1_over_R_field_transfer)
+  call cdf_write(ncid, vn_Bnormal_from_const_v_coils, Bnormal_from_const_v_coils)
+  call cdf_write(ncid, vn_Bnormal_from_const_v_coils_inductance, Bnormal_from_const_v_coils_inductance)
+  call cdf_write(ncid, vn_Bnormal_from_const_v_coils_transfer,   Bnormal_from_const_v_coils_transfer)
+  call cdf_write(ncid, vn_Bnormal_from_plasma_current, Bnormal_from_plasma_current)
+  call cdf_write(ncid, vn_Bnormal_from_plasma_current_inductance, Bnormal_from_plasma_current_inductance)
+  call cdf_write(ncid, vn_Bnormal_from_plasma_current_transfer,   Bnormal_from_plasma_current_transfer)
 
   ! Arrays with dimension 2
 
@@ -470,8 +484,9 @@ subroutine write_output
   end if
   call cdf_write(ncid, vn_overlap_plasma, overlap_plasma)
   call cdf_write(ncid, vn_overlap_middle, overlap_middle)
-  call cdf_write(ncid, vn_normal_component_of_1_over_R_field_uv, normal_component_of_1_over_R_field_uv)
-  call cdf_write(ncid, vn_normal_component_of_const_v_field_uv, normal_component_of_const_v_field_uv)
+  call cdf_write(ncid, vn_Bnormal_from_1_over_R_field_uv, Bnormal_from_1_over_R_field_uv)
+  call cdf_write(ncid, vn_Bnormal_from_const_v_coils_uv, Bnormal_from_const_v_coils_uv)
+  call cdf_write(ncid, vn_Bnormal_from_plasma_current_uv, Bnormal_from_plasma_current_uv)
 
   ! Arrays with dimension 3
 

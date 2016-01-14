@@ -15,8 +15,9 @@ subroutine svd_inductance_matrices()
        xm_plasma, xn_plasma, mnmax_plasma, save_vectors_in_uv_format, &
        svd_u_inductance_plasma_middle_dominant_m, svd_u_inductance_plasma_middle_dominant_n, &
        svd_u_inductance_plasma_middle_all, svd_v_inductance_plasma_middle_all, &
-       normal_component_of_1_over_R_field_inductance, normal_component_of_1_over_R_field, &
-       normal_component_of_const_v_field_inductance, normal_component_of_const_v_field
+       Bnormal_from_1_over_R_field_inductance, Bnormal_from_1_over_R_field, &
+       Bnormal_from_const_v_coils_inductance,  Bnormal_from_const_v_coils, &
+       Bnormal_from_plasma_current_inductance, Bnormal_from_plasma_current
   
   use stel_kinds
   
@@ -251,8 +252,9 @@ subroutine svd_inductance_matrices()
      svd_u_inductance_plasma_middle_uv = matmul(basis_functions_plasma, svd_u_inductance_plasma_middle)
      svd_v_inductance_plasma_middle_uv = matmul(basis_functions_middle, svd_v_inductance_plasma_middle)
   end if
-  normal_component_of_1_over_R_field_inductance = matmul(normal_component_of_1_over_R_field,U)
-  normal_component_of_const_v_field_inductance  = matmul(normal_component_of_const_v_field, U)
+  Bnormal_from_1_over_R_field_inductance = matmul(Bnormal_from_1_over_R_field,U)
+  Bnormal_from_const_v_coils_inductance  = matmul(Bnormal_from_const_v_coils, U)
+  Bnormal_from_plasma_current_inductance = matmul(Bnormal_from_plasma_current,U)
   call system_clock(toc1)
   print *,"  Final matmuls: ",real(toc1-tic1)/countrate," sec."
 

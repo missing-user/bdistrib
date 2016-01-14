@@ -77,22 +77,31 @@ except:
     overlap_exists = False
 
 try:
-    normal_component_of_1_over_R_field = f.variables['normal_component_of_1_over_R_field'][()]
-    normal_component_of_1_over_R_field_uv = f.variables['normal_component_of_1_over_R_field_uv'][()]
-    normal_component_of_1_over_R_field_inductance = f.variables['normal_component_of_1_over_R_field_inductance'][()]
-    normal_component_of_1_over_R_field_transfer = f.variables['normal_component_of_1_over_R_field_transfer'][()]
+    Bnormal_from_1_over_R_field = f.variables['Bnormal_from_1_over_R_field'][()]
+    Bnormal_from_1_over_R_field_uv = f.variables['Bnormal_from_1_over_R_field_uv'][()]
+    Bnormal_from_1_over_R_field_inductance = f.variables['Bnormal_from_1_over_R_field_inductance'][()]
+    Bnormal_from_1_over_R_field_transfer = f.variables['Bnormal_from_1_over_R_field_transfer'][()]
     one_over_R_exists = True
 except:
     one_over_R_exists = False
 
 try:
-    normal_component_of_const_v_field = f.variables['normal_component_of_const_v_field'][()]
-    normal_component_of_const_v_field_uv = f.variables['normal_component_of_const_v_field_uv'][()]
-    normal_component_of_const_v_field_inductance = f.variables['normal_component_of_const_v_field_inductance'][()]
-    normal_component_of_const_v_field_transfer = f.variables['normal_component_of_const_v_field_transfer'][()]
+    Bnormal_from_const_v_coils = f.variables['Bnormal_from_const_v_coils'][()]
+    Bnormal_from_const_v_coils_uv = f.variables['Bnormal_from_const_v_coils_uv'][()]
+    Bnormal_from_const_v_coils_inductance = f.variables['Bnormal_from_const_v_coils_inductance'][()]
+    Bnormal_from_const_v_coils_transfer = f.variables['Bnormal_from_const_v_coils_transfer'][()]
     const_v_exists = True
 except:
     const_v_exists = False
+
+try:
+    Bnormal_from_plasma_current = f.variables['Bnormal_from_plasma_current'][()]
+    Bnormal_from_plasma_current_uv = f.variables['Bnormal_from_plasma_current_uv'][()]
+    Bnormal_from_plasma_current_inductance = f.variables['Bnormal_from_plasma_current_inductance'][()]
+    Bnormal_from_plasma_current_transfer = f.variables['Bnormal_from_plasma_current_transfer'][()]
+    plasma_current_exists = True
+except:
+    plasma_current_exists = False
 
 print "nu_plasma: ",nu_plasma
 print "nvl_plasma: ",nvl_plasma
@@ -446,52 +455,73 @@ if overlap_exists:
 # Plot quantities related to 1/R field
 ########################################################
 
-if one_over_R_exists or const_v_exists:
+if one_over_R_exists or const_v_exists or plasma_current_exists:
 
     figureNum += 1
     fig = plt.figure(figureNum)
     fig.patch.set_facecolor('white')
 
     numRows = 2
-    numCols = 2
+    numCols = 3
+    titleFontSize=10
 
     if one_over_R_exists:
         plt.subplot(numRows,numCols,1)
-        plt.contourf(v_plasma, u_plasma, normal_component_of_1_over_R_field_uv.transpose(), numContours)
+        plt.contourf(v_plasma, u_plasma, Bnormal_from_1_over_R_field_uv.transpose(), numContours)
         plt.xlabel('v',fontsize='x-small')
         plt.ylabel('u',fontsize='x-small')
         #plt.imshow(,interpolation='none')
         ##plt.gca().xaxis.tick_top()
         plt.colorbar()
-        plt.title('1/R toroidal field (component normal to plasma surface)')
+        plt.title('1/R toroidal field\n(component normal to plasma surface)')
         #plt.xlabel('iu')
         #plt.ylabel('iv')
 
-        plt.subplot(numRows,numCols,2)
-        plt.semilogy(abs(normal_component_of_1_over_R_field),'x-',label='Basis functions')
-        plt.semilogy(abs(normal_component_of_1_over_R_field_inductance),'x-',label='Left-singular vectors of inductance matrix')
-        plt.semilogy(abs(normal_component_of_1_over_R_field_transfer),'x-',label='Left-singular vectors of transfer matrix')
-        plt.title('abs (normal_component_of_1_over_R_field) on the plasma surface')
+        plt.subplot(numRows,numCols,4)
+        plt.semilogy(abs(Bnormal_from_1_over_R_field),'x-',label='Basis functions')
+        plt.semilogy(abs(Bnormal_from_1_over_R_field_inductance),'x-',label='Left-singular vectors of inductance matrix')
+        plt.semilogy(abs(Bnormal_from_1_over_R_field_transfer),'x-',label='Left-singular vectors of transfer matrix')
+        plt.title('abs (Bnormal_from_1_over_R_field) on the plasma surface',fontsize=titleFontSize)
         plt.xlabel('index')
         plt.legend(fontsize=8)
 
     if const_v_exists:
-        plt.subplot(numRows,numCols,3)
-        plt.contourf(v_plasma, u_plasma, normal_component_of_const_v_field_uv.transpose(), numContours)
+        plt.subplot(numRows,numCols,2)
+        plt.contourf(v_plasma, u_plasma, Bnormal_from_const_v_coils_uv.transpose(), numContours)
         plt.xlabel('v',fontsize='x-small')
         plt.ylabel('u',fontsize='x-small')
         #plt.imshow(,interpolation='none')
         ##plt.gca().xaxis.tick_top()
         plt.colorbar()
-        plt.title('B field due to constant-v coils (component normal to plasma surface)')
+        plt.title('B field due to constant-v coils\n(component normal to plasma surface)')
         #plt.xlabel('iu')
         #plt.ylabel('iv')
 
-        plt.subplot(numRows,numCols,2)
-        plt.semilogy(abs(normal_component_of_const_v_field),'+-',label='Basis functions')
-        plt.semilogy(abs(normal_component_of_const_v_field_inductance),'+-',label='Left-singular vectors of inductance matrix')
-        plt.semilogy(abs(normal_component_of_const_v_field_transfer),'+-',label='Left-singular vectors of transfer matrix')
-        plt.title('abs (normal_component_of_const_v_field) on the plasma surface')
+        plt.subplot(numRows,numCols,5)
+        plt.semilogy(abs(Bnormal_from_const_v_coils),'+-',label='Basis functions')
+        plt.semilogy(abs(Bnormal_from_const_v_coils_inductance),'+-',label='Left-singular vectors of inductance matrix')
+        plt.semilogy(abs(Bnormal_from_const_v_coils_transfer),'+-',label='Left-singular vectors of transfer matrix')
+        plt.title('abs (Bnormal_from_const_v_coils) on the plasma surface',fontsize=titleFontSize)
+        plt.xlabel('index')
+        plt.legend(fontsize=8)
+
+    if plasma_current_exists:
+        plt.subplot(numRows,numCols,3)
+        plt.contourf(v_plasma, u_plasma, Bnormal_from_plasma_current_uv.transpose(), numContours)
+        plt.xlabel('v',fontsize='x-small')
+        plt.ylabel('u',fontsize='x-small')
+        #plt.imshow(,interpolation='none')
+        ##plt.gca().xaxis.tick_top()
+        plt.colorbar()
+        plt.title('B field due to plasma current\n(component normal to plasma surface)')
+        #plt.xlabel('iu')
+        #plt.ylabel('iv')
+
+        plt.subplot(numRows,numCols,6)
+        plt.semilogy(abs(Bnormal_from_plasma_current),'+-',label='Basis functions')
+        plt.semilogy(abs(Bnormal_from_plasma_current_inductance),'+-',label='Left-singular vectors of inductance matrix')
+        plt.semilogy(abs(Bnormal_from_plasma_current_transfer),'+-',label='Left-singular vectors of transfer matrix')
+        plt.title('abs (Bnormal_from_plasma_current) on the plasma surface',fontsize=titleFontSize)
         plt.xlabel('index')
         plt.legend(fontsize=8)
 

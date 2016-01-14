@@ -15,19 +15,19 @@ subroutine one_over_R_field
   call system_clock(tic, countrate)
   print *,"Computing quantities related to the 1/R field."
   
-  allocate(normal_component_of_1_over_R_field(num_basis_functions_plasma),stat=iflag)
+  allocate(Bnormal_from_1_over_R_field(num_basis_functions_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(normal_component_of_1_over_R_field_inductance(num_basis_functions_plasma),stat=iflag)
+  allocate(Bnormal_from_1_over_R_field_inductance(num_basis_functions_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(normal_component_of_1_over_R_field_transfer(num_basis_functions_plasma),stat=iflag)
+  allocate(Bnormal_from_1_over_R_field_transfer(num_basis_functions_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  allocate(normal_component_of_1_over_R_field_uv(nu_plasma,nv_plasma),stat=iflag)
+  allocate(Bnormal_from_1_over_R_field_uv(nu_plasma,nv_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
   allocate(tempVec(nu_plasma*nv_plasma),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
 
-  ! There are 2 differences between tempVec and normal_component_of_1_over_R_field_uv.
-  ! 1) tempVec is 1D whereas normal_component_of_1_over_R_field_uv is 2D.
+  ! There are 2 differences between tempVec and Bnormal_from_1_over_R_field_uv.
+  ! 1) tempVec is 1D whereas Bnormal_from_1_over_R_field_uv is 2D.
   ! 2) tempVec has an extra factor of |N| = norm_normal_plasma for the area integration.
 
   du = u_plasma(2)-u_plasma(1)
@@ -41,14 +41,14 @@ subroutine one_over_R_field
         index = (iv-1)*nu_plasma + iu
         R2 = r_plasma(1,iu,iv)*r_plasma(1,iu,iv) + r_plasma(2,iu,iv)*r_plasma(2,iu,iv)
         temp = normalization * (r_plasma(1,iu,iv)*normal_plasma(2,iu,iv)-r_plasma(2,iu,iv)*normal_plasma(1,iu,iv)) / R2
-        normal_component_of_1_over_R_field_uv(iu,iv) = temp / norm_normal_plasma(iu,iv)
+        Bnormal_from_1_over_R_field_uv(iu,iv) = temp / norm_normal_plasma(iu,iv)
         tempVec(index) = temp*factors
      end do
   end do
-
+  
   ! This next line could be optimized using BLAS
-  normal_component_of_1_over_R_field = matmul(tempVec,basis_functions_plasma)
-  !normal_component_of_1_over_R_field = matmul(transpose(basis_functions_plasma),tempVec)
+  Bnormal_from_1_over_R_field = matmul(tempVec,basis_functions_plasma)
+  !Bnormal_from_1_over_R_field = matmul(transpose(basis_functions_plasma),tempVec)
 
   deallocate(tempVec)
   call system_clock(toc)

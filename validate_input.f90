@@ -158,5 +158,16 @@ subroutine validate_input
   end if
 
 
+  if (load_bnorm) then
+     ! To use bnorm data, we must have a VMEC file to set the overall normalization
+     select case (geometry_option_plasma)
+     case (2,3,4)
+        ! Yes, we have a VMEC file available.
+     case (0,1,5)
+        stop "Error! If load_bnorm=.t., the plasma surface must come from a vmec wout file."
+     case default
+        stop "Error! Invalid geometry_option_plasma"
+     end select
+  end if
 
 end subroutine validate_input

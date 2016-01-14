@@ -18,7 +18,7 @@ subroutine read_input
        nescin_filename_middle, nescin_filename_outer, efit_filename, efit_psiN, efit_num_modes, &
        mpol_transform_refinement, ntor_transform_refinement, &
        basis_option_plasma, basis_option_middle, basis_option_outer, check_orthogonality, transfer_matrix_option, &
-       zero_first_transfer_vector_in_overlap, net_poloidal_current_Amperes
+       zero_first_transfer_vector_in_overlap, net_poloidal_current_Amperes, load_bnorm, bnorm_filename
 
   ! getcarg is in LIBSTELL
   call getcarg(1, inputFilename, numargs)

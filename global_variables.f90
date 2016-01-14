@@ -27,15 +27,20 @@ module global_variables
   real(dp), dimension(:), allocatable :: u_plasma, v_plasma, vl_plasma
   real(dp), dimension(:,:,:), allocatable :: r_plasma, drdu_plasma, drdv_plasma, normal_plasma
 
-  real(dp), dimension(:), allocatable :: normal_component_of_1_over_R_field
-  real(dp), dimension(:), allocatable :: normal_component_of_1_over_R_field_inductance
-  real(dp), dimension(:), allocatable :: normal_component_of_1_over_R_field_transfer
-  real(dp), dimension(:,:), allocatable :: normal_component_of_1_over_R_field_uv
+  real(dp), dimension(:), allocatable :: Bnormal_from_1_over_R_field
+  real(dp), dimension(:), allocatable :: Bnormal_from_1_over_R_field_inductance
+  real(dp), dimension(:), allocatable :: Bnormal_from_1_over_R_field_transfer
+  real(dp), dimension(:,:), allocatable :: Bnormal_from_1_over_R_field_uv
 
-  real(dp), dimension(:), allocatable :: normal_component_of_const_v_field
-  real(dp), dimension(:), allocatable :: normal_component_of_const_v_field_inductance
-  real(dp), dimension(:), allocatable :: normal_component_of_const_v_field_transfer
-  real(dp), dimension(:,:), allocatable :: normal_component_of_const_v_field_uv
+  real(dp), dimension(:), allocatable :: Bnormal_from_const_v_coils
+  real(dp), dimension(:), allocatable :: Bnormal_from_const_v_coils_inductance
+  real(dp), dimension(:), allocatable :: Bnormal_from_const_v_coils_transfer
+  real(dp), dimension(:,:), allocatable :: Bnormal_from_const_v_coils_uv
+
+  real(dp), dimension(:), allocatable :: Bnormal_from_plasma_current
+  real(dp), dimension(:), allocatable :: Bnormal_from_plasma_current_inductance
+  real(dp), dimension(:), allocatable :: Bnormal_from_plasma_current_transfer
+  real(dp), dimension(:,:), allocatable :: Bnormal_from_plasma_current_uv
 
   real(dp), dimension(:), allocatable :: u_middle, v_middle, vl_middle
   real(dp), dimension(:,:,:), allocatable :: r_middle, drdu_middle, drdv_middle, normal_middle
@@ -117,6 +122,9 @@ module global_variables
   logical :: zero_first_transfer_vector_in_overlap = .false.
 
   real(dp) :: net_poloidal_current_Amperes = 1
+  logical :: load_bnorm = .false.
+  character(len=200) :: bnorm_filename=""
+  real(dp) :: curpol = 1  ! number which multiplies data in bnorm file.
 
 end module global_variables
 

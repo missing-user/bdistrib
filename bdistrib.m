@@ -36,16 +36,24 @@ compute_Kmn_option = 1;
 % 2 = Direct slow method: Adaptive quadrature
 % To compare: figure(300);clf;subplot(1,3,1);imagesc(Kmn_1);colorbar;title('1');subplot(1,3,2);imagesc(Kmn_2);colorbar;title('2');subplot(1,3,3);imagesc(log10(abs(Kmn_1-Kmn_2)));colorbar;title('diff')
 
+load_bnorm = true;
+%load_bnorm = false;
+
+bnorm_filename = 'C:\Users\landreman\Box Sync\MATLAB\bnorm.d23p4_tm';
+
+% This next value will be over-written if a VMEC equilibrium is used:
+net_poloidal_current_Amperes = 1.0;
+
 % Resolution parameters:
 % **********************************
 
-nu_plasma = 63;
-nu_middle = 51;
-nu_outer  = 49;
+nu_plasma = 33;
+nu_middle = 32;
+nu_outer  = 31;
 
-nv_plasma = 48;
-nv_middle = 47;
-nv_outer  = 40;
+nv_plasma = 30;
+nv_middle = 29;
+nv_outer  = 28;
 %{
 mpol_plasma = 10;
 mpol_middle = 9;
@@ -55,12 +63,12 @@ ntor_plasma = 7;
 ntor_middle = 6;
 ntor_outer  = 5;
 %}
-mpol_plasma = 8;
-mpol_middle = 8;
+mpol_plasma = 10;
+mpol_middle = 9;
 mpol_outer  = 8;
 
-ntor_plasma = 5;
-ntor_middle = 5;
+ntor_plasma = 7;
+ntor_middle = 6;
 ntor_outer  = 5;
 
 %{
@@ -104,7 +112,8 @@ geometry_option_plasma = 2;
 R0_plasma = 3.0;
 a_plasma = 0.5;
 nfp_imposed = 1;
-woutFilename = 'C:\Users\landreman\Box Sync\MATLAB\20150601-01 Sfincs version 3\equilibria\wout_w7x_standardConfig.nc';
+%woutFilename = 'C:\Users\landreman\Box Sync\MATLAB\20150601-01 Sfincs version 3\equilibria\wout_w7x_standardConfig.nc';
+woutFilename = 'C:\Users\landreman\Box Sync\MATLAB\wout_d23p4_tm.nc';
 
 % Options for the shape of the middle surface:
 % **********************************
@@ -112,13 +121,13 @@ geometry_option_middle = 3;
 R0_middle = 3.0;
 a_middle = 1.0;
 separation_middle = 0.35;
-nescin_filename_middle = 'nescin.w7x_standardConfig_separation0.3';
-%nescin_filename_middle = 'nescin.w7x_winding_surface_from_Drevlak';
+%nescin_filename_middle = 'nescin.w7x_standardConfig_separation0.3';
+nescin_filename_middle = 'nescin.w7x_winding_surface_from_Drevlak';
 
 % Options for the shape of the outer surface:
 % **********************************
-geometry_option_outer = 3;
-R0_outer = 6.0;
+geometry_option_outer = 1;
+R0_outer = 5.5;
 a_outer = 2.5;
 separation_outer = 0.7;
 nescin_filename_outer = 'nescin.w7x_standardConfig_separation0.6';
@@ -127,7 +136,7 @@ nescin_filename_outer = 'nescin.w7x_standardConfig_separation0.6';
 % **********************************
 pseudoinverse_thresholds = [1e-12];
 
-n_singular_vectors_to_save = 12;
+n_singular_vectors_to_save = 16;
 
 inverse_option = 0;
 % 0 = Pseudo-inverse with customizable threshold, analogous to the implementation in the fortran version.
@@ -164,7 +173,8 @@ plot_singular_vectors = false;
 compareToFortran = true;
 %compareToFortran = false;
 
-fortranNcFilename = 'C:\Users\landreman\Box Sync\MATLAB\bdistrib_out.compareToMatlab.nc';
+%fortranNcFilename = 'C:\Users\landreman\Box Sync\MATLAB\bdistrib_out.compareToMatlab.nc';
+fortranNcFilename = 'C:\Users\landreman\Box Sync\MATLAB\bdistrib_out.w7x.nc';
 
 fortranComparisonThreshhold_abs = 1e-5;
 
@@ -173,6 +183,8 @@ fortranComparisonThreshhold_abs = 1e-5;
 % End of input parameters.
 % *************************************************************************
 % *************************************************************************
+
+mu0 = 4*pi*(1e-7);
 
 if transfer_matrix_option==2
     % Override options for the outer surface. It will be the same as the
@@ -336,6 +348,21 @@ switch geometry_option_plasma
         error('Invalid setting for geometry_option_plasma')
 end
 
+switch geometry_option_plasma
+    case {2}
+        % BNORM scales B_n by curpol=(2*pi/nfp)*bsubv(m=0,n=0)
+        % where bsubv is the extrapolation to the last full mesh point of
+        % bsubvmnc.  Let's undo this scaling now.
+        bsubvmnc = ncread(woutFilename,'bsubvmnc');
+        bsubv00 = 1.5*bsubvmnc(1,end) - 0.5*bsubvmnc(1,end-1);
+        curpol = 2*pi/nfp*bsubv00;  % /1 since nfp=1.
+        
+        bvco = ncread(woutFilename,'bvco');
+        net_poloidal_current_Amperes = (2*pi/mu0) * (1.5*bvco(end) - 0.5*bvco(end-1));
+    otherwise
+        curpol = 1;
+end
+
 nvl_plasma = nv_plasma * nfp;
 nvl_middle = nv_middle * nfp;
 nvl_outer = nv_outer * nfp;
@@ -387,8 +414,8 @@ du_plasma = u_plasma(2)-u_plasma(1);
 dv_plasma = v_plasma(2)-v_plasma(1);
 area_plasma = sum(sum(norm_normal_plasma)) * du_plasma * dv_plasma;
 
-normal_component_of_1_over_R_field_uv = (-y .* Nx + x .* Ny) ./ ((x.^2 + y.^2) .* norm_normal_plasma);
-normal_component_of_1_over_R_field_uv = normal_component_of_1_over_R_field_uv(:,1:nv_plasma);
+Bnormal_from_1_over_R_field_uv = (mu0*net_poloidal_current_Amperes/(2*pi)) * (-y .* Nx + x .* Ny) ./ ((x.^2 + y.^2) .* norm_normal_plasma);
+Bnormal_from_1_over_R_field_uv = Bnormal_from_1_over_R_field_uv(:,1:nv_plasma);
 
 r_plasma = zeros(3, nu_plasma, nvl_plasma);
 drdu_plasma = zeros(3, nu_plasma, nvl_plasma);
@@ -419,7 +446,7 @@ compareVariableToFortran('drdv_plasma')
 compareVariableToFortran('normal_plasma')
 compareVariableToFortran('norm_normal_plasma')
 
-compareVariableToFortran('normal_component_of_1_over_R_field_uv')
+compareVariableToFortran('Bnormal_from_1_over_R_field_uv')
 
 % *********************************************
 % Initialize the middle and outer surfaces:
@@ -753,6 +780,58 @@ if stopAfterInitialPlots
     return
 end
 
+% *********************************************
+% Load BNORM data.
+% *********************************************
+
+Bnormal_from_plasma_current_uv = zeros(nu_plasma,nv_plasma);
+if load_bnorm
+    fid = fopen(bnorm_filename,'r');
+    if fid<0
+        error('Unable to open BNORM file %s.\n',bnorm_filename)
+    end
+    [v_plasma_2D, u_plasma_2D] = meshgrid(v_plasma, u_plasma);
+    while ~ feof(fid);
+        [fileline,count] = fscanf(fid,'%f %f %f\n',3);
+        if count == 3
+            mm  = fileline(1);
+            nn  = fileline(2);
+            amp = fileline(3);
+            Bnormal_from_plasma_current_uv = Bnormal_from_plasma_current_uv + amp*sin(2*pi*(mm*u_plasma_2D + nn*v_plasma_2D));
+        end
+    end
+else
+end
+Bnormal_from_plasma_current_uv = Bnormal_from_plasma_current_uv * curpol;
+compareVariableToFortran('Bnormal_from_plasma_current_uv')
+
+% *********************************************
+% Compute B_normal due to constant-v coils
+% *********************************************
+tic
+fprintf('Computing B_normal due to constant-v coils.\n')
+Bnormal_from_const_v_coils_uv = zeros(nu_plasma,nv_plasma);
+for iu_plasma = 1:nu_plasma
+    for iv_plasma = 1:nv_plasma
+        adx = r_plasma(1,iu_plasma,iv_plasma) - squeeze(r_middle(1,:,:));
+        ady = r_plasma(2,iu_plasma,iv_plasma) - squeeze(r_middle(2,:,:));
+        adz = r_plasma(3,iu_plasma,iv_plasma) - squeeze(r_middle(3,:,:));
+        adr2 = adx.*adx + ady.*ady + adz.*adz;
+        dr32 = adr2 .* sqrt(adr2);
+        tempMatrix = (squeeze(drdu_middle(1,:,:)).*ady*normal_plasma(3,iu_plasma,iv_plasma) ...
+            + squeeze(drdu_middle(2,:,:)).*adz.*normal_plasma(1,iu_plasma,iv_plasma) ...
+            + squeeze(drdu_middle(3,:,:)).*adx.*normal_plasma(2,iu_plasma,iv_plasma) ...
+            - squeeze(drdu_middle(3,:,:)).*ady.*normal_plasma(1,iu_plasma,iv_plasma) ...
+            - squeeze(drdu_middle(1,:,:)).*adz.*normal_plasma(2,iu_plasma,iv_plasma) ...
+            - squeeze(drdu_middle(2,:,:)).*adx.*normal_plasma(3,iu_plasma,iv_plasma)) ./ dr32;
+        
+        Bnormal_from_const_v_coils_uv(iu_plasma,iv_plasma) = sum(sum(tempMatrix));
+    end
+end
+Bnormal_from_const_v_coils_uv = -(Bnormal_from_const_v_coils_uv./norm_normal_plasma(:,1:nv_plasma)) ...
+    * (du_plasma * dv_plasma * mu0/(4*pi) * net_poloidal_current_Amperes / nfp);
+fprintf('Done. Took %g seconds.\n',toc)
+compareVariableToFortran('Bnormal_from_const_v_coils_uv')
 
 % ***********************************************
 % Compute the basis functions on the (u,v) grids.
@@ -1049,9 +1128,17 @@ if plot_basis_vectors
     return
 end
 
-temp = reshape(nfp*du_plasma*dv_plasma*normal_component_of_1_over_R_field_uv .* norm_normal_plasma(:,1:nv_plasma), [nu_plasma*nv_plasma,1]);
-normal_component_of_1_over_R_field = (basis_functions_plasma') * temp;
-compareVariableToFortran('normal_component_of_1_over_R_field')
+temp = reshape(nfp*du_plasma*dv_plasma*Bnormal_from_1_over_R_field_uv .* norm_normal_plasma(:,1:nv_plasma), [nu_plasma*nv_plasma,1]);
+Bnormal_from_1_over_R_field = (basis_functions_plasma') * temp;
+compareVariableToFortran('Bnormal_from_1_over_R_field')
+
+temp = reshape(nfp*du_plasma*dv_plasma*Bnormal_from_const_v_coils_uv .* norm_normal_plasma(:,1:nv_plasma), [nu_plasma*nv_plasma,1]);
+Bnormal_from_const_v_coils = (basis_functions_plasma') * temp;
+compareVariableToFortran('Bnormal_from_const_v_coils')
+
+temp = reshape(nfp*du_plasma*dv_plasma*Bnormal_from_plasma_current_uv .* norm_normal_plasma(:,1:nv_plasma), [nu_plasma*nv_plasma,1]);
+Bnormal_from_plasma_current = (basis_functions_plasma') * temp;
+compareVariableToFortran('Bnormal_from_plasma_current')
 
 % *********************************************
 % If needed, compute Merkel's K_mn integrals
@@ -1236,8 +1323,6 @@ end
 % *********************************************
 %return
 
-mu0 = 4*pi*(1e-7);
-
     function inductanceMatrix = ...
             computeInductanceMatrix(r_1, normal_1, u_1, v_1, basis_functions_1, ...
             r_2, normal_2, u_2, v_2, basis_functions_2)
@@ -1386,10 +1471,11 @@ mu0 = 4*pi*(1e-7);
             % (This implementation assumes xm and xn are the same on the
             % middle and outer surfaces.)
             
+            Merkel_Kmn_plus_2pi = Merkel_Kmn+2*pi;
             if symmetry_option==3
-                partial_inductanceMatrix = partial_inductanceMatrix - sincos_on_middle .* [Merkel_Kmn, Merkel_Kmn];
+                partial_inductanceMatrix = partial_inductanceMatrix - sincos_on_middle .* [Merkel_Kmn_plus_2pi, Merkel_Kmn_plus_2pi];
             else
-                partial_inductanceMatrix = partial_inductanceMatrix - sincos_on_middle .* Merkel_Kmn;
+                partial_inductanceMatrix = partial_inductanceMatrix - sincos_on_middle .* Merkel_Kmn_plus_2pi;
             end
         else
             % 2 surfaces differ, so no need to subtract singularity.
@@ -1558,7 +1644,9 @@ fprintf('Computing SVD of the mutual inductance matrix between the plasma and mi
 svd_s_inductance_plasma_middle = diag(svd_s_inductance_plasma_middle);
 fprintf('Done. Took %g seconds.\n',toc)
 
-normal_component_of_1_over_R_field_inductance = (svd_u_inductance_plasma_middle')*normal_component_of_1_over_R_field;
+Bnormal_from_1_over_R_field_inductance = (svd_u_inductance_plasma_middle')*Bnormal_from_1_over_R_field;
+Bnormal_from_const_v_coils_inductance  = (svd_u_inductance_plasma_middle')*Bnormal_from_const_v_coils;
+Bnormal_from_plasma_current_inductance = (svd_u_inductance_plasma_middle')*Bnormal_from_plasma_current;
 
 svd_u_inductance_plasma_middle = svd_u_inductance_plasma_middle(:,1:n_singular_vectors_to_save);
 svd_v_inductance_plasma_middle = svd_v_inductance_plasma_middle(:,1:n_singular_vectors_to_save);
@@ -1569,7 +1657,10 @@ compareVariableToFortran('svd_u_inductance_plasma_middle','abs')
 compareVariableToFortran('svd_u_inductance_plasma_middle_uv','abs')
 compareVariableToFortran('svd_v_inductance_plasma_middle','abs')
 compareVariableToFortran('svd_v_inductance_plasma_middle_uv','abs')
-compareVariableToFortran('normal_component_of_1_over_R_field_inductance','abs')
+
+compareVariableToFortran('Bnormal_from_1_over_R_field_inductance','abs')
+compareVariableToFortran('Bnormal_from_const_v_coils_inductance','abs')
+compareVariableToFortran('Bnormal_from_plasma_current_inductance','abs')
 
 figure(figureOffset + 2)
 clf
@@ -1650,7 +1741,9 @@ for i = 1:n_pseudoinverse_thresholds
     fprintf('  Done with SVD. Took %g seconds.\n',toc)
     
     if i==1
-        normal_component_of_1_over_R_field_transfer = (svd_u_transferMatrix_pre')*normal_component_of_1_over_R_field;
+        Bnormal_from_1_over_R_field_transfer = (svd_u_transferMatrix_pre')*Bnormal_from_1_over_R_field;
+        Bnormal_from_const_v_coils_transfer  = (svd_u_transferMatrix_pre')*Bnormal_from_const_v_coils;
+        Bnormal_from_plasma_current_transfer = (svd_u_transferMatrix_pre')*Bnormal_from_plasma_current;
     end
     
     svd_u_transferMatrix(:,:,i) = svd_u_transferMatrix_pre(:,1:n_singular_vectors_to_save);
@@ -1670,7 +1763,10 @@ compareVariableToFortran('svd_u_transferMatrix','abs')
 compareVariableToFortran('svd_u_transferMatrix_uv','abs')
 compareVariableToFortran('svd_v_transferMatrix','abs')
 compareVariableToFortran('svd_v_transferMatrix_uv','abs')
-compareVariableToFortran('normal_component_of_1_over_R_field_transfer','abs')
+
+compareVariableToFortran('Bnormal_from_1_over_R_field_transfer','abs')
+compareVariableToFortran('Bnormal_from_const_v_coils_transfer','abs')
+compareVariableToFortran('Bnormal_from_plasma_current_transfer','abs')
 
 % *********************************************
 % Done with the main calculation.

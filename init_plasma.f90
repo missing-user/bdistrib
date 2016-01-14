@@ -4,7 +4,7 @@ subroutine init_plasma
   use read_wout_mod, only: nfp_vmec => nfp, xm_vmec => xm, xn_vmec => xn, &
        rmnc_vmec => rmnc, zmns_vmec => zmns, rmns_vmec => rmns, zmnc_vmec => zmnc, &
        lasym_vmec => lasym, mnmax_vmec => mnmax, ns, Rmajor, read_wout_file, lmns, &
-       mpol_vmec => mpol, ntor_vmec => ntor, bvco
+       mpol_vmec => mpol, ntor_vmec => ntor, bvco, bsubvmnc
   use stel_constants
 
   implicit none
@@ -390,6 +390,8 @@ subroutine init_plasma
      print *,"Overriding net_poloidal_current_Amperes with value from the VMEC wout file."
      ! VMEC stores the toroidal Boozer component B_zeta as "bvco", using the HALF mesh
      net_poloidal_current_Amperes = 2*pi/mu0*(1.5_dp*bvco(ns)-0.5_dp*bvco(ns-1))
+     ! curpol is a number which multiplies the data in the bnorm file.
+     curpol = (2*pi/nfp)*(1.5_dp*bsubvmnc(1,ns) - 0.5_dp*bsubvmnc(1,ns-1))
   case default
      if (abs(net_poloidal_current_Amperes-1)<1e-12) then
         print *,"No VMEC file is available, and the default value of net_poloidal_current_Amperes (=1) will be used."
