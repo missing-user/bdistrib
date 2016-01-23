@@ -19,6 +19,7 @@ module global_variables
   real(dp) :: separation_middle=0.2, separation_outer=0.4
 
   character(len=200) :: wout_filename=""
+  character(len=200) :: shape_filename_plasma=""
   character(len=200) :: nescin_filename_middle=""
   character(len=200) :: nescin_filename_outer=""
   character(len=200) :: efit_filename=""

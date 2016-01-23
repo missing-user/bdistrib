@@ -25,7 +25,7 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
   real(dp), dimension(:,:), allocatable :: efit_psi, sefit_psi
   real(dp), dimension(:,:,:), allocatable :: dpm, dtm
   integer :: ndum, nbbbs  ! nbbbs = number of points for LCFS in efit file.
-  real(dp), allocatable, dimension (:) :: rbbbs, zbbbs, thetab, r_bound !boundary of plasma
+  real(dp), allocatable, dimension (:) :: rbbbs, zbbbs, thetab_atan, r_bound !boundary of plasma
 
   ! Variables for spline fit of psi(R,Z):
   real(dp), dimension(:), allocatable :: zp, temp, zx1, zxm, zy1, zyn
@@ -33,7 +33,7 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
 
   type (spline):: LCFS_spline
   integer :: ntheta = 20
-  real(dp), dimension(:), allocatable :: theta, R_surface, Z_surface, r_LCFS
+  real(dp), dimension(:), allocatable :: theta_atan, theta_general, R_surface, Z_surface, r_LCFS
 
   ! Variables related to the root finding:
   integer :: fzeroFlag
@@ -42,7 +42,9 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
   real(dp) :: r_minor
   real(dp) :: rtemp, ztemp, rtemps, ztempc, cosmu, sinmu, dnorm
   integer :: m
-    
+  real(dp) :: offset1, offset2
+  real(dp), dimension(:), allocatable :: thetab_atan_3, r_bound_3
+
   ! nw, nh = original number of grid points in width and height of efit file. ('small' grid)
   ! big = some factor by which the EFIT (R,Z) grid is refined.
   big = 20
@@ -66,12 +68,19 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
   ! Initialize a theta grid.
   ! (Factor 10 here is arbitrary. Really it just needs to be large enough to resolve mnmax modes without aliasing.)
   ntheta = mnmax * 10
-  allocate(theta(ntheta))
+  allocate(theta_general(ntheta))
+  allocate(theta_atan(ntheta))
   do i=1,ntheta
-     theta(i) = i-1
+     theta_general(i) = i-1
   end do
-  theta = theta*twopi/ntheta - pi
+  theta_general = theta_general*twopi/ntheta - pi
 
+  offset1 = 2*pi*0.71
+  offset2 = 2*pi*0.3
+  theta_atan = theta_general - 0.6*sin((theta_general-offset1)/2)*cos((theta_general-offset1)/2) &
+       / (0.3 + sin((theta_general-offset1)/2)**2) &
+       - 0.32*sin((theta_general-offset2)/2)*cos((theta_general-offset2)/2) &
+       / (0.2 + sin((theta_general-offset2)/2)**2)
 
 ! Beginning of code taken from gs2/geo/eeq.f90
 
@@ -151,7 +160,7 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
   read(5,2022) nbbbs, ndum
 2022 format (2i5)      
 
-  allocate(rbbbs(nbbbs), zbbbs(nbbbs), thetab(nbbbs), r_bound(nbbbs))
+  allocate(rbbbs(nbbbs), zbbbs(nbbbs), thetab_atan(nbbbs), r_bound(nbbbs))
   ! Read in location of the LCFS:
   read(5,2020) (rbbbs(i), zbbbs(i) , i = 1, nbbbs)
 
@@ -160,35 +169,35 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
 
 
 ! get r_boundary(theta)
-  thetab = atan2 ((zbbbs-Z_mag), (rbbbs-R_mag))
+  thetab_atan = atan2 ((zbbbs-Z_mag), (rbbbs-R_mag))
   r_bound = sqrt( (rbbbs - R_mag)**2 + (zbbbs - Z_mag)**2 )
 
-  call sort(thetab, r_bound, zbbbs, rbbbs, nbbbs)
+  call sort(thetab_atan, r_bound, zbbbs, rbbbs, nbbbs)
 
 
 ! Allow for duplicated points near +- pi:
 
-  if(thetab(1) == thetab(2)) then
-     thetab(1) = thetab(1) + twopi
-     call sort(thetab, r_bound, zbbbs, rbbbs, nbbbs)
+  if(thetab_atan(1) == thetab_atan(2)) then
+     thetab_atan(1) = thetab_atan(1) + twopi
+     call sort(thetab_atan, r_bound, zbbbs, rbbbs, nbbbs)
   endif
 
-  if(thetab(nbbbs-1) == thetab(nbbbs)) then
-     thetab(nbbbs) = thetab(nbbbs) - twopi
-     call sort(thetab, r_bound, zbbbs, rbbbs, nbbbs)
+  if(thetab_atan(nbbbs-1) == thetab_atan(nbbbs)) then
+     thetab_atan(nbbbs) = thetab_atan(nbbbs) - twopi
+     call sort(thetab_atan, r_bound, zbbbs, rbbbs, nbbbs)
   endif
 
 ! It isn't likely that a duplicate point would exist near theta = 0, 
 ! so I am not allowing this possibility for now.
 
   do i=1,nbbbs-1
-     if(thetab(i+1) == thetab(i)) then
+     if(thetab_atan(i+1) == thetab_atan(i)) then
 !          write(*,*) 'Duplicates near theta = 0 not allowed.'
 !          write(*,*) i, i+1, ' Stopping.'
 !          stop
 !
 ! put in kluge for duplicate points, which happens near theta=0:
-        thetab(i+1) = thetab(i+1)+1.e-8
+        thetab_atan(i+1) = thetab_atan(i+1)+1.e-8
      endif
   enddo
 
@@ -230,16 +239,26 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
 
 
   ! Next, use spline interpolation to get r_LCFS on the theta grid we want.
-  ! Since 'thetab' does not run from exactly -pi to pi, there will be a bit of extrapolation
+  ! Since 'thetab_atan' does not run from exactly -pi to pi, there will be a bit of extrapolation
   ! at the ends of the grid. This could be eliminated if it is a problem.
-  call new_spline(nbbbs, thetab, r_bound, LCFS_spline)
+  allocate(thetab_atan_3(nbbbs*3))
+  allocate(r_bound_3(nbbbs*3))
+  thetab_atan_3(1:nbbbs) = thetab_atan-2*pi
+  thetab_atan_3((nbbbs+1):(2*nbbbs)) = thetab_atan
+  thetab_atan_3((2*nbbbs+1):(3*nbbbs)) = thetab_atan+2*pi
+  r_bound_3(1:nbbbs) = r_bound
+  r_bound_3((nbbbs+1):(2*nbbbs)) = r_bound
+  r_bound_3((2*nbbbs+1):(3*nbbbs)) = r_bound
+
+  !call new_spline(nbbbs, thetab_atan, r_bound, LCFS_spline)
+  call new_spline(nbbbs*3, thetab_atan_3, r_bound_3, LCFS_spline)
   allocate(r_LCFS(ntheta))
   do i = 1,ntheta
-     r_LCFS(i) = splint(theta(i), LCFS_spline)
+     r_LCFS(i) = splint(theta_atan(i), LCFS_spline)
   end do
 
 !!$  print *," "
-!!$  print *,"thetab:",thetab
+!!$  print *,"thetab_atan:",thetab_atan
 !!$  print *," "
 !!$  print *,"theta:",theta
 !!$  print *," "
@@ -255,7 +274,7 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
      print *,"i=",i,"of",ntheta
      rootSolve_min = 0.0_dp
      rootSolve_max = r_LCFS(i)
-     this_theta = theta(i)
+     this_theta = theta_atan(i)
 
      if (abs(psiN_desired-1) < 1d-7) then
         r_minor = r_LCFS(i)
@@ -293,8 +312,8 @@ subroutine read_efit(filename, psiN_desired, mnmax, rmnc, zmns, rmns, zmnc)
      rtemps = 0
      ztempc = 0
      do i = 1, ntheta
-        cosmu = cos(m*theta(i))*dnorm
-        sinmu = sin(m*theta(i))*dnorm
+        cosmu = cos(m*theta_general(i))*dnorm
+        sinmu = sin(m*theta_general(i))*dnorm
         rtemp  = rtemp  + R_surface(i) * cosmu
         ztemp  = ztemp  + Z_surface(i) * sinmu
         rtemps = rtemps + R_surface(i) * sinmu

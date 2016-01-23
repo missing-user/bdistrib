@@ -16,6 +16,16 @@ if len(sys.argv) != 2:
     print "Error! You must specify 1 argument: the bdistrib_out.XXX.nc file."
     exit(1)
 
+def maximizeWindow():
+    # Maximize window. The command for this depends on the backend.
+    mng = plt.get_current_fig_manager()
+    try:
+        mng.resize(*mng.window.maxsize())
+    except AttributeError:
+        try:
+            mng.window.showMaximized()
+        except AttributeError:
+            pass
 
 f = netcdf.netcdf_file(sys.argv[1],'r',mmap=False)
 nfp = f.variables['nfp'][()]
@@ -169,10 +179,7 @@ if check_orthogonality:
     plt.colorbar()
     plt.title('should_be_identity_outer')
 
-    # Maximize window. The command for this depends on the backend.
-    mng = plt.get_current_fig_manager()
-    #mng.resize(*mng.window.maxsize())
-    mng.window.showMaximized()
+    maximizeWindow()
 
     figureNum += 1
     fig = plt.figure(figureNum)
@@ -197,11 +204,7 @@ if check_orthogonality:
     plt.title('log10(diag(should_be_identity)-1)    This should be very small.')
     plt.legend()
 
-    # Maximize window. The command for this depends on the backend.
-    mng = plt.get_current_fig_manager()
-    #mng.resize(*mng.window.maxsize())
-    mng.window.showMaximized()
-
+    maximizeWindow()
 
 ########################################################
 # For 3D plotting, 'close' the arrays in u and v
@@ -446,10 +449,7 @@ if overlap_exists:
     plt.xlabel('Index of inductance singular vector')
     plt.ylabel('Index of transfer singular vector')
 
-    # Maximize window. The command for this depends on the backend.
-    mng = plt.get_current_fig_manager()
-    #mng.resize(*mng.window.maxsize())
-    mng.window.showMaximized()
+    maximizeWindow()
 
 #######################################################
 # Plot quantities related to 1/R field
@@ -518,18 +518,19 @@ if one_over_R_exists or const_v_exists or plasma_current_exists:
         #plt.ylabel('iv')
 
         plt.subplot(numRows,numCols,6)
-        plt.semilogy(abs(Bnormal_from_plasma_current),'+-',label='Basis functions')
-        plt.semilogy(abs(Bnormal_from_plasma_current_inductance),'+-',label='Left-singular vectors of inductance matrix')
-        plt.semilogy(abs(Bnormal_from_plasma_current_transfer),'+-',label='Left-singular vectors of transfer matrix')
+        try:
+            plt.semilogy(abs(Bnormal_from_plasma_current),'+-',label='Basis functions')
+            plt.semilogy(abs(Bnormal_from_plasma_current_inductance),'+-',label='Left-singular vectors of inductance matrix')
+            plt.semilogy(abs(Bnormal_from_plasma_current_transfer),'+-',label='Left-singular vectors of transfer matrix')
+        except:
+            # May give an error if values are all 0
+            pass
+
         plt.title('abs (Bnormal_from_plasma_current) on the plasma surface',fontsize=titleFontSize)
         plt.xlabel('index')
         plt.legend(fontsize=8)
 
-    # Maximize window. The command for this depends on the backend.
-    mng = plt.get_current_fig_manager()
-    #mng.resize(*mng.window.maxsize())
-    mng.window.showMaximized()
-
+    maximizeWindow()
 
 plt.show()
 

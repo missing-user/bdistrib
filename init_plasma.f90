@@ -5,6 +5,7 @@ subroutine init_plasma
        rmnc_vmec => rmnc, zmns_vmec => zmns, rmns_vmec => rmns, zmnc_vmec => zmnc, &
        lasym_vmec => lasym, mnmax_vmec => mnmax, ns, Rmajor, read_wout_file, lmns, &
        mpol_vmec => mpol, ntor_vmec => ntor, bvco, bsubvmnc
+  use safe_open_mod
   use stel_constants
 
   implicit none
@@ -46,6 +47,40 @@ subroutine init_plasma
      zmns(1) = 0
      zmns(2) = a_plasma
      
+  case(6)
+     ! Read in an ASCII table
+     call safe_open(iunit, ierr, trim(shape_filename_plasma), 'old', 'formatted')
+     if (ierr .ne. 0) then
+        stop 'Error opening nescin file'
+     endif
+
+     ! Skip first line
+     read (iunit, *)
+     read (iunit, *) mnmax
+
+     allocate(xm(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error! 1"
+     allocate(xn(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error!  2"
+     allocate(rmnc(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error!  3"
+     allocate(zmns(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error!  4"
+     allocate(rmns(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error!  5"
+     allocate(zmnc(mnmax),stat=iflag)
+     if (iflag .ne. 0) stop "Allocation error!  6"
+
+     ! Skip a line
+     read (iunit, *)
+     do i = 1, mnmax
+        read (iunit, *) xm(i), xn(i), rmnc(i), zmns(i), rmns(i), zmnc(i)
+     end do
+
+     close(iunit)
+
+     nfp = nfp_imposed
+     lasym = .true.
 
   case (2,3)
      ! VMEC, "original" theta coordinate which is not a straight-field-line coordinate

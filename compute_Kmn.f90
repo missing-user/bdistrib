@@ -16,7 +16,7 @@ subroutine compute_Kmn
   real(dp) :: aPlus, aMinus, d
   real(dp) :: AAPlus, AAMinus, DD
   real(dp) :: k1Plus, k1Minus, k2Plus, k2Minus
-  real(dp), dimension(:), allocatable :: factorial
+  real(dp), dimension(:), allocatable :: log_factorial
   real(dp), dimension(:), allocatable :: TPlus, TMinus, SPlus, SMinus
   real(dp), dimension(:,:), allocatable :: cSPlus, cSMinus
   real(dp), dimension(:,:,:), allocatable :: factor
@@ -27,13 +27,11 @@ subroutine compute_Kmn
   ! Initialize array of n!
   factorial_max = mpol_outer+ntor_outer
   !allocate(factorial(0:factorial_max),stat=iflag)
-  allocate(factorial(factorial_max+1),stat=iflag)
+  allocate(log_factorial(factorial_max+1),stat=iflag)
   if (iflag .ne. 0) stop 'Allocation error!'
-  factorial(1) = 1
-  factorial(2) = 1
+  log_factorial = 0
   do index = 2,factorial_max
-     !factorial(index) = index * factorial(index-1)
-     factorial(index+1) = index * factorial(index)
+     log_factorial(index+1) = log(1.0_dp*index) + log_factorial(index)
   end do
 
   max_index = max(mpol_outer+ntor_outer,1)
@@ -60,8 +58,12 @@ subroutine compute_Kmn
            stop "Out of bounds!"
         end if
         do l = 0,lmax
-           factor(l+1,m+1,n+1) = 0.5*((-1)**(l+(abs(m-n)-m+n)/2)) * factorial(1+(m+n+abs(m-n))/2 + l) &
-                / (factorial(1+(m+n-abs(m-n))/2-l) * factorial(1+abs(m-n)+l) * factorial(1+l))
+           factor(l+1,m+1,n+1) = 0.5*((-1)**(l+(abs(m-n)-m+n)/2)) * exp( log_factorial(1+(m+n+abs(m-n))/2 + l) &
+                - (log_factorial(1+(m+n-abs(m-n))/2-l) + log_factorial(1+abs(m-n)+l) + log_factorial(1+l)))
+
+           !factor(l+1,m+1,n+1) = 0.5*((-1)**(l+(abs(m-n)-m+n)/2)) * factorial(1+(m+n+abs(m-n))/2 + l) &
+           !     / (factorial(1+(m+n-abs(m-n))/2-l) * factorial(1+abs(m-n)+l) * factorial(1+l))
+
            !factor(l+1,m+1,n+1) = 0.5*((-1)**(l+(abs(m-n)-m+n)/2)) * factorial((m+n+abs(m-n))/2 + l) &
            !     / (factorial((m+n-abs(m-n))/2-l) * factorial(abs(m-n)+l) * factorial(l))
         end do
@@ -181,7 +183,7 @@ subroutine compute_Kmn
      end do
   end do
 
-  deallocate(TPlus,TMinus,SPlus,SMinus,cSPlus,cSMinus,factorial,factor)
+  deallocate(TPlus,TMinus,SPlus,SMinus,cSPlus,cSMinus,log_factorial,factor)
 
   call system_clock(toc)
   print *,"Done computing Kmn. Took ",real(toc-tic)/countrate," sec."
