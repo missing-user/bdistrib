@@ -1,34 +1,22 @@
 module compute_offset_surface_mod
 
-  use stel_kinds
-
   implicit none
-
-  private
-
-  public :: compute_offset_surface_xyz_of_uv
-
-  real(dp) :: u_rootSolve, v_rootSolve_target, separation
 
 contains
 
-  subroutine compute_offset_surface_xyz_of_uv(u_rootSolve_in,v_rootSolve_target_in,x_offsetSurface,y_offsetSurface,z_offsetSurface,separation_in)
+  subroutine compute_offset_surface_xyz_of_uv(u_rootSolve,v_rootSolve_target,x_offsetSurface,y_offsetSurface,z_offsetSurface,separation)
     
     use stel_kinds
     
     implicit none
     
-    real(dp), intent(in) :: u_rootSolve_in, v_rootSolve_target_in, separation_in
+    real(dp), intent(in) :: u_rootSolve, v_rootSolve_target, separation
     real(dp), intent(out) :: x_offsetSurface, y_offsetSurface, z_offsetSurface
     
     integer :: fzeroFlag
     real(dp) :: rootSolve_abserr, rootSolve_relerr, v_rootSolve_min, v_rootSolve_max
     real(dp) :: v_plasma_rootSolveSolution
     
-    u_rootSolve = u_rootSolve_in
-    v_rootSolve_target = v_rootSolve_target_in
-    separation = separation_in
-
     !rootSolve_abserr = 0
     !rootSolve_relerr = 0
     rootSolve_abserr = 1.0e-10_dp
@@ -48,31 +36,32 @@ contains
     
     call expand_plasma_surface(u_rootSolve, v_plasma_rootSolveSolution, separation, x_offsetSurface, y_offsetSurface, z_offsetSurface)
   
-  end subroutine compute_offset_surface_xyz_of_uv
-  
+  contains  
   !------------------------------------------------------------------------------------
   
-  function fzero_residual(v_plasma_test)
-    
-    use global_variables, only: nfp
-    use stel_constants
-    
-    implicit none
-    
-    real(dp) :: v_plasma_test, fzero_residual
-    real(dp) :: x_outer, y_outer, z_outer, v_outer_new, v_error
-    
-    call expand_plasma_surface(u_rootSolve, v_plasma_test, separation, x_outer, y_outer, z_outer)
-    v_outer_new = atan2(y_outer,x_outer)*nfp/twopi
-    v_error = v_outer_new - v_rootSolve_target
-    if (v_error < -nfp/2.0_dp) then
-       v_error = v_error + nfp
-    end if
-    if (v_error > nfp/2.0_dp) then
-       v_error = v_error - nfp
-    end if
-    fzero_residual = v_error
-    
-  end function fzero_residual
+    function fzero_residual(v_plasma_test)
+      
+      use global_variables, only: nfp
+      use stel_constants
+      
+      implicit none
+      
+      real(dp) :: v_plasma_test, fzero_residual
+      real(dp) :: x_outer, y_outer, z_outer, v_outer_new, v_error
+      
+      call expand_plasma_surface(u_rootSolve, v_plasma_test, separation, x_outer, y_outer, z_outer)
+      v_outer_new = atan2(y_outer,x_outer)*nfp/twopi
+      v_error = v_outer_new - v_rootSolve_target
+      if (v_error < -nfp/2.0_dp) then
+         v_error = v_error + nfp
+      end if
+      if (v_error > nfp/2.0_dp) then
+         v_error = v_error - nfp
+      end if
+      fzero_residual = v_error
+      
+    end function fzero_residual
   
+  end subroutine compute_offset_surface_xyz_of_uv
+
 end module compute_offset_surface_mod
