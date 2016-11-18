@@ -50,6 +50,9 @@ subroutine read_input
      if (didFileAccessWork /= 0) then
         print *,"Error!  I was able to open the file ", trim(inputFilename), &
                " but not read data from the bdistrib namelist in it."
+        if (didFileAccessWork==-1) then
+           print *,"Make sure there is a carriage return after the / at the end of the namelist!"
+        end if
         stop
      end if
      print *,"Successfully read parameters from bdistrib namelist in ", trim(inputFilename), "."

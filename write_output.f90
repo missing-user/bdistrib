@@ -155,41 +155,43 @@ subroutine write_output
        basis_plasma_dim = (/'num_basis_functions_plasma'/)
 
   ! Arrays with dimension 2:
+  ! The form of the array declarations here is inspired by
+  ! http://stackoverflow.com/questions/21552430/gfortran-does-not-allow-character-arrays-with-varying-component-lengths
   character(len=*), parameter, dimension(2) :: &
-       u_v_plasma_dim = (/'nu_plasma','nv_plasma'/), &
-       u_vl_plasma_dim = (/'nu_plasma','nvl_plasma'/), &
-       u_vl_middle_dim = (/'nu_middle','nvl_middle'/), &
-       u_vl_outer_dim = (/'nu_outer','nvl_outer'/), &
-       basis_plasma_outer_dim  = (/'num_basis_functions_plasma','num_basis_functions_outer'/), &
-       basis_middle_outer_dim  = (/'num_basis_functions_middle','num_basis_functions_outer'/), &
-       basis_plasma_middle_dim = (/'num_basis_functions_plasma','num_basis_functions_middle'/), &
+       u_v_plasma_dim = (/ character(len=50) :: 'nu_plasma','nv_plasma'/), &
+       u_vl_plasma_dim = (/ character(len=50) :: 'nu_plasma','nvl_plasma'/), &
+       u_vl_middle_dim = (/ character(len=50) :: 'nu_middle','nvl_middle'/), &
+       u_vl_outer_dim = (/ character(len=50) :: 'nu_outer','nvl_outer'/), &
+       basis_plasma_outer_dim  = (/ character(len=50) :: 'num_basis_functions_plasma','num_basis_functions_outer'/), &
+       basis_middle_outer_dim  = (/ character(len=50) :: 'num_basis_functions_middle','num_basis_functions_outer'/), &
+       basis_plasma_middle_dim = (/ character(len=50) :: 'num_basis_functions_plasma','num_basis_functions_middle'/), &
        n_singular_values_thresholds_dim = &
-            (/'n_singular_values_transferMatrix','n_pseudoinverse_thresholds'/), &
-       basis_basis_plasma_dim = (/'num_basis_functions_plasma','num_basis_functions_plasma'/), &
-       basis_basis_middle_dim = (/'num_basis_functions_middle','num_basis_functions_middle'/), &
-       basis_basis_outer_dim  = (/'num_basis_functions_outer','num_basis_functions_outer'/), &
-       uv_basis_plasma_dim = (/'nu_nv_plasma','num_basis_functions_plasma'/), &
-       uv_basis_middle_dim = (/'nu_nv_middle','num_basis_functions_middle'/), &
-       uv_basis_outer_dim  = (/'nu_nv_outer', 'num_basis_functions_outer'/), &
-       basis_plasma_nsave_dim = (/'num_basis_functions_plasma','n_singular_vectors_to_save'/), &
-       basis_middle_nsave_dim = (/'num_basis_functions_middle','n_singular_vectors_to_save'/), &
-       uv_plasma_nsave_dim = (/'nu_nv_plasma','n_singular_vectors_to_save'/), &
-       uv_middle_nsave_dim = (/'nu_nv_middle','n_singular_vectors_to_save'/), &
-       basis_plasma_thresholds_dim = (/'num_basis_functions_plasma','n_pseudoinverse_thresholds'/), &
-       uv_middle_mnmax_outer_dim = (/'nu_nv_middle','mnmax_outer'/)
+            (/ character(len=50) :: 'n_singular_values_transferMatrix','n_pseudoinverse_thresholds'/), &
+       basis_basis_plasma_dim = (/ character(len=50) :: 'num_basis_functions_plasma','num_basis_functions_plasma'/), &
+       basis_basis_middle_dim = (/ character(len=50) :: 'num_basis_functions_middle','num_basis_functions_middle'/), &
+       basis_basis_outer_dim  = (/ character(len=50) :: 'num_basis_functions_outer','num_basis_functions_outer'/), &
+       uv_basis_plasma_dim = (/ character(len=50) :: 'nu_nv_plasma','num_basis_functions_plasma'/), &
+       uv_basis_middle_dim = (/ character(len=50) :: 'nu_nv_middle','num_basis_functions_middle'/), &
+       uv_basis_outer_dim  = (/ character(len=50) :: 'nu_nv_outer', 'num_basis_functions_outer'/), &
+       basis_plasma_nsave_dim = (/ character(len=50) :: 'num_basis_functions_plasma','n_singular_vectors_to_save'/), &
+       basis_middle_nsave_dim = (/ character(len=50) :: 'num_basis_functions_middle','n_singular_vectors_to_save'/), &
+       uv_plasma_nsave_dim = (/ character(len=50) :: 'nu_nv_plasma','n_singular_vectors_to_save'/), &
+       uv_middle_nsave_dim = (/ character(len=50) :: 'nu_nv_middle','n_singular_vectors_to_save'/), &
+       basis_plasma_thresholds_dim = (/ character(len=50) :: 'num_basis_functions_plasma','n_pseudoinverse_thresholds'/), &
+       uv_middle_mnmax_outer_dim = (/ character(len=50) :: 'nu_nv_middle','mnmax_outer'/)
 !       uvl_plasma_dim = (/'nvl_plasma','nu_plasma'/)
 !       u_v_uprime_vprime_plasma_dim = (/'nu_nv_plasma','nu_nv_outer'/),&
 !       u_v_uprime_vprime_middle_dim = (/'nu_nv_middle','nu_nv_outer'/), &
 
   ! Arrays with dimension 3:
   character(len=*), parameter, dimension(3) :: &
-       xyz_u_vl_plasma_dim = (/'xyz','nu_plasma','nvl_plasma'/), &
-       xyz_u_vl_middle_dim = (/'xyz','nu_middle','nvl_middle'/), &
-       xyz_u_vl_outer_dim  = (/'xyz','nu_outer', 'nvl_outer'/), &
-       basis_plasma_nsave_thresholds_dim = (/'num_basis_functions_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
-       basis_middle_nsave_thresholds_dim = (/'num_basis_functions_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
-       uv_plasma_nsave_thresholds_dim = (/'nu_nv_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
-       uv_middle_nsave_thresholds_dim = (/'nu_nv_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/)
+       xyz_u_vl_plasma_dim = (/ character(len=50) :: 'xyz','nu_plasma','nvl_plasma'/), &
+       xyz_u_vl_middle_dim = (/ character(len=50) :: 'xyz','nu_middle','nvl_middle'/), &
+       xyz_u_vl_outer_dim  = (/ character(len=50) :: 'xyz','nu_outer', 'nvl_outer'/), &
+       basis_plasma_nsave_thresholds_dim = (/ character(len=50) :: 'num_basis_functions_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
+       basis_middle_nsave_thresholds_dim = (/ character(len=50) :: 'num_basis_functions_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
+       uv_plasma_nsave_thresholds_dim = (/ character(len=50) :: 'nu_nv_plasma','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/), &
+       uv_middle_nsave_thresholds_dim = (/ character(len=50) :: 'nu_nv_middle','n_singular_vectors_to_save','n_pseudoinverse_thresholds'/)
 
 
   call cdf_open(ncid,outputFilename,'w',ierr)
