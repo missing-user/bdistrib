@@ -4,6 +4,7 @@ program bdistrib
 
   use global_variables
   use init_basis_functions_mod
+  use init_plasma_mod
 
   implicit none
 
