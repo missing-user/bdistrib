@@ -418,10 +418,11 @@ for whichThreshold in range(n_pseudoinverse_thresholds):
 ########################################################
 
 if overlap_exists:
-    execfile('/global/homes/l/landrema/scripts/colormaps.py')
+    #execfile('/global/homes/l/landrema/scripts/colormaps.py')
     ##myCmap=viridis
     #myCmap=plasma
-    myCmap = inferno
+    #myCmap = inferno
+    myCmap = 'inferno'
 
     figureNum += 1
     fig = plt.figure(figureNum)
@@ -433,7 +434,8 @@ if overlap_exists:
 
     plt.subplot(numRows,numCols,1)
     #plt.imshow(np.log10(np.abs(overlap_plasma)),interpolation='none',clim=my_clim)
-    plt.imshow(np.log10(np.abs(overlap_plasma.transpose())),interpolation='none',clim=my_clim,cmap=myCmap)
+    #plt.imshow(np.log10(np.abs(overlap_plasma.transpose())),interpolation='none',clim=my_clim,cmap=myCmap)
+    plt.imshow(np.log10(np.abs(overlap_plasma.transpose())),interpolation='none',clim=my_clim)
     #plt.gca().xaxis.tick_top()
     plt.colorbar()
     plt.title('Log10 overlap of transfer and inductance singular vectors on plasma surface')
@@ -442,7 +444,8 @@ if overlap_exists:
 
     plt.subplot(numRows,numCols,2)
     #plt.imshow(np.log10(np.abs(overlap_middle)),interpolation='none',clim=my_clim)
-    plt.imshow(np.log10(np.abs(overlap_middle.transpose())),interpolation='none',clim=my_clim,cmap=myCmap)
+    #plt.imshow(np.log10(np.abs(overlap_middle.transpose())),interpolation='none',clim=my_clim,cmap=myCmap)
+    plt.imshow(np.log10(np.abs(overlap_middle.transpose())),interpolation='none',clim=my_clim)
     #plt.gca().xaxis.tick_top()
     plt.colorbar()
     plt.title('Log10 overlap of transfer and inductance singular vectors on middle surface')

@@ -18,7 +18,7 @@ contains
     use read_efit_mod
     use read_wout_mod, only: nfp_vmec => nfp, xm_vmec => xm, xn_vmec => xn, &
          rmnc_vmec => rmnc, zmns_vmec => zmns, rmns_vmec => rmns, zmnc_vmec => zmnc, &
-         lasym_vmec => lasym, mnmax_vmec => mnmax, ns, Rmajor, read_wout_file, lmns, &
+         lasym_vmec => lasym, mnmax_vmec => mnmax, ns, Rmajor, read_wout_file, &
          mpol_vmec => mpol, ntor_vmec => ntor, bvco, bsubvmnc
     use safe_open_mod
     use stel_constants
