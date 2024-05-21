@@ -5,7 +5,10 @@
 # run directly, and it is also called when "make test" is run from the
 # main BDISTRIB directory.
 
-execfile('../testsCommon.py')
+import sys
+
+sys.path = ["../"] + sys.path
+from testsCommon import *
 
 desiredTolerance = 0.03
 
@@ -17,7 +20,7 @@ variableName = 'svd_s_transferMatrix'
 data = f.variables[variableName][()]
 
 # These numbers come from the basis_option=3 case
-numFailures += arrayShouldBe(data[0,:], [\
+numFailures += arrayShouldBe(variableName, data[0,:], [\
     0.607490335213963, 0.589192794088282, 0.542536334050193, 0.506806588519051, \
     0.44969004300756, 0.421239961356771, 0.366379203520474,                   \
     0.356139843449531, 0.339653064334853, 0.337884534065549,                  \
@@ -68,9 +71,9 @@ numFailures += arrayShouldBe(data[0,:], [\
     0.00775775152841735], desiredTolerance)
 
 
-#numFailures += shouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,:], 0.500, desiredTolerance, requireSameLength=False)
+#numFailures += shouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,:], 0.500, desiredTolerance, requireSameLength=False)
 
 f.close()
 print "numFailures: ",numFailures

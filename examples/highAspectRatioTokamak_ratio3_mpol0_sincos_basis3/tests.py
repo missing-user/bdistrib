@@ -5,7 +5,10 @@
 # run directly, and it is also called when "make test" is run from the
 # main BDISTRIB directory.
 
-execfile('../testsCommon.py')
+import sys
+
+sys.path = ["../"] + sys.path
+from testsCommon import *
 
 numFailures = 0
 
@@ -30,7 +33,7 @@ for n in range(1,max_n+1):
 
 # Compare to analytically expected values:
 desiredTolerance = 0.02
-numFailures += arrayShouldBe(data[0,:], analytical, desiredTolerance)
+numFailures += arrayShouldBe(variableName, data[0,:], analytical, desiredTolerance)
 
 f.close()
 print "numFailures: ",numFailures

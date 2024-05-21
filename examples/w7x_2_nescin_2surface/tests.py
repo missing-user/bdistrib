@@ -18,7 +18,7 @@ data = f.variables[variableName][()]
 
 # The values below come from the 3-surface calculation:
 
-numFailures += arrayShouldBe(data[0,:], [ \
+numFailures += arrayShouldBe(variableName, data[0,:], [ \
     0.756733254860545, 0.675471379935325, 0.592208082776024, 0.536884314491204, \
     0.474304119351931, 0.462098639867155, 0.433482824297775,                  \
     0.40504994884439, 0.395088147190296, 0.378002092760559,                   \
@@ -51,9 +51,9 @@ numFailures += arrayShouldBe(data[0,:], [ \
  ], desiredTolerance, requireSameLength=False)
 
 
-#numFailures += shouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,:], 0.500, desiredTolerance, requireSameLength=False)
+#numFailures += shouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,:], 0.500, desiredTolerance, requireSameLength=False)
 
 f.close()
 print "Number of failures:",numFailures

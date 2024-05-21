@@ -5,7 +5,10 @@
 # run directly, and it is also called when "make test" is run from the
 # main BDISTRIB directory.
 
-execfile('../testsCommon.py')
+import sys
+
+sys.path = ["../"] + sys.path
+from testsCommon import *
 
 desiredTolerance = 0.001
 
@@ -16,7 +19,7 @@ f = readOutputFile()
 variableName = 'svd_s_transferMatrix'
 data = f.variables[variableName][()]
 
-numFailures += arrayShouldBe(data[0,:], [ \
+numFailures += arrayShouldBe(variableName, data[0,:], [ \
     0.80748806762884, 0.75673553269543, 0.685698469409079, 0.675471456480586, \
     0.592253825762204, 0.553337967744933, 0.536880519946412,                \
     0.530404373519825, 0.511004844261854, 0.474331160314634,                \
@@ -115,8 +118,8 @@ numFailures += arrayShouldBe(data[0,:], [ \
 
 
 #numFailures += shouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,:], 0.500, desiredTolerance, requireSameLength=False)
+#numFailures += arrayShouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,:], 0.500, desiredTolerance, requireSameLength=False)
 
 f.close()
 

@@ -5,7 +5,10 @@
 # run directly, and it is also called when "make test" is run from the
 # main BDISTRIB directory.
 
-execfile('../testsCommon.py')
+import sys
+
+sys.path = ["../"] + sys.path
+from testsCommon import *
 
 desiredTolerance = 0.001
 
@@ -17,7 +20,7 @@ variableName = 'svd_s_transferMatrix'
 data = f.variables[variableName][()]
 
 # Actual values returned by the code:
-#numFailures += arrayShouldBe(data[0,:], [0.500107470804363, 0.250061426291945, 0.125043886863589, \
+#numFailures += arrayShouldBe(variableName, data[0,:], [0.500107470804363, 0.250061426291945, 0.125043886863589, \
 #    0.0625244758101717, 0.0312623395374004, 0.0156307958627311, \
 #    0.00781502680267965, 0.00390723848185482, 0.00195343541441372, \
 #    0.000976600826142138, 0.000488228275983158, 0.000244070496262005, \
@@ -25,9 +28,9 @@ data = f.variables[variableName][()]
 #    1.52182666772794e-05], desiredTolerance)
 
 
-#numFailures += shouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,:], 0.500, desiredTolerance, requireSameLength=False)
+#numFailures += shouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,:], 0.500, desiredTolerance, requireSameLength=False)
 
 # Compare to analytically expected values:
 desiredTolerance = 0.003
@@ -35,7 +38,7 @@ analyticalResults = [[0.5 ** (i+1),0.5 ** (i+1)] for i in range(16)]
 # Flatten list of lists:
 analyticalResults = [item for sublist in analyticalResults for item in sublist]
 print "analyticalResults:",analyticalResults
-numFailures += arrayShouldBe(data[0,:], analyticalResults, desiredTolerance)
+numFailures += arrayShouldBe(variableName, data[0,:], analyticalResults, desiredTolerance)
 
 f.close()
 exit(numFailures > 0)

@@ -5,7 +5,10 @@
 # run directly, and it is also called when "make test" is run from the
 # main BDISTRIB directory.
 
-execfile('../testsCommon.py')
+import sys
+
+sys.path = ["../"] + sys.path
+from testsCommon import *
 
 desiredTolerance = 0.001
 
@@ -16,7 +19,7 @@ f = readOutputFile()
 variableName = 'svd_s_transferMatrix'
 data = f.variables[variableName][()]
 
-numFailures += arrayShouldBe(data[0,:], [0.500107470804363, 0.498701861460618, 0.498570256474812, 0.494757120411698, \
+numFailures += arrayShouldBe(variableName, data[0,:], [0.500107470804363, 0.498701861460618, 0.498570256474812, 0.494757120411698, \
     0.494526925087883, 0.250061426291945, 0.249914764213506, \
     0.24974631585096, 0.248896865997166, 0.248805348743705, \
     0.246437256346953, 0.242361254290523, 0.125043886863589, \
@@ -31,9 +34,9 @@ numFailures += arrayShouldBe(data[0,:], [0.500107470804363, 0.498701861460618, 0
     0.0039028921106597, 0.00390186714317446, 0.00390186714317442, \
     0.00389879420871117, 0.00389879420871117], desiredTolerance)
 
-#numFailures += shouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,0], 0.500, desiredTolerance)
-#numFailures += arrayShouldBe(data[0,:], 0.500, desiredTolerance, requireSameLength=False)
+#numFailures += shouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,0], 0.500, desiredTolerance)
+#numFailures += arrayShouldBe(variableName, data[0,:], 0.500, desiredTolerance, requireSameLength=False)
 
 
 f.close()
