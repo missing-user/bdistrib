@@ -74,7 +74,7 @@ $(LIBSTELL_DIR)/$(LIBSTELL_LIB_BIN_NAME):
 
 clean:
 	rm -f *.o *.mod *.MOD *~ $(TARGET)
-	cd $(LIBSTELL_DIR); rm -f *.o *.mod *.MOD *.a
+	cd $(LIBSTELL_DIR); make clean
 
 test: $(TARGET)
 	@echo "Beginning functional tests." && cd examples && export BDISTRIB_RETEST=no && python runExamples.py
