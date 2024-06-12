@@ -3,10 +3,13 @@
 #   module load cray-netcdf
 # For Cori is is also necessary to run
 #   module swap intel/16.0.0.109 intel/15.0.1.133
-# to avoid a bug in the Intel MKL!!!
+#   to avoid a bug in the Intel MKL!!!
 # It is convenient to run
 #   module unload cray-libsci
-# to avoid warning messages about libsci during compiling.
+#   to avoid warning messages about libsci during compiling.
+
+# the else case works for systems with intel compiler and intel MPI:
+#  module load intel netcdf impi mkl
 
 ifdef NERSC_HOST
         HOSTNAME = $(NERSC_HOST)
@@ -28,7 +31,7 @@ else ifeq ($(HOSTNAME),cori)
 	## NERSC documentation recommends against specifying -O3
 	## -mkl MUST APPEAR AT THE END!!
 	EXTRA_COMPILE_FLAGS = -qopenmp -mkl
-	EXTRA_LINK_FLAGS =  -qopenmp -mkl -Wl,-ydgemm_
+	EXTRA_LINK_FLAGS =  -qopenmp -mkl
 	# Above, the link flag "-Wl,-ydgemm_" causes the linker to report which version of DGEMM (the BLAS3 matrix-matrix-multiplication subroutine) is used.
 	# For batch systems, set the following variable to the command used to run jobs. This variable is used by 'make test'.
 	BDISTRIB_COMMAND_TO_SUBMIT_JOB = srun -n 1 -c 32
@@ -36,7 +39,7 @@ else
 	FC = mpif90
 	#EXTRA_COMPILE_FLAGS = -fopenmp -I/usr/include -ffree-line-length-none -cpp
 	EXTRA_COMPILE_FLAGS = -fopenmp -I/usr/include -ffree-line-length-none
-	EXTRA_LINK_FLAGS =  -fopenmp -L/usr/lib -lnetcdff  -lnetcdf -llapack -lblas
+	EXTRA_LINK_FLAGS =  -fopenmp -L/usr/lib -lnetcdff -mkl
 #-framework Accelerate
 
 	# For batch systems, set the following variable to the command used to run jobs. This variable is used by 'make test'.
@@ -45,10 +48,10 @@ endif
 
 
 # End of system-dependent variable assignments
-LIBSTELL_DIR =/home/IPP-HGW/juph/LIBSTELL/build
-LIBSTELL_LIB_BIN_NAME=libstell.a
-#LIBSTELL_DIR = mini_libstell
-#LIBSTELL_LIB_BIN_NAME=mini_libstell.a
+#LIBSTELL_DIR =/home/IPP-HGW/juph/LIBSTELL/build
+#LIBSTELL_LIB_BIN_NAME=libstell.a
+LIBSTELL_DIR = mini_libstell
+LIBSTELL_LIB_BIN_NAME=mini_libstell.a
 TARGET = bdistrib
 
 export
