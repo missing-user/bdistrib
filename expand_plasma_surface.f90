@@ -33,6 +33,7 @@ subroutine expand_plasma_surface(u, v, separation, x,y,z)
   dsinphidv = cosphi*twopi/nfp
   dcosphidv = -sinphi*twopi/nfp
 
+  ! TODO: There may be an FFT in here
   do imn = 1,mnmax
      angle = twopi*(xm(imn)*u - xn(imn)*v/nfp)
      cosangle = cos(angle)

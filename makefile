@@ -38,20 +38,17 @@ else ifeq ($(HOSTNAME),cori)
 else
 	FC = mpif90
 	#EXTRA_COMPILE_FLAGS = -fopenmp -I/usr/include -ffree-line-length-none -cpp
-	EXTRA_COMPILE_FLAGS = -fopenmp -I/usr/include -ffree-line-length-none
-	EXTRA_LINK_FLAGS =  -fopenmp -L/usr/lib -lnetcdff -mkl
-#-framework Accelerate
+	EXTRA_COMPILE_FLAGS = -O3 -fopenmp  -I/usr/include -ffree-line-length-none  -mkl
+	EXTRA_LINK_FLAGS =   -fopenmp -L/usr/lib -lnetcdff -mkl
 
-	# For batch systems, set the following variable to the command used to run jobs. This variable is used by 'make test'.
-	BDISTRIB_COMMAND_TO_SUBMIT_JOB =
 endif
 
 
 # End of system-dependent variable assignments
-#LIBSTELL_DIR =/home/IPP-HGW/juph/LIBSTELL/build
-#LIBSTELL_LIB_BIN_NAME=libstell.a
-LIBSTELL_DIR = mini_libstell
-LIBSTELL_LIB_BIN_NAME=mini_libstell.a
+LIBSTELL_DIR =/home/IPP-HGW/juph/LIBSTELL/build
+LIBSTELL_LIB_BIN_NAME=libstell.a
+# LIBSTELL_DIR = mini_libstell
+# LIBSTELL_LIB_BIN_NAME=mini_libstell.a
 TARGET = bdistrib
 
 export
@@ -70,7 +67,6 @@ include makefile.depend
 
 $(TARGET): $(OBJ_FILES) $(LIBSTELL_DIR)/$(LIBSTELL_LIB_BIN_NAME)
 	$(FC) -o $(TARGET) $(OBJ_FILES) $(LIBSTELL_DIR)/$(LIBSTELL_LIB_BIN_NAME) $(EXTRA_LINK_FLAGS)
-#	$(FC) -o $(TARGET) $(OBJ_FILES) $(LIBSTELL_DIR)/$(LIBSTELL_LIB_BIN_NAME) $(EXTRA_LINK_FLAGS)
 
 $(LIBSTELL_DIR)/$(LIBSTELL_LIB_BIN_NAME):
 	$(MAKE) -C $(LIBSTELL_DIR)
