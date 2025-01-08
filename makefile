@@ -35,12 +35,20 @@ else ifeq ($(HOSTNAME),cori)
 	# Above, the link flag "-Wl,-ydgemm_" causes the linker to report which version of DGEMM (the BLAS3 matrix-matrix-multiplication subroutine) is used.
 	# For batch systems, set the following variable to the command used to run jobs. This variable is used by 'make test'.
 	BDISTRIB_COMMAND_TO_SUBMIT_JOB = srun -n 1 -c 32
-else
+else ifeq ($(HOSTNAME),ipp)
 	FC = mpif90
 	#EXTRA_COMPILE_FLAGS = -fopenmp -I/usr/include -ffree-line-length-none -cpp
 	EXTRA_COMPILE_FLAGS = -O3 -fopenmp  -I/usr/include -ffree-line-length-none  -mkl
 	EXTRA_LINK_FLAGS =   -fopenmp -L/usr/lib -lnetcdff -mkl
+else
+	# Compile flags that worked for an Ubuntu laptop
+	FC = mpif90
+	
+	EXTRA_COMPILE_FLAGS = -O3 -fopenmp  -I/usr/include -ffree-line-length-none
+	EXTRA_LINK_FLAGS =   -fopenmp -L/usr/lib -lnetcdff -lblas  -llapack
 
+	# For batch systems, set the following variable to the command used to run jobs. This variable is used by 'make test'.
+	BDISTRIB_COMMAND_TO_SUBMIT_JOB =
 endif
 
 
